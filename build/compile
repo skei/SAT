@@ -1,0 +1,544 @@
+#!/bin/bash
+
+#----------------------------------------------------------------------
+#
+# defaults
+#
+#----------------------------------------------------------------------
+
+CC="g++"
+INPUT="build.cpp"
+OUTPUT="plugin.exe"
+SYSTEM="LINUX"
+FORMAT="EXE"
+GUI="NATIVE"
+#WINDOW="X11"
+#RENDERER="X11"
+#PAINTER="X11"
+#AUDIO="JACK"
+BUILD_COUNT=""
+DEBUG=false
+SANITIZE=false
+TESTS=false
+ADDITIONAL=""
+VERBOSE=false
+
+LINUX=false
+MAC=false
+WIN32=false
+LIBRARY=false
+#EXELIB=false
+
+FLAGS=""
+FLAGS+=" -std=gnu++17"
+FLAGS+=" -fno-exceptions"
+FLAGS+=" -Wall" # -Wfatal-errors"
+FLAGS+=" -Wno-unknown-pragmas -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-narrowing"
+FLAGS+=" -Wl,--as-needed"
+#FLAGS+=" -Wl,-Bsymbolic"
+
+#FLAGS+=" -pthread"
+#FLAGS+=" -static-libgcc"
+#FLAGS+=" -static-libstdc++"
+
+INC=""
+INC+=" -I../src"
+
+PRELIB=""
+
+LIB=""
+LIB+=" -lm"
+#LIB+=" -ldl -lrt"
+
+#----------------------------------------------------------------------
+#
+#
+#
+#----------------------------------------------------------------------
+
+# compile <arguments>
+
+# -i    input
+# -o    output
+
+# -S    os/system   linux, windows, mac
+# -F    format      clap, vst3, vst2, lv2, dssi, ladspa, exe, (exelib)
+# -W    window      x11, win32, wayland, [cocoa?], none
+# -R    renderer    glx, wgl, egl, x11, win32, software, none
+# -P    painter     nanovg, cairo, x11, win32, blend2d, canvasify, none
+# _G    gui         native, cpu, gpu (shortcut for window/rederer/painter)
+# -A    audio       jack,
+
+# -b    build       build-file (increasing build #)
+# -d    debug       debug on
+# -s    sanitize    asan
+# -t    tests       include (unit) tests
+# -a    additional  arguments ("-D..", etc)
+# -v    verbose     print actual compiler command and argumants
+
+#----------------------------------------------------------------------
+#
+# print help
+#
+#----------------------------------------------------------------------
+
+function print_help_and_exit {
+    echo "usage: ./compile <options>"
+    echo ""
+    echo "  -i <path>       input file name/path"
+    echo "  -o <path>       output file name/path"
+    echo ""
+    echo "  -S <system>     LINUX, windows, (mac)"
+    echo "  -F <format>     clap, vst3, vst2, lv2, dssi, ladspa, EXE, (exelib)"
+    echo "  -G <gui>        NATIVE, cpu, gpu, none"
+#    echo "  -W <window>     X11, win32, wayland, none"
+#    echo "  -R <renderer>   glx, wgl, egl, X11, win32, none"
+#    echo "  -P <painter>    nanovg, cairo, X11, win32, blend2d, canvasify, none"
+#    echo "  -A <audio>      JACK, .."
+    echo ""
+    echo "  -d              debug mode (else release)"
+    echo "  -t              include tests"
+    echo "  -s              sanitize"
+    echo "  -b <path>       build_count file name/path"
+    echo "  -a <flags>      additional flags (in quotes)"
+    echo "  -v              verbose"
+    echo "  -h, -?          help"
+    exit 1
+}
+
+#----------------------------------------------------------------------
+#
+# parse command line
+#
+#----------------------------------------------------------------------
+
+if [ "$#" -eq 0 ]; then
+    print_help_and_exit
+fi
+
+#while getopts i:o:S:F:G:W:R:P:A:dtsb:a:vh? arg
+while getopts i:o:S:F:G:W:R:P:A:dtsb:a:vh? arg
+do
+    A=""
+    case $arg in
+        i)      INPUT=$OPTARG;;
+        o)      OUTPUT=$OPTARG;;
+        S)      SYSTEM==${OPTARG^^};; # $OPTARG;;
+        F)      FORMAT=${OPTARG^^};; # $OPTARG;;
+        G)      GUI=${OPTARG^^};; # $OPTARG;;
+ #       W)      WINDOW=${OPTARG^^};; # $OPTARG;;
+ #       R)      RENDERER=${OPTARG^^};; # $OPTARG;;
+ #       P)      PAINTER=${OPTARG^^};; # $OPTARG;;
+ #       A)      AUDIO=${OPTARG^^};; # $OPTARG;;
+        d)      DEBUG=true;;
+        t)      TESTS=true;;
+        s)      SANITIZE=true;;
+        b)      BUILD_COUNT=$OPTARG;;
+        a)      ADDITIONAL=$OPTARG;;
+        v)      VERBOSE=true;;
+        h|?)    print_help_and_exit;;
+        *)      exit 1;;
+#       f)      FORMAT=${OPTARG^^};;
+#       g)      GUI=${OPTARG^^};;
+#       w)      WIN32=true;;
+    esac
+done
+
+#------------------------------
+# -i input
+#------------------------------
+
+#if [ $INPUT = "" ]; then
+#  INPUT="build.clap"
+#fi
+
+INPUT_FILE=${INPUT##*/}
+INPUT_BASE=${INPUT_FILE%%.*}
+INPUT_EXT=${INPUT_FILE##*.}
+INPUT_DIR=${INPUT%$INPUT_FILE}
+
+#echo ""
+#echo "INPUT     : $INPUT"
+#echo "INPUT_FILE: $INPUT_FILE"
+#echo "INPUT_BASE: $INPUT_BASE"
+#echo "INPUT_EXT : $INPUT_EXT"
+#echo "INPUT_DIR : $INPUT_DIR"
+
+#------------------------------
+# -o output
+#------------------------------
+
+OUTPUT_FILE=${OUTPUT##*/}
+OUTPUT_BASE=${OUTPUT_FILE%%.*}
+OUTPUT_EXT=${OUTPUT_FILE##*.}
+OUTPUT_DIR=${OUTPUT%$OUTPUT_FILE}
+
+#echo "OUTPUT     : $OUTPUT"
+#echo "OUTPUT_FILE: $OUTPUT_FILE"
+#echo "OUTPUT_BASE: $OUTPUT_BASE"
+#echo "OUTPUT_EXT : $OUTPUT_EXT"
+#echo "OUTPUT_DIR : $OUTPUT_DIR" 
+
+#if [ "$OUTPUT" = "" ]; then
+#  OUTPUT=$INPUT_BASE
+#fi
+
+#------------------------------
+# -S system/os
+#------------------------------
+
+#if $WIN32
+#  then
+#  else
+#fi
+
+if [[ "$SYSTEM" == *"LINUX"* ]]; then
+    LINUX=true
+    CC="g++"
+    FLAGS+=" -pthread"
+    LIB+=" -ldl -lrt"
+fi
+
+if [[ "$SYSTEM" == *"WIN32"* ]]; then
+    WIN32=true
+    CC="/usr/bin/x86_64-w64-mingw32-g++"
+    FLAGS+=" -static-libgcc"
+    FLAGS+=" -static-libstdc++"
+    LIB+=" -lwsock32"
+fi
+
+#------------------------------
+# -F format
+#------------------------------
+
+#if [ "$FORMAT" = "" ]; then
+#    FORMAT="CLAP"
+#fi
+
+#-----
+
+if [[ "$FORMAT" == *"ALL"* ]]; then
+    LIBRARY=true
+    FLAGS+=" -DSAT_PLUGIN_ALL"
+fi
+
+if [[ "$FORMAT" == *"CLAP"* ]]; then
+    LIBRARY=true
+    FLAGS+=" -DSAT_PLUGIN_CLAP"
+fi
+
+if [[ "$FORMAT" == *"DSSI"* ]]; then
+    LIBRARY=true
+    FLAGS+=" -DSAT_PLUGIN_DSSI"
+fi
+
+if [[ "$FORMAT" == *"EXE"* ]]; then
+    LIBRARY=false
+    FLAGS+=" -DSAT_PLUGIN_EXE"
+fi
+
+#if [[ "$FORMAT" == *"EXLIB"* ]]; then
+#    LIBRARY=true
+#    EXELIB=true
+#    FLAGS+=" -DSAT_PLUGIN_EXECUTABLE_LIBRARY"
+#fi
+
+if [[ "$FORMAT" == *"LADSPA"* ]]; then
+    LIBRARY=true
+    FLAGS+=" -DSAT_PLUGIN_LADSPA"
+fi
+
+if [[ "$FORMAT" == *"LV2"* ]]; then
+    LIBRARY=true
+    FLAGS+=" -DSAT_PLUGIN_LV2"
+fi
+
+if [[ "$FORMAT" == *"VST2"* ]]; then
+    LIBRARY=true
+    FLAGS+=" -DSAT_PLUGIN_VST2"
+fi
+
+if [[ "$FORMAT" == *"VST3"* ]]; then
+    LIBRARY=true
+    FLAGS+=" -DSAT_PLUGIN_VST3"
+    INC+=" -I../src/extern/vst3/vst3sdk"
+fi
+
+#----------
+
+if $LIBRARY
+then
+#   if $EXELIB
+#       then
+#           FLAGS+=" -shared"
+#           FLAGS+=" -fPIC"
+#           #FLAGS+=" -fPIE"
+#           FLAGS+=" -Wl,-e,exelib_entry_point"
+#           FLAGS+=" -DSAT_PLUGIN_EXE"
+#   else
+        FLAGS+=" -shared"
+        FLAGS+=" -fPIC"
+        FLAGS+=" -DSAT_LIBRARY"
+#   fi
+#else
+#   FLAGS+=" -DSAT_PLUGIN_EXE"
+fi
+
+#------------------------------
+# -G gui
+#------------------------------
+
+case $GUI in
+    "NONE")
+        #echo "gui = nogui"
+        FLAGS+=" -DSAT_GUI_NONE"
+        ;;
+    "NATIVE")
+        #echo "gui = nogui"
+        FLAGS+=" -DSAT_GUI_NATIVE"
+        # if [[ "$SYSTEM" == *"LINUX"* ]]; then
+        if $LINUX
+        then
+            #echo "gui = x11"
+            LIB+=" -lX11 -lX11-xcb"
+            LIB+=" -lxcb -lxcb-util -lxcb-image -lxcb-cursor -lxcb-keysyms"
+            LIB+=" -lxkbcommon"
+            #FLAGS+=" -DSAT_GUI_X11"
+        fi
+        # if [[ "$SYSTEM" == *"WIN32"* ]]; then
+        if $WIN32
+        then
+            #echo "gui = win32"
+            LIB+=" -lgdi32 -lmsimg32"
+            #FLAGS+=" -DSAT_GUI_WIN32"
+        fi
+        ;;
+    "CPU")
+        #echo "gui = nogui"
+        FLAGS+=" -DSAT_GUI_CPU"
+        ;;
+    "GPU")
+        #echo "gui = nogui"
+        FLAGS+=" -DSAT_GUI_GPU"
+        # if [[ "$SYSTEM" == *"LINUX"* ]]; then
+        if $LINUX
+        then
+            LIB+=" -lX11 -lX11-xcb"
+            LIB+=" -lxcb -lxcb-util -lxcb-image -lxcb-cursor -lxcb-keysyms"
+            LIB+=" -lxkbcommon"
+            LIB+=" -lGL"
+            LIB+=" -lGLX"
+            #LIB+=" -lEGL"
+            #FLAGS+=" -DSAT_GUI_X11"
+        fi
+        # if [[ "$SYSTEM" == *"WIN32"* ]]; then
+        if $WIN32
+        then
+            #echo "gui = win32"
+            LIB+=" -lgdi32 -lmsimg32"
+            LIB+=" -lopengl32"
+            #FLAGS+=" -DSAT_GUI_WIN32"
+        fi
+        ;;
+#   "WAYLAND")
+#       #echo "gui = win32"
+#       LIB+=" -lX11"
+#       LIB+=" -lGL"
+#       LIB+=" -lEGL"
+#       LIB+=" -lwayland-client -lwayland-egl"
+#       FLAGS+=" -DSAT_GUI_WAYLAND"
+#       ;;
+#   "WIN32")
+#       #echo "gui = win32"
+#       LIB+=" -lgdi32 -lmsimg32 -lopengl32"
+#       FLAGS+=" -DSAT_GUI_WIN32"
+#       ;;
+#   "X11")
+#       #echo "gui = x11"
+#       LIB+=" -lX11 -lX11-xcb"
+#       LIB+=" -lxcb -lxcb-util -lxcb-image -lxcb-cursor -lxcb-keysyms"
+#       LIB+=" -lxkbcommon"
+#       LIB+=" -lGL"
+#       LIB+=" -lGLX"
+#       #LIB+=" -lEGL"
+#       FLAGS+=" -DSAT_GUI_X11"
+#       ;;
+    *)
+        echo "unknown gui: $GUI";
+        exit 1
+        ;;
+esac
+
+#------------------------------
+# -W window
+#------------------------------
+
+#------------------------------
+# -R renderer
+#------------------------------
+
+#------------------------------
+# -P painter
+#------------------------------
+
+#------------------------------
+# -A audio
+#------------------------------
+
+#------------------------------
+# -d debug
+#------------------------------
+
+if $DEBUG
+then
+    FLAGS+=" -DSAT_DEBUG"
+    FLAGS+=" -g"
+    if ! $WIN32
+    then
+        #FLAGS+=" -export-dynamic"
+        FLAGS+=" -rdynamic"
+    fi
+    #FLAGS+=" -export-dynamic"
+    #FLAGS+=" -Wl,-Bsymbolic"
+else
+    FLAGS+=" -DNDEBUG"
+    FLAGS+=" -O3"
+    FLAGS+=" -ffast-math"
+    FLAGS+=" -s"
+    #FLAGS+=" -flto"
+fi
+
+#------------------------------
+# -t tests
+#------------------------------
+
+if $TESTS
+then
+    FLAGS+=" -DSAT_INCLUDE_TESTS"
+fi
+
+#------------------------------
+# -s sanitize
+#------------------------------
+
+if $SANITIZE
+then
+    #PRELIB+=" -lasan"
+    FLAGS+=" -fsanitize=leak"
+    #FLAGS+=" -fsanitize=address"
+    FLAGS+=" -fno-omit-frame-pointer -fno-optimize-sibling-calls"
+fi
+
+#------------------------------
+# -b build count
+#------------------------------
+
+if [[ "$BUILD_COUNT" != "" ]]
+  then
+    count=0
+    if test -f $BUILD_COUNT 
+    then
+        read count < $BUILD_COUNT
+    fi
+    ((count=count+1))  
+    echo $count > $BUILD_COUNT
+    #echo build $count
+    FLAGS+=" -DSAT_BUILD_COUNT=$count"
+fi
+
+#------------------------------
+# -a additional
+#------------------------------
+
+#------------------------------
+# -v verbose
+#------------------------------
+
+#------------------------------
+# -h -? help
+#------------------------------
+
+#----------------------------------------------------------------------
+#
+# compile
+#
+#----------------------------------------------------------------------
+
+#echo "* format:" $FORMAT
+#echo "* gui:" $GUI
+#echo "* debug:" $DEBUG
+#echo "* tests:" $TESTS
+
+#echo
+#echo "g++" $INPUT "-o" $OUTPUT $FLAGS $INC $LIB
+#echo
+
+if $VERBOSE; then
+    echo $CC $INPUT -o $OUTPUT $FLAGS $INC $PRELIB $LIB $ADDITIONAL
+fi  
+
+$CC $INPUT -o $OUTPUT $FLAGS $INC $PRELIB $LIB $ADDITIONAL
+
+#----------------------------------------------------------------------
+#
+#
+#
+#----------------------------------------------------------------------
+
+# -Wfatal-errors
+# stop compilation at first error
+
+# -shared -fPIC
+# shared library
+
+# -g
+# generate and embed debug information
+
+# -rdynamic
+# the gcc option -rdynamic enables the linker option --export-dynamic. So it is a shorthand for passing -Wl,--export-dynamic to gcc.
+# any external symbol that is statically defined by the program to be propagated to its dynamic symbol table.
+
+# -fvisibility=hidden
+# makes all your symbols hidden by default.
+
+# -Wl,-exclude-libs,All
+# This is a linker option. When used during the creation of a shared library or
+# executable, it prevents the linker from adding symbols from all statically
+# linked libraries (or specifically listed libraries if not "All") to the
+# dynamic symbol table of the resulting output file. This means that the
+# symbols from these libraries will not be visible to other dynamically linked
+# libraries or executables that might try to link against your output.
+
+# -Wl,-Bsymbolic:
+# This is a linker option, primarily used when building shared libraries (e.g., .so files).
+# When -Bsymbolic is used, the linker binds symbol references within the shared object to
+# their global definitions within that same shared object, rather than allowing them to be
+# preempted by definitions from other shared libraries loaded at runtime.
+
+# -s
+# Remove all symbol table and relocation information from the executable.
+
+# see also: https://www.technovelty.org/linux/stripping-shared-libraries.html
+
+#----------------------------------------------------------------------
+#
+#
+#
+#----------------------------------------------------------------------
+
+# $PWD  = current path
+# $0    = script name/executable
+# $@    = arguments
+# $#    = number of arguments?
+
+#VAR_1="to uppercase"
+#echo ${VAR_1^}
+#echo ${VAR_1^^}
+
+#VAR_2="TO  LOWERCASE!"
+#echo ${VAR_2,}
+#echo ${VAR_2,,}
+
+#VAR_3="Reverse Cases"
+#echo ${VAR_3~}
+#echo ${VAR_3~~}

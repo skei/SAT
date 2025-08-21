@@ -1,0 +1,308 @@
+#pragma once
+
+/*
+    TODO / consider..
+    should we put all 'global' gui resources in SAT_Global.GUI,
+    and have some lazy creation stuff there? (refcount?)
+
+    x11:
+        separate display connection per window
+        glx needs display and targe drawable
+
+    win32:
+        window needs (global) WNDCLASS, created from global HINSTANCE (from DllMain)
+        surface needs dc (can get it from screen using nullptr)
+        painter wands dc (from hwnd)
+        wgl needs hwnd, and dc (created from hwnd)
+
+    nanovg
+        context is 'global'
+        nanovg surface & painter needs context
+
+        (github: "At first I used a separate NanoVG context and GLFW context per window.
+        However, this leads to weird difficulties down the road. I ended up using shared context")
+
+    cairo surface
+        win32: dc
+        xcb: connection, drawable, visual
+        xrender: conection, screen, drawable, xrender pictformat
+
+    so.. everything except nanovg is per window..
+    (maybe opengl context too)
+
+*/
+
+#include "base/sat_base.h"
+
+#ifdef SAT_USE_X11
+    #include "gui/system/x11/sat_x11.h"
+#endif
+
+class SAT_Painter;
+class SAT_Renderer;
+class SAT_Surface;
+class SAT_Window;
+class SAT_Widget;
+
+//----------------------------------------------------------------------
+//
+// painter
+//
+//----------------------------------------------------------------------
+
+struct SAT_PaintContext
+{
+    SAT_Painter*    painter     = nullptr;
+    SAT_Rect        update_rect = {};
+};
+
+class SAT_PaintSource
+{
+    public:
+        virtual bool                            isBitmap()                  { return false; }
+        virtual bool                            isSurface()                 { return false; }
+        virtual uint32_t                        getWidth()                  { return 0; }
+        virtual uint32_t                        getHeight()                 { return 0; }
+        virtual uint32_t                        getDepth()                  { return 0; }
+        virtual uint32_t                        getBufferSize()             { return 0; }
+        virtual uint32_t*                       getBuffer()                 { return 0; }
+        #ifdef SAT_USE_NANOVG
+            virtual int32_t                     getImageFromRenderBuffer()  { return 0; }
+        #endif
+        #ifdef SAT_USE_X11
+            virtual xcb_drawable_t              getXcbDrawable()            { return 0; } // = 0;
+            #ifdef SAT_USE_X11_XRENDER
+                virtual xcb_render_picture_t    getXcbPicture()             { return 0; }// = 0;
+            #endif
+        #endif
+};
+
+class SAT_PaintTarget
+{
+    public:
+        virtual bool                            isBitmap()                  { return false; }
+        virtual bool                            isSurface()                 { return false; }
+        virtual bool                            isWindow()                  { return false; }
+        #ifdef SAT_USE_NANOVG
+            virtual void                        selectRenderBuffer()        { }
+        #endif
+        #ifdef SAT_USE_X11
+            virtual xcb_drawable_t              getXcbDrawable()            { return 0; } // = 0;
+        #endif
+};
+
+class SAT_PainterOwner
+{
+    public:
+        #ifdef SAT_USE_X11
+            virtual xcb_connection_t*   getXcbConnection() = 0;
+        #endif
+};
+
+class SAT_BasePainter
+{
+    public:
+        SAT_BasePainter(SAT_PainterOwner* AOwner, SAT_PaintTarget* ATarget) {}
+        virtual ~SAT_BasePainter() {}
+    public:
+        virtual void        beginPainting(uint32_t AWidth, uint32_t AHeight) = 0;
+        virtual void        endPainting() = 0;
+     // virtual void        setPaintTarget(SAT_PaintTarget* ATarget) = 0;
+     // virtual void        resetPaintTarget(SAT_PaintTarget* ATarget) = 0;
+        virtual void        setClip(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) = 0;
+        virtual void        resetClip() = 0;
+    public: // state
+        virtual void        setDrawColor(SAT_Color AColor) = 0;
+        virtual void        setFillColor(SAT_Color AColor) = 0;
+        virtual void        setTextColor(SAT_Color AColor) = 0;
+        virtual void        setLineWidth(sat_coord_t AWidth) = 0;
+    public: // raster
+        virtual void        drawLine(sat_coord_t AX1, sat_coord_t AY1, sat_coord_t AX2, sat_coord_t AY2) = 0;
+        virtual void        drawRect(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t AWidth, sat_coord_t AHeight) = 0;
+        virtual void        drawArc(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2) = 0;
+        virtual void        fillRect(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t AWidth, sat_coord_t AHeight) = 0;
+        virtual void        fillArc(sat_coord_t AXposx, sat_coord_t AYpos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2) = 0;
+        virtual void        drawText(sat_coord_t AXpos, sat_coord_t AYpos, const char* AText) = 0;
+        virtual void        drawText(SAT_Rect ARect, const char* AText, uint32_t AAlignment) = 0;
+        virtual sat_coord_t getTextBounds(const char* AText, sat_coord_t* ABounds) = 0;
+        virtual sat_coord_t getTextWidth(const char* AText) = 0;
+        virtual sat_coord_t getTextHeight(const char* AText) = 0;
+        virtual void        drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSource* ASource) = 0;
+        virtual void        drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSource* ASource, SAT_Rect ASrc) = 0;
+        virtual void        drawImage(SAT_Rect ADst, SAT_PaintSource* ASource, SAT_Rect ASrc) = 0;
+    public: // vector
+        // TODO
+};
+
+//----------------------------------------------------------------------
+//
+// renderer
+//
+//----------------------------------------------------------------------
+
+struct SAT_RenderContext
+{
+    SAT_Renderer*   renderer    = nullptr;
+};
+
+class SAT_RenderSource
+{
+};
+
+class SAT_RenderTarget
+{
+    public:
+        #ifdef SAT_USE_X11
+            virtual xcb_drawable_t getXcbDrawable() = 0;
+        #endif
+};
+
+class SAT_RendererOwner
+{
+    public:
+        #ifdef SAT_USE_X11
+            virtual Display* getX11Display() = 0;
+        #endif
+};
+
+class SAT_BaseRenderer
+{
+    public:
+        SAT_BaseRenderer(SAT_RendererOwner* AOwner, SAT_RenderTarget* ATarget) {}
+        virtual ~SAT_BaseRenderer() {}
+    public:
+        virtual bool makeCurrent() = 0;
+        virtual bool resetCurrent() = 0;
+        virtual bool beginRendering() = 0;
+        virtual bool beginRendering(int32_t AWidth, int32_t AHeight) = 0;
+        virtual bool endRendering() = 0;
+        virtual bool setViewport(int32_t AXpos, int32_t AYpos, int32_t AWidth, int32_t AHeight) = 0;
+        virtual bool swapBuffers() = 0;
+        virtual bool enableVSync() = 0;
+        virtual bool disableVSync() = 0;
+};
+
+//----------------------------------------------------------------------
+//
+// surface
+//
+//----------------------------------------------------------------------
+
+class SAT_SurfaceOwner
+{
+    public:
+        // TODO: move to SAT_Global.GUI
+        #ifdef SAT_USE_NANOVG
+            virtual NVGcontext*         getNanoVgContext() ) 0;
+        #endif
+        #ifdef SAT_USE_X11
+            virtual xcb_connection_t*   getXcbConnection() = 0;
+            virtual xcb_drawable_t      getXcbDrawable() = 0;
+        #endif
+};
+
+class SAT_BaseSurface
+{
+   public:
+        SAT_BaseSurface(SAT_SurfaceOwner* AOwner, uint32_t AWidth, uint32_t AHeight, uint32_t ADepth=0) {}
+        virtual ~SAT_BaseSurface() {}
+    public:
+     // virtual void fill(SAT_Color AColor) = 0;
+     // virtual void uploadBitmap(SAT_Bitmap* ABitmap) = 0;
+};
+
+//----------------------------------------------------------------------
+//
+// window
+//
+//----------------------------------------------------------------------
+
+// class SAT_WindowOwner
+// {
+// };
+
+// class SAT_WindowListener
+// {
+//     public:
+//         virtual void    on_window_show(SAT_Window* AWindow) {}
+//         virtual void    on_window_hide(SAT_Window* AWindow) {}
+//         virtual void    on_window_move(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos) {}
+//         virtual void    on_window_resize(SAT_Window* AWindow, uint32_t AWidth, uint32_t AHeight) {}
+//         virtual void    on_window_paint(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) {}
+//         virtual void    on_window_mouse_click(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) {}
+//         virtual void    on_window_mouse_release(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) {}
+//         virtual void    on_window_mouse_move(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) {}
+//         virtual void    on_window_key_press(SAT_Window* AWindow, uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) {}
+//         virtual void    on_window_key_release(SAT_Window* AWindow, uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) {}
+//         virtual void    on_window_mouse_enter(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t ATime) {}
+//         virtual void    on_window_mouse_leave(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t ATime) {}
+//         virtual void    on_window_client_message(SAT_Window* AWindow, uint32_t AData) {}  
+//         virtual void    on_window_timer(SAT_Window* AWindow, double ADelta) {}
+// };
+
+class SAT_BaseWindow
+{
+    public:
+        SAT_BaseWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0) {}
+        virtual ~SAT_BaseWindow() {}
+    public:
+        virtual void    show() = 0;
+        virtual void    hide() = 0;
+        virtual void    setPos(int32_t AXpos, int32_t AYpos) = 0;
+        virtual void    setSize(uint32_t AWidth, uint32_t AHeight) = 0;
+        virtual void    setTitle(const char* ATitle) = 0;
+        virtual void    showMouseCursor() = 0;
+        virtual void    hideMouseCursor() = 0;
+        virtual void    grabMouseCursor() = 0;
+        virtual void    releaseMouseCursor() = 0;
+        virtual void    setMouseCursorPos(int32_t AXpos, int32_t AYpos) = 0;
+        virtual void    setMouseCursorShape(int32_t ACursor) = 0;
+        virtual void    reparent(intptr_t AParent) = 0;
+        virtual void    invalidate(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) = 0;
+        virtual void    sendClientMessage(uint32_t AData, uint32_t AType) = 0;
+        virtual void    eventLoop() = 0;
+        virtual void    startEventThread() = 0;
+        virtual void    stopEventThread() = 0;
+    public:
+        virtual void    on_window_show() {}
+        virtual void    on_window_hide() {}
+        virtual void    on_window_move(int32_t AXpos, int32_t AYpos) {}
+        virtual void    on_window_resize(uint32_t AWidth, uint32_t AHeight) {}
+        virtual void    on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) {}
+        virtual void    on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) {}
+        virtual void    on_window_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) {}
+        virtual void    on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) {}
+        virtual void    on_window_key_press(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) {}
+        virtual void    on_window_key_release(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) {}
+        virtual void    on_window_mouse_enter(int32_t AXpos, int32_t AYpos, uint32_t ATime) {}
+        virtual void    on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint32_t ATime) {}
+        virtual void    on_window_client_message(uint32_t AData) {}  
+        virtual void    on_window_timer(double ADelta) {}
+};
+
+//----------------------------------------------------------------------
+//
+// widget
+//
+//----------------------------------------------------------------------
+
+class SAT_WidgetOwner
+{
+};
+
+class SAT_WidgetListener
+{
+};
+
+class SAT_BaseWidget
+{
+    public:
+        SAT_BaseWidget(SAT_Rect ARect) {}
+        virtual ~SAT_BaseWidget() {}
+    public:
+        virtual void setListener(SAT_WidgetListener* AOwner) {}
+    public:
+        virtual void on_widget_show(SAT_WidgetOwner* AOwner) {}
+        virtual void on_widget_hide(SAT_WidgetOwner* AOwner) {}
+        virtual void on_widget_paint(SAT_PaintContext* AContext) {}
+};
