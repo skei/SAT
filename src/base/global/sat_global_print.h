@@ -212,7 +212,7 @@ const char* SAT_GlobalPrint::stripPath(const char* buffer)
 
     void SAT_GlobalPrint::setupSocket()
     {
-        #if define SAT_LINUX
+        #if defined SAT_LINUX
             MSocketHandle = socket(PF_UNIX,SOCK_STREAM,0);
             sockaddr_un address;
             memset(&address,0,sizeof(sockaddr_un));

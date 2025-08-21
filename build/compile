@@ -199,7 +199,7 @@ if [[ "$SYSTEM" == *"LINUX"* ]]; then
     LIB+=" -ldl -lrt"
 fi
 
-if [[ "$SYSTEM" == *"WIN32"* ]]; then
+if [[ "$SYSTEM" == *"WINDOWS"* ]]; then
     WIN32=true
     CC="/usr/bin/x86_64-w64-mingw32-g++"
     FLAGS+=" -static-libgcc"
