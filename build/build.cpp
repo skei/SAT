@@ -116,7 +116,7 @@ void myWindow::on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, ui
     MPainter->setFillColor(SAT_DarkRed);
     MPainter->fillRect(AXpos,AYpos,AWidth,AHeight);
     MPainter->setTextColor(SAT_White);
-    MPainter->drawText(SAT_Rect(AXpos,AYpos,AWidth,AHeight),"Hello world",SAT_TEXT_ALIGN_CENTER);
+    MPainter->drawText(SAT_Rect(getWidth(),getHeight()),"Hello world",SAT_TEXT_ALIGN_CENTER);
 }
 
 //----------------------------------------------------------------------

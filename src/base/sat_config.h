@@ -44,7 +44,11 @@
 // #define SAT_TWEEN_MAX_VALUES                        4
 // #define SAT_WIDGET_NUM_VALUES                       16
 // #define SAT_WINDOW_DBL_CLICK_MS                     200
-// #define SAT_WINDOW_BUFFER_MIN_SIZE                  256
+#define SAT_WINDOW_BUFFER_MIN_SIZE                  256
+#define SAT_WINDOW_REALIGN_QUEUE_SIZE               64
+#define SAT_WINDOW_REDRAW_QUEUE_SIZE                256
+#define SAT_WINDOW_PAINT_QUEUE_SIZE                 256
+#define SAT_WINDOW_RESIZE_QUEUE_SIZE                64
 // #define SAT_WINDOW_TIMER_MS                         20
 
 //----------------------------------------
