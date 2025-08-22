@@ -8,7 +8,6 @@
 
 #include "base/sat.h"
 
-#include "plugin/sat_entry.h"
 #include "plugin/sat_plugin.h"
 #include "plugin/sat_processor.h"
 
@@ -16,8 +15,10 @@
 #include "plugin/format/clap/sat_clap_host_proxy.h"
 #include "plugin/format/clap/sat_clap_plugin_proxy.h"
 
-#include "gui/sat_window.h"
 #include "gui/sat_painter.h"
+#include "gui/sat_widget.h"
+#include "gui/sat_window.h"
+#include "gui/sat_widget_window.h"
 
 //----------------------------------------------------------------------
 //
@@ -29,7 +30,6 @@ class myPlugin
 : public SAT_Plugin
 {
     private:
-        SAT_ClapGui*    MGui;
         SAT_ClapParams  MParams;
     public:
         myPlugin(const clap_plugin_descriptor_t* ADescriptor, const clap_host_t* AHost);
@@ -58,7 +58,6 @@ uint32_t myPlugin::params_count()
     return 0;
 }
 
-
 //----------
 
 const clap_plugin_descriptor_t myDescriptor = 
@@ -77,7 +76,10 @@ const clap_plugin_descriptor_t myDescriptor =
 
 //----------
 
-SAT_SIMPLE_PLUGIN_ENTRY(myDescriptor,myPlugin)
+#ifndef SAT_NO_ENTRY
+    #include "plugin/sat_entry.h"
+    SAT_REGISTER_SINGLE_PLUGIN(myDescriptor,myPlugin)
+#endif
 
 //----------------------------------------------------------------------
 //
@@ -129,11 +131,8 @@ void test_debug()
 {
 
     // SAT_Assert(1==0);
-
     // SAT_PrintCallStack;
-
     // --- memtrace ---
-
     // uint8_t* test = (uint8_t*)malloc(1024);
     // uint8_t* test2 = new uint8_t[512];
     // SAT_PRINT("test %p test2 %p\n",test,test2);
@@ -141,51 +140,44 @@ void test_debug()
     // delete [] test2;
     // //delete test; // mismatch
     // //free(test2); // mismatch
-
     // --- observer ---
-
-    // const char* teststr = "string 123\0";
-    // double      testdbl = 3.14;
-    // void*       testptr = 0; // &teststr;
+    // const char* test_str = "string 123\0";
+    // double      test_dbl = 3.14;
+    // void*       test_ptr = 0; // &teststr;
     // // SAT_PRINT("teststr %s testdlb %.3f testptr %p\n",teststr,testdbl,testptr);
-    // SAT_Observe(SAT_OBSERVE_DOUBLE, &testdbl,"test - dbl");
-    // SAT_Observe(SAT_OBSERVE_STR,    &teststr,"test - str");
-    // SAT_Observe(SAT_OBSERVE_PTR,    &testptr,"test - ptr");
+    // SAT_Observe(SAT_OBSERVE_DOUBLE, &test_dbl,"test_dbl");
+    // SAT_Observe(SAT_OBSERVE_STR,    &test_str,"test_str");
+    // SAT_Observe(SAT_OBSERVE_PTR,    &test_ptr,"test_ptr");
     // SAT_PrintObservers;
-
     // --- crash handler ---
-
     // int* ptr = nullptr;
     // int a = *ptr;
     // SAT_PRINT("a = %i\n",a);
-
 }
 
 //----------
 
 int main(void)
 {
-    //clap_entry.init("./");
+    // test_debug();
 
-    SAT_PRINT("OS: %s\n",SAT.SYSTEM->getOSString());
+    // SAT_PRINT("OS: %s\n",SAT.SYSTEM->getOSString());
     // SAT_DPRINT("hello world!\n");
     // SAT_TRACE;
-
     // SAT_LOG("WARNING! no window available");
     // SAT_PRINT("width %i height %i depth %i\n",SAT.GUI->getScreenWidth(),SAT.GUI->getScreenHeight(),SAT.GUI->getScreenDepth());
 
-    // test_debug();
-
+    //clap_entry.init("./");
     myPlugin* plugin = new myPlugin(nullptr,nullptr);
-    delete plugin;
 
-    myWindow* window = new myWindow(640,480);
-    window->show();
-    window->eventLoop();
-    window->hide();
-    delete window;
+    // myWindow* window = new myWindow(640,480);
+    // window->show();
+    // window->eventLoop();
+    // window->hide();
+    // delete window;
 
     //clap_entry.deinit();
+    delete plugin;
     return 0;
 }
 

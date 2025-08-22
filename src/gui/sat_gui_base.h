@@ -52,8 +52,11 @@ class SAT_Widget;
 
 struct SAT_PaintContext
 {
-    SAT_Painter*    painter     = nullptr;
-    SAT_Rect        update_rect = {};
+    SAT_Painter*    painter         = nullptr;
+    SAT_Rect        update_rect     = {};
+    uint32_t        current_frame   = 0;
+    double          previous_time   = 0.0;
+
 };
 
 class SAT_PaintSource
@@ -213,6 +216,62 @@ class SAT_BaseSurface
 
 //----------------------------------------------------------------------
 //
+// widget
+//
+//----------------------------------------------------------------------
+
+// class SAT_BaseWidget;
+// typedef SAT_Array<SAT_BaseWidget*> SAT_WidgetArray;
+
+/*
+    some widget might need to konw things like window painter, etc..
+    so they can initialize buffers, autosize text (so they need to use
+    the window painter), etc..
+    we give the widgets the owner during on_widget_show/hide,
+    so they can save it for later, if needed..
+*/
+
+class SAT_WidgetOwner
+{
+    public:
+        virtual SAT_Painter*    do_widget_owner_get_painter()  { return nullptr; }
+        virtual SAT_Rect        do_widget_owner_get_rect()     { return SAT_Rect(); }
+};
+
+/*
+    root widget -> window
+    or should we try to make the window a root-widget itself?
+    (saving us one step of redirection)..
+*/
+
+/*
+    class SAT_WidgetListener
+    {
+    };
+*/
+
+/*
+    class SAT_BaseWidget
+    {
+        public:
+            SAT_BaseWidget(SAT_Rect ARect) {}
+            virtual ~SAT_BaseWidget() {}
+        public:
+            virtual void appendChildWidget(SAT_BaseWidget* AWidget) {}
+            virtual void deleteChildWidgets() {}
+        public:
+            virtual void on_widget_show(SAT_WidgetOwner* AOwner) {}
+            virtual void on_widget_hide(SAT_WidgetOwner* AOwner) {}
+            virtual void on_widget_paint(SAT_PaintContext* AContext) {}
+        public:
+            virtual void do_widget_update(SAT_BaseWidget* AWidget) {}
+            virtual void do_widget_realign(SAT_BaseWidget* AWidget) {}
+            virtual void do_widget_redraw(SAT_BaseWidget* AWidget) {}
+    };
+*/
+
+//----------------------------------------------------------------------
+//
 // window
 //
 //----------------------------------------------------------------------
@@ -221,24 +280,13 @@ class SAT_BaseSurface
 // {
 // };
 
-// class SAT_WindowListener
-// {
-//     public:
-//         virtual void    on_window_show(SAT_Window* AWindow) {}
-//         virtual void    on_window_hide(SAT_Window* AWindow) {}
-//         virtual void    on_window_move(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos) {}
-//         virtual void    on_window_resize(SAT_Window* AWindow, uint32_t AWidth, uint32_t AHeight) {}
-//         virtual void    on_window_paint(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) {}
-//         virtual void    on_window_mouse_click(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) {}
-//         virtual void    on_window_mouse_release(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) {}
-//         virtual void    on_window_mouse_move(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) {}
-//         virtual void    on_window_key_press(SAT_Window* AWindow, uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) {}
-//         virtual void    on_window_key_release(SAT_Window* AWindow, uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) {}
-//         virtual void    on_window_mouse_enter(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t ATime) {}
-//         virtual void    on_window_mouse_leave(SAT_Window* AWindow, int32_t AXpos, int32_t AYpos, uint32_t ATime) {}
-//         virtual void    on_window_client_message(SAT_Window* AWindow, uint32_t AData) {}  
-//         virtual void    on_window_timer(SAT_Window* AWindow, double ADelta) {}
-// };
+// window -> editor
+
+class SAT_WindowListener
+{
+    public:
+        virtual void do_widget_update(SAT_Widget* AWidget);
+};
 
 class SAT_BaseWindow
 {
@@ -280,29 +328,3 @@ class SAT_BaseWindow
         virtual void    on_window_timer(double ADelta) {}
 };
 
-//----------------------------------------------------------------------
-//
-// widget
-//
-//----------------------------------------------------------------------
-
-class SAT_WidgetOwner
-{
-};
-
-class SAT_WidgetListener
-{
-};
-
-class SAT_BaseWidget
-{
-    public:
-        SAT_BaseWidget(SAT_Rect ARect) {}
-        virtual ~SAT_BaseWidget() {}
-    public:
-        virtual void setListener(SAT_WidgetListener* AOwner) {}
-    public:
-        virtual void on_widget_show(SAT_WidgetOwner* AOwner) {}
-        virtual void on_widget_hide(SAT_WidgetOwner* AOwner) {}
-        virtual void on_widget_paint(SAT_PaintContext* AContext) {}
-};

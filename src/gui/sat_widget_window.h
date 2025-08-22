@@ -3,6 +3,7 @@
 #include "base/sat_base.h"
 #include "gui/sat_gui_base.h"
 #include "gui/sat_window.h"
+#include "gui/sat_widget.h"
 
 //----------------------------------------------------------------------
 //
@@ -10,15 +11,16 @@
 //
 //----------------------------------------------------------------------
 
-class SAT_PaintWindow
+class SAT_WidgetWindow
 : public SAT_Window
+, public SAT_WidgetOwner
+, public SAT_Widget
 {
     public:
-        SAT_PaintWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
-        virtual ~SAT_PaintWindow();
+        SAT_WidgetWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
+        virtual ~SAT_WidgetWindow();
     private:
-        SAT_Renderer*   MRenderer = nullptr;
-        SAT_Painter*    MPainter = nullptr;
+        SAT_Widget* MRootWidget = nullptr;
 };
 
 //----------------------------------------------------------------------
@@ -27,11 +29,12 @@ class SAT_PaintWindow
 //
 //----------------------------------------------------------------------
 
-SAT_PaintWindow::SAT_PaintWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent)
+SAT_WidgetWindow::SAT_WidgetWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent)
 : SAT_Window(AWidth, AHeight, AParent)
+, SAT_Widget(SAT_Rect(AWidth,AHeight))
 {
 }
 
-SAT_PaintWindow::~SAT_PaintWindow()
+SAT_WidgetWindow::~SAT_WidgetWindow()
 {
 }

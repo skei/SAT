@@ -25,6 +25,7 @@
 #define SAT_MAX_NAME_LENGTH                         64
 #define SAT_MAX_PATH_LENGTH                         1024
 #define SAT_MAX_STRING_LENGTH                       256
+#define SAT_MAX_VALUE_TEXT_LENGTH                   32
 
 //----------------------------------------
 // plugin
@@ -101,7 +102,7 @@
 
 // #define SAT_PRINT_ALWAYS
 // #define SAT_PRINT_PRETTY_FUNCTION
-// #define SAT_PRINT_SOCKET
+#define SAT_PRINT_SOCKET
 #define SAT_PRINT_THREAD
 #define SAT_PRINT_TIME
 
@@ -118,6 +119,8 @@
 
 // #define SAT_INCLUDE_ARA_EXTENSIONS
 // #define SAT_INCLUDE_REAPER_EXTENSIONS
+
+// #define SAT_NO_ENTRY
 
 //------------------------------
 // setup in compile script:

@@ -14,6 +14,24 @@
     };
 */
 
+//----------
+
+/*
+    reaper v7.43+dev0821 - August 21 2025:
+    https://github.com/justinfrankel/reaper-sdk/blob/main/sdk/reaper_plugin_fx_embed.h    
+    
+    CLAP: support embedded ui
+    host requests "cockos.reaper_embedui", plugin returns
+
+    struct clap_plugin_reaper_embedui
+    {
+        INT_PTR *(*inline_editor)(const clap_plugin_t *plugin, int msg, void *param1, void *param2);
+    };
+
+*/
+
+//----------
+
 #include "base/sat_base.h"
 #include "plugin/format/clap/sat_clap.h"
 // #include "plugin/format/clap/sat_clap_plugin.h"

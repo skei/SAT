@@ -93,7 +93,8 @@ SAT_PRINT("appendSection: %s\n",ASection);
   SAT_IniSection* findSection(const char* ASection) {
     for (uint32_t i=0; i<MSections.size(); i++) {
       SAT_IniSection* section = MSections[i];
-      if (strcmp(section->name, ASection) == 0) {
+      //if (strcmp(section->name, ASection) == 0) {
+      if (SAT_IsEqual(section->name, ASection)) {
         return section;
       }
     }
@@ -120,7 +121,8 @@ SAT_PRINT("appendKey: section '%s' name '%s' value '%s'\n",ASection,AName,AValue
     if (section) {
       for (uint32_t i=0; i<section->keys.size(); i++) {
         SAT_IniKey* key =section->keys[i];
-        if (strcmp(key->name, AKey) == 0) return key;
+        //if (strcmp(key->name, AKey) == 0) return key;
+        if (SAT_IsEqual(key->name,AKey)) return key;
       }
     }
     return nullptr;

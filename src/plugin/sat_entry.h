@@ -44,7 +44,7 @@
 
 #ifdef SAT_INCLUDE_REGISTRY
 
-    #define SAT_SIMPLE_PLUGIN_ENTRY(DESC,PLUG)                                                                                  \
+    #define SAT_REGISTER_SINGLE_PLUGIN(DESC,PLUG)                                                                               \
                                                                                                                                 \
         void SAT_Register(SAT_GlobalRegistry* ARegistry)                                                                        \
         {                                                                                                                       \

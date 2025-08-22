@@ -8,6 +8,7 @@
 
 #include "base/sat_base.h"
 #include "base/type/sat_array.h"
+#include "base/util/sat_strutils.h"
 
 //----------------------------------------------------------------------
 //
@@ -76,7 +77,8 @@ bool SAT_Dictionary<T>::hasItem(const char* name)
 {
     for (uint32_t i=0; i<size(); i++)
     {
-        if (strcmp(name,MItems[i].name) == 0) return true;
+        //if (strcmp(name,MItems[i].name) == 0) return true;
+        if (SAT_IsEqual(name,MItems[i].name)) return true;
     }
     return false;
 }
@@ -92,7 +94,8 @@ T SAT_Dictionary<T>::getItem(const char* name)
 {
     for (uint32_t i=0; i<size(); i++)
     {
-        if (strcmp(name,MItems[i].name) == 0) return MItems[i].value;
+        //if (strcmp(name,MItems[i].name) == 0) return MItems[i].value;
+        if (SAT_IsEqual(name,MItems[i].name)) return MItems[i].value;
     }
     return nullptr;
 }
@@ -102,7 +105,8 @@ int32_t SAT_Dictionary<T>::getItemIndex(const char* name)
 {
     for (uint32_t i=0; i<size(); i++)
     {
-        if (strcmp(name,MItems[i].name) == 0) return i;
+        //if (strcmp(name,MItems[i].name) == 0) return i;
+        if (SAT_IsEqual(name,MItems[i].name)) return i;
     }
     return -1;
 }
@@ -124,7 +128,8 @@ T& SAT_Dictionary<T>::operator [] (const char* name)
 {
     for (uint32_t i=0; i<size(); i++)
     {
-        if (strcmp(name,MItems[i].name) == 0) return MItems[i].value;
+        //if (strcmp(name,MItems[i].name) == 0) return MItems[i].value;
+        if (SAT_IsEqual(name,MItems[i].name)) return MItems[i].value;
     }
     uint32_t idx = size();
     SAT_DictionaryItem d;
@@ -157,7 +162,8 @@ bool SAT_Dictionary<T>::removeItem(const char* name)
 {
     for (uint32_t i=0; i<size(); i++)
     {
-        if (strcmp(name,MItems[i].name) == 0)
+        //if (strcmp(name,MItems[i].name) == 0)
+        if (SAT_IsEqual(name,MItems[i].name))
         {
             MItems.remove(i);
             return true;

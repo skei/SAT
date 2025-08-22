@@ -157,7 +157,8 @@ void SAT_GlobalRegistry::setBinaryPath(const char* APath)
         uint32_t num = MDescriptors.size();
         for (uint32_t i=0; i<num; i++)
         {
-            if (strcmp(AId,MDescriptors[i]->id) == 0) return i;
+            //if (strcmp(AId,MDescriptors[i]->id) == 0) return i;
+            if (SAT_IsEqual(AId,MDescriptors[i]->id)) return i;
         }
         return -1;
     }
@@ -207,7 +208,8 @@ void SAT_GlobalRegistry::setBinaryPath(const char* APath)
         for (uint32_t i=0; i<num; i++)
         {
             const char* factory_id = MFactories[i]->getId();
-            if (strcmp(AId,factory_id) == 0)
+            //if (strcmp(AId,factory_id) == 0)
+            if (SAT_IsEqual(AId,factory_id))
             {
                 return i;
             }

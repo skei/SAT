@@ -34,6 +34,14 @@ class SAT_Window
     public:
         SAT_Window(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
         virtual ~SAT_Window();
+    private: // buffer
+        // SAT_Surface*    MBuffer         = nullptr;
+        // uint32_t        MBufferWidth    = 0; // allocated width
+        // uint32_t        MBufferHeight   = 0; // allocated height
+    private: // painting
+        // SAT_Renderer*   MRenderer = nullptr;
+        // SAT_Painter*    MPainter = nullptr;
+    
 };
 
 //----------------------------------------------------------------------
@@ -50,3 +58,8 @@ SAT_Window::SAT_Window(uint32_t AWidth, uint32_t AHeight, intptr_t AParent)
 SAT_Window::~SAT_Window()
 {
 }
+
+//------------------------------
+//
+//------------------------------
+

@@ -4,6 +4,7 @@
 
 #include "sat.h"
 #include "base/util/sat_integer_math.h"
+//#include "base/util/sat_strutils.h"
 
 //----------------------------------------------------------------------
 //
@@ -71,7 +72,8 @@ public:
   //}
 
   //bool operator == (const TYPE* str) {
-  //  //return (strcmp(MBuffer,str) == 0) ? true : false;
+  //  ////return (strcmp(MBuffer,str) == 0) ? true : false;
+  //  //return (SAT_IsEqual(MBuffer,str)) ? true : false;
   //  return false;
   //}
 

@@ -1,12 +1,24 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "plugin/sat_entry.h"
+#include "base/util/sat_strutils.h"
+
+#include "plugin/sat_plugin_base.h"
+#include "plugin/sat_editor.h"
+#include "plugin/sat_parameter.h"
+#include "plugin/sat_audio_port.h"
+#include "plugin/sat_note_port.h"
+#include "plugin/sat_processor.h"
+
 #include "plugin/format/clap/sat_clap.h"
 #include "plugin/format/clap/sat_clap_plugin.h"
 #include "plugin/format/clap/sat_clap_extensions.h"
 
-typedef SAT_Array<SAT_ClapExtension*> SAT_ClapExtensionArray;
+
+typedef SAT_Array<SAT_ClapExtension*>   SAT_ExtensionArray;
+typedef SAT_Array<SAT_Parameter*>       SAT_ParameterArray;
+typedef SAT_Array<SAT_AudioPort*>       SAT_AudioPortArray;
+typedef SAT_Array<SAT_NotePort*>        SAT_NotePortArray;
 
 //----------------------------------------------------------------------
 //
@@ -16,6 +28,8 @@ typedef SAT_Array<SAT_ClapExtension*> SAT_ClapExtensionArray;
 
 class SAT_Plugin
 : public SAT_ClapPlugin
+, public SAT_EditorListener
+, public SAT_ProcessorListener
 {
     public:
 
@@ -44,10 +58,52 @@ class SAT_Plugin
         const void*         findExtension(const char* AName);
         int32_t             findExtensionIndex(const char* AName);
 
+    public: // clap extensions
+
+    public: // parameters
+
+        void                appendParameter(SAT_Parameter* AParameter);
+        void                deleteAllParameters();
+        uint32_t            getNumParameters();
+        SAT_Parameter*      getParameter(uint32_t AIndex);
+        SAT_Parameter*      findParameter(uint32_t AId);
+        SAT_Parameter*      findParameter(const char* AName, const char* AModule=nullptr);
+        int32_t             findParameterIndex(uint32_t AId);
+        int32_t             findParameterIndex(const char* AName, const char* AModule=nullptr);
+
+    public: // presets
+    public: // audio ports
+
+        void                appendAudioPort(SAT_AudioPort* APort);
+        void                deleteAllAudioPorts();
+        uint32_t            getNumAudioPorts();
+        SAT_AudioPort*      getAudioPort(uint32_t AIndex);
+
+    public: // note ports
+
+        void                appendNotePort(SAT_NotePort* APort);
+        void                deleteAllNotePorts();
+        uint32_t            getNumNotePorts();
+        SAT_NotePort*       getNotePort(uint32_t AIndex);
+
+    public: // processor
+
+        void                setProcessor(SAT_Processor* AProcessor);
+        void                do_processor_update_parameter(uint32_t AId, sat_param_t AValue) override;
+
+    public: // editor
+
+        void                do_editor_update_parameter(SAT_Parameter* AParameter, sat_param_t AValue) override;
+
     private:
 
-        // bool                    MStaticExtensions   = false;
-        SAT_ClapExtensionArray  MExtensions         = {};
+        SAT_ExtensionArray  MExtensions     = {};
+        SAT_ParameterArray  MParameters     = {};
+      //SAT_PresetManager   MPresets        = {}
+        SAT_AudioPortArray  MAudioPorts     = {};
+        SAT_NotePortArray   MNotePorts      = {};
+        SAT_Processor*      MProcessor      = {};
+        SAT_Editor*         MEditor         = {};
 
 };
 
@@ -66,6 +122,7 @@ SAT_Plugin::~SAT_Plugin()
 {
     #ifndef SAT_NO_AUTODELETE
         deleteAllExtensions();
+        deleteAllParameters();
     #endif
 }
 
@@ -123,6 +180,14 @@ void SAT_Plugin::on_main_thread()
 //------------------------------
 
 //..
+
+//------------------------------
+// editor listener
+//------------------------------
+
+//------------------------------
+// processor listener
+//------------------------------
 
 //------------------------------
 // extensions
@@ -225,15 +290,211 @@ int32_t SAT_Plugin::findExtensionIndex(const char* AName)
         if (ext)
         {
             const char* id = ext->getId();
-            if (id && (strcmp(AName,id) == 0)) return i;
+            if (id && SAT_IsEqual(AName,id)) return i;
             else
             {
                 id = MExtensions[i]->getCompatId();
-                if (id && (strcmp(AName,id) == 0)) return i;
+                if (id && SAT_IsEqual(AName,id)) return i;
             }
         }
     }
     return -1;
 }
 
+//------------------------------
+// parameters
+//------------------------------
 
+/*
+    we are currently using index as id for performance reasons, so we don't have
+    to search through all the parameters to find parameter with a certain id..
+    parameter updates from clap uses id.. but we also get the cookie = ptr back
+    to this class, so we could just look up the indedx from that!
+    TODO: investigate.. does all hosts send the cookie? SAT_Assert(cookie)...
+*/
+
+void SAT_Plugin::appendParameter(SAT_Parameter* AParameter)
+{
+    SAT_Assert(AParameter);
+    uint32_t index = MParameters.size();
+    MParameters.append(AParameter);
+    AParameter->setIndex(index);
+    AParameter->setId(index);
+}
+
+void SAT_Plugin::deleteAllParameters()
+{
+    uint32_t num = MParameters.size();
+    for (uint32_t i=0; i<num; i++)
+    {
+        if (MParameters[i])
+        {
+            delete MParameters[i];
+            // MParameters[i] = nullptr;
+        }
+    }
+    MParameters.clear();
+}
+
+uint32_t SAT_Plugin::getNumParameters()
+{
+    return MParameters.size();
+}
+
+SAT_Parameter* SAT_Plugin::getParameter(uint32_t AIndex)
+{
+    return MParameters[AIndex];
+}
+
+SAT_Parameter* SAT_Plugin::findParameter(uint32_t AId)
+{
+    int32_t index = findParameterIndex(AId);
+    if (index >= 0) return MParameters[index];
+    return nullptr;
+}
+
+SAT_Parameter* SAT_Plugin::findParameter(const char* AName, const char* AModule)
+{
+    int32_t index = findParameterIndex(AName,AModule);
+    if (index >= 0) return MParameters[index];
+    return nullptr;
+}
+
+int32_t SAT_Plugin::findParameterIndex(uint32_t AId)
+{
+    SAT_Assert(AId >= 0);
+    SAT_Assert(AId < MParameters.size());
+    //return MParameters[AId]->getIndex();
+    uint32_t num = MParameters.size();
+    for (uint32_t i=0; i<num; i++)
+    {
+        if (MParameters[i]->getId() == AId) return i;
+    }
+    return -1;
+}
+
+int32_t SAT_Plugin::findParameterIndex(const char* AName, const char* AModule)
+{
+    uint32_t num = MParameters.size();
+    for (uint32_t i=0; i<num; i++)
+    {
+        const char* param_name = MParameters[i]->getName();
+        if (param_name && SAT_IsEqual(param_name,AName))
+        {
+            if (AModule)
+            {
+                const char* param_module = MParameters[i]->getModule();
+                if (param_module && SAT_IsEqual(param_module,AModule))
+                {
+                    return i;
+                }
+            }
+            else return i;
+        }
+    }
+    return -1;
+}
+
+//------------------------------
+// presets
+//------------------------------
+
+//------------------------------
+// audio ports
+//------------------------------
+
+void SAT_Plugin::appendAudioPort(SAT_AudioPort* APort)
+{
+    uint32_t index = MAudioPorts.size();
+    MAudioPorts.append(APort);
+    APort->setIndex(index);
+}
+
+void SAT_Plugin::deleteAllAudioPorts()
+{
+    uint32_t num = MAudioPorts.size();
+    for (uint32_t i=0; i<num; i++)
+    {
+        if (MAudioPorts[i])
+        {
+            delete MAudioPorts[i];
+            // MAudioPorts[i] = nullptr;
+        }
+    }
+    MAudioPorts.clear();
+}
+
+uint32_t SAT_Plugin::getNumAudioPorts()
+{
+    return MAudioPorts.size();
+}
+
+SAT_AudioPort* SAT_Plugin::getAudioPort(uint32_t AIndex)
+{
+    return MAudioPorts[AIndex];
+}
+
+//------------------------------
+// note ports
+//------------------------------
+
+void SAT_Plugin::appendNotePort(SAT_NotePort* APort)
+{
+    uint32_t index = MNotePorts.size();
+    MNotePorts.append(APort);
+    APort->setIndex(index);
+}
+
+void SAT_Plugin::deleteAllNotePorts()
+{
+    uint32_t num = MNotePorts.size();
+    for (uint32_t i=0; i<num; i++)
+    {
+        if (MNotePorts[i])
+        {
+            delete MNotePorts[i];
+            // MNotePorts[i] = nullptr;
+        }
+    }
+    MNotePorts.clear();
+}
+
+uint32_t SAT_Plugin::getNumNotePorts()
+{
+    return MNotePorts.size();
+}
+
+SAT_NotePort* SAT_Plugin::getNotePort(uint32_t AIndex)
+{
+    return MNotePorts[AIndex];
+}
+
+//------------------------------
+// processor
+//------------------------------
+
+void SAT_Plugin::setProcessor(SAT_Processor* AProcessor)
+{
+    SAT_Assert(AProcessor);
+    MProcessor = AProcessor;
+}
+
+//------------------------------
+// processor listener
+//------------------------------
+
+void SAT_Plugin::do_processor_update_parameter(uint32_t AId, sat_param_t AValue)
+{
+}
+
+//------------------------------
+// editor
+//------------------------------
+
+//------------------------------
+// editor listener
+//------------------------------
+
+void SAT_Plugin::do_editor_update_parameter(SAT_Parameter* AParameter, sat_param_t AValue)
+{
+}

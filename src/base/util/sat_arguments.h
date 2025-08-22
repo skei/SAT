@@ -3,6 +3,7 @@
 //----------------------------------------------------------------------
 
 #include "sat.h"
+#include "base/util/sat_strutils.h"
 
 class SAT_Arguments {
 
@@ -101,7 +102,8 @@ public:
 
   int32_t findArg(const char* arg) {
     for (int32_t i=0; i<MArgc; i++) {
-      if (strcmp(arg,MArgv[i]) == 0) return i;
+      //if (strcmp(arg,MArgv[i]) == 0) return i;
+      if (SAT_IsEqual(arg,MArgv[i])) return i;
     }
     return -1;
   }

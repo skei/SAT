@@ -18,11 +18,6 @@ class SAT_ClapParams
 
     public:
 
-        // SAT_ClapParams() {}
-        // virtual ~SAT_ClapParams() {}
-
-    public:
-
         const char* getId() final       { return CLAP_EXT_PARAMS; }
         const void* getPtr() final      { return &MPlugExtParams; }
         const void* getHostPtr() final  { return &MHostExtParams; }
