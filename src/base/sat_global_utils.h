@@ -60,31 +60,30 @@
         return 1;
     }
 
-    /*
-        void* operator new  (std::size_t count );
-        void* operator new[](std::size_t count );
-        void* operator new  (std::size_t count, const std::nothrow_t& tag);
-        void* operator new[](std::size_t count, const std::nothrow_t& tag);
+    // see:
+    // https://en.cppreference.com/w/cpp/memory/new/operator_new.html    
+    // https://en.cppreference.com/w/cpp/memory/new/operator_delete.html
 
-        void operator delete  (void* ptr); 	
-        void operator delete[](void* ptr);
-        void operator delete  (void* ptr, const std::nothrow_t& tag);
-        void operator delete[](void* ptr, const std::nothrow_t& tag);
-        void operator delete  (void* ptr, std::size_t sz);
-        void operator delete[](void* ptr, std::size_t sz);
-    */
-
-    // //void operator delete (void* ptr) /*throw()*/ {}
+    // void operator delete (void* ptr) /*throw()*/ {}
     // void operator delete (void* ptr) _GLIBCXX_USE_NOEXCEPT {}
-
-    // //void operator delete[] (void* ptr) /*throw()*/ {0
+    // void operator delete[] (void* ptr) /*throw()*/ {0
     // void operator delete [] (void* ptr) _GLIBCXX_USE_NOEXCEPT {0
 
     void* operator  new         (const size_t size, const char* file, unsigned int line)    { return SAT.DEBUG->MEMTRACE->malloc(size, file, line, 1); }
     void* operator  new[]       (const size_t size, const char* file, unsigned int line)    { return SAT.DEBUG->MEMTRACE->malloc(size, file, line, 1); }
 
+    // void* operator new  (std::size_t count, const std::nothrow_t& tag)  { SAT.PRINT->print("new nothrow not implemented\n"); return (void*)666; }
+    // void* operator new[](std::size_t count, const std::nothrow_t& tag)  { SAT.PRINT->print("new[] nothrow not implemented\n"); return (void*)666; }
+
     void  operator  delete      (void* ptr)                                                 { return SAT.DEBUG->MEMTRACE->free(ptr, sat_memtrace_prefix_file, sat_memtrace_prefix_line, 1); }
     void  operator  delete[]    (void* ptr)                                                 { return SAT.DEBUG->MEMTRACE->free(ptr, sat_memtrace_prefix_file, sat_memtrace_prefix_line, 1); }
+
+    // void operator delete  (void* ptr, const std::nothrow_t& tag)    { SAT.PRINT->print("delete nothrow not implemented (%p)\n",ptr); }
+    // void operator delete[](void* ptr, const std::nothrow_t& tag)    { SAT.PRINT->print("delete[] nothrow not implemented (%p)\n",ptr); }
+    // void operator delete  (void* ptr, std::size_t sz)               { SAT.PRINT->print("delete size (%i) not implemented (%p)\n",sz,ptr); }
+    // void operator delete[](void* ptr, std::size_t sz)               { SAT.PRINT->print("delete[] size (%i) not implemented (%p)\n",sz,ptr); }
+
+    // -----
 
     #define new     new(__FILE__, __LINE__)
     #define delete  if (sat_memtrace_prefix(__FILE__, __LINE__)) delete

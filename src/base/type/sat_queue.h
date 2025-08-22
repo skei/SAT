@@ -1,6 +1,122 @@
-#ifndef sat_queue_included
-#define sat_queue_included
+#pragma once
+
+#include "base/sat_base.h"
+#include "base/type/sat_queue.h"
+
 //----------------------------------------------------------------------
+//
+//
+//
+//----------------------------------------------------------------------
+
+/*
+    hmmm..
+    this wreaks havoc with my mem tracer.. reports memory leaks, and i
+    can't find what it points to.. a ot of weird, modern ++ memory
+    stuff going on in there, that i don't really understand..
+    my tracker does some hackery with new/elete, so probably it's my
+    own fault.. but how can i be sure?
+    so i have problems trusting it totally.. i don't like "it's probably ok",
+    i want "i know it's perfectly ok" :-)
+    todo: look around for something else..
+*/
+
+// #include "extern/base/cameron314/concurrentqueue.h"
+// #include "extern/base/cameron314/readerwriterqueue.h"
+// #define SAT_SPSCQueue   moodycamel::ReaderWriterQueue
+// #define SAT_MPMCQueue   moodycamel::ConcurrentQueue
+
+//----------------------------------------------------------------------
+//
+//
+//
+//----------------------------------------------------------------------
+
+#include "extern/base/rigtorp/SPSCQueue.h"
+#include "extern/base/rigtorp/MPMCQueue.h"
+
+template<class T, int SIZE>
+class SAT_SPSCQueue
+{
+    public:
+        bool write(T AItem);
+        T read(T* AItem);
+    private:
+        rigtorp::SPSCQueue<T> MQueue = rigtorp::SPSCQueue<T>(SIZE);
+};
+
+//------------------------------
+//
+//------------------------------
+
+template<class T, int SIZE>
+class SAT_MPMCQueue
+{
+    public:
+        bool write(T AItem);
+        T read(T* AItem);
+    private:
+        rigtorp::MPMCQueue<T> MQueue = rigtorp::MPMCQueue<T>(SIZE);
+};
+
+//----------------------------------------------------------------------
+//
+//
+//
+//----------------------------------------------------------------------
+
+template<class T, int SIZE>
+bool SAT_SPSCQueue<T,SIZE>::write(T AItem)
+{
+    return MQueue.try_push(AItem);
+}
+
+template<class T, int SIZE>
+T SAT_SPSCQueue<T,SIZE>::read(T* AItem)
+{
+    //return MQueue.try_pop(AItem);
+    T temp;
+    if (MQueue.front())
+    {
+        *AItem = *MQueue.front();
+        MQueue.pop();
+        return true;
+    }
+    return false;
+}
+
+//------------------------------
+//
+//------------------------------
+
+template<class T, int SIZE>
+bool SAT_MPMCQueue<T,SIZE>::write(T AItem)
+{
+    return MQueue.try_push(AItem);
+}
+
+template<class T, int SIZE>
+T SAT_MPMCQueue<T,SIZE>::read(T* AItem)
+{
+    //return MQueue.try_pop(AItem);
+    T temp;
+    if (MQueue.front())
+    {
+        *AItem = *MQueue.front();
+        MQueue.pop();
+        return true;
+    }
+    return false;
+}
+
+
+//----------------------------------------------------------------------
+//
+//
+//
+//----------------------------------------------------------------------
+
+#if 0
 
 /*
   "..nothing will read the value until the size of the container is
@@ -394,5 +510,4 @@ public:
 //#include "extern/cameron314/concurrentqueue.h"
 //#include "extern/cameron314/readerwriterqueue.h"
 
-//----------------------------------------------------------------------
-#endif
+#endif // 0

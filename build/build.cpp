@@ -93,9 +93,7 @@ class myWindow
     public:
         myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
         virtual ~myWindow();
-        void on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) final;
-    private:
-        SAT_Painter* MPainter = nullptr;
+        void on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) override;
 };
 
 //------------------------------
@@ -105,16 +103,16 @@ class myWindow
 myWindow::myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent)
 : SAT_Window(AWidth,AHeight,AParent)
 {
-    MPainter = new SAT_Painter(this,this);
 }
 
 myWindow::~myWindow()
 {
-    delete MPainter;
 }
 
 void myWindow::on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight)
 {
+    //SAT_TRACE;
+    SAT_Window::on_window_paint(AXpos,AYpos,AWidth,AHeight);
     MPainter->setFillColor(SAT_DarkRed);
     MPainter->fillRect(AXpos,AYpos,AWidth,AHeight);
     MPainter->setTextColor(SAT_White);
@@ -168,16 +166,15 @@ int main(void)
     // SAT_PRINT("width %i height %i depth %i\n",SAT.GUI->getScreenWidth(),SAT.GUI->getScreenHeight(),SAT.GUI->getScreenDepth());
 
     //clap_entry.init("./");
-    myPlugin* plugin = new myPlugin(nullptr,nullptr);
+    // myPlugin* plugin = new myPlugin(nullptr,nullptr);
 
-    // myWindow* window = new myWindow(640,480);
-    // window->show();
-    // window->eventLoop();
-    // window->hide();
-    // delete window;
-
+    myWindow* window = new myWindow(640,480);
+    window->show();
+    window->eventLoop();
+    window->hide();
+    delete window;
     //clap_entry.deinit();
-    delete plugin;
+    // delete plugin;
     return 0;
 }
 

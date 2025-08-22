@@ -91,6 +91,8 @@ struct SAT_Rect
     void        overlap(SAT_Rect R);
     void        combine(SAT_Rect R);
 
+    bool        equal(SAT_Rect R);
+
  // void        remove(SAT_Rect ARect);
 
     union {
@@ -583,3 +585,12 @@ void SAT_Rect::combine(SAT_Rect R)
 // void SAT_Rect::remove(SAT_Rect ARect)
 // {
 // }
+
+bool SAT_Rect::equal(SAT_Rect R)
+{
+    if (abs(x - R.x) > SAT_TINY) return false;
+    if (abs(y - R.y) > SAT_TINY) return false;
+    if (abs(w - R.w) > SAT_TINY) return false;
+    if (abs(h - R.h) > SAT_TINY) return false;
+    return true;
+}

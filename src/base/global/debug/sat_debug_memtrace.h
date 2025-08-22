@@ -95,8 +95,8 @@ void SAT_MemTrace::deactivate(SAT_GlobalBase* AGlobal)
 void* SAT_MemTrace::malloc(unsigned int size, const char* file, const unsigned int line, const unsigned int flag)
 {
     #ifdef SAT_DEBUG_MEMTRACE
-        //print("malloc size %i file %s line %i\n",size,strip_path(file),line);
         void* p = ::malloc(size);
+        //SAT_GLOBAL_DPRINT("memtrace.malloc  %i bytes @ %p (%s:%i)\n",size,p,strip_path(file),line);
         SAT_MemTraceNode node;
         strcpy(node.file,strip_path(file));
         node.line = line;
@@ -114,7 +114,7 @@ void* SAT_MemTrace::malloc(unsigned int size, const char* file, const unsigned i
 void* SAT_MemTrace::calloc(const unsigned int n, unsigned int size, const char* file, const unsigned int line)
 {
     #ifdef SAT_DEBUG_MEMTRACE
-        //print("calloc\n");
+        //SAT_GLOBAL_DPRINT("memtrace.calloc  TODO\n");
         void* p = ::calloc(n,size);
         return p;
     #else
@@ -125,7 +125,7 @@ void* SAT_MemTrace::calloc(const unsigned int n, unsigned int size, const char* 
 void* SAT_MemTrace::realloc(void* ptr, const unsigned int size, const char* file, const unsigned int line)
 {
     #ifdef SAT_DEBUG_MEMTRACE
-        //print("realloc\n");
+        //SAT_GLOBAL_DPRINT("memtrace.realloc TODO\n");
         void* p = ::realloc(ptr,size);
         bool found = false;
         for (uint32_t i=0; i<MMemTraceNodes.size(); i++)
@@ -139,7 +139,7 @@ void* SAT_MemTrace::realloc(void* ptr, const unsigned int size, const char* file
         }
         if (!found)
         {
-            //SAT_DPrint("Error! allocation %p not found (%s/%i)\n",ptr,strip_path(file),line);
+            //SAT_GLOBAL_DPRINT("Error! allocation %p not found (%s/%i)\n",ptr,strip_path(file),line);
         }
         return p;
     #else
@@ -154,42 +154,40 @@ void* SAT_MemTrace::realloc(void* ptr, const unsigned int size, const char* file
 void SAT_MemTrace::free(void* ptr, const char* file, const unsigned int line, const unsigned int flag)
 {
     #ifdef SAT_DEBUG_MEMTRACE
-        //print("free ptr %p file %s line %i\n",ptr,strip_path(file),line);
-        //bool found = false;
+        //SAT_GLOBAL_DPRINT("  trying to free @ %p (%s:%i)\n",ptr,strip_path(file),line);
         // find node
         for (uint32_t i=0; i<MMemTraceNodes.size(); i++)
         {
             if (MMemTraceNodes[i].ptr == ptr) {
-                // found = true;
+                //SAT_GLOBAL_DPRINT("memtrace.free    %i bytes @ %p (%s:%i)\n",MMemTraceNodes[i].size,ptr,strip_path(file),line);
                 // check for malloc/fre mismatch
                 if (MMemTraceNodes[i].flag != flag)
                 {
                     if (MMemTraceNodes[i].flag == 0)
                     {
-                        SAT_GLOBAL_DPRINT("  MemTrace - mismatch! malloc (%s:%i) delete (%s:%i)\n",MMemTraceNodes[i].file,MMemTraceNodes[i].line,strip_path(file),line);
+                        SAT_GLOBAL_DPRINT("memtrace error   mismatch! malloc (%s:%i) delete (%s:%i)\n",MMemTraceNodes[i].file,MMemTraceNodes[i].line,strip_path(file),line);
                     }
                     else
                     {
-                        SAT_GLOBAL_DPRINT("  MemTrace - mismatch! new (%s:%i) free (%s:%i)\n",MMemTraceNodes[i].file,MMemTraceNodes[i].line,strip_path(file),line);
+                        SAT_GLOBAL_DPRINT("memtrace error   mismatch! new (%s:%i) free (%s:%i)\n",MMemTraceNodes[i].file,MMemTraceNodes[i].line,strip_path(file),line);
                     }
                     // SAT_PrintCallStack();
                 }
                 // remove node
                 MMemTraceNodes.remove(i);
             }
+            // not found
+            // x11, nanovg prints a lot of these..
+            // things that calls free on something allocated in an external lib, etc..
+            else
+            {
+                // SAT_GLOBAL_DPRINT("memtrace.free    @ %p not found (%s:%i)\n",ptr,strip_path(file),line);
+            }
         }
-        // not found
-        // x11, nanovg prints a lot of these.. :-/
-        // if (!found)
-        // {
-        //     SAT_GLOBAL_DPRINT("Error! allocation %p not found (%s/%i)\n",ptr,strip_path(file),line);
-        //  }
-        // delete memory
     #endif
+    // delete memory
     ::free(ptr);
 }
-
-// print() doesn't work?
 
 void SAT_MemTrace::print_memtrace()
 {
@@ -204,7 +202,7 @@ void SAT_MemTrace::print_memtrace()
                 uint32_t  flag  = MMemTraceNodes[i].flag;
                 void*     ptr   = MMemTraceNodes[i].ptr;
                 uint32_t  size  = MMemTraceNodes[i].size;
-                SAT_GLOBAL_DPRINT("  %i. %s:%i [%s]: %i bytes at %p\n",i,file,line,(flag==1)?"new":"malloc",size,ptr);
+                SAT_GLOBAL_DPRINT("  %i. (%s:%i) [%s]: %i bytes @ %p\n",i,file,line,(flag==1)?"new":"malloc",size,ptr);
             }
         }
     #endif

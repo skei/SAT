@@ -3,7 +3,7 @@
 //----------------------------------------------------------------------
 
 #include "sat.h"
-#include "base/util/sat_integer_math.h"
+#include "base/util/sat_intmath.h"
 //#include "base/util/sat_strutils.h"
 
 //----------------------------------------------------------------------

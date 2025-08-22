@@ -1,6 +1,4 @@
-#ifndef sat_integer_math_included
-#define sat_integer_math_included
-//----------------------------------------------------------------------
+#pragma once
 
 #include "sat.h"
 //#include "base/sat_const.h"
@@ -138,6 +136,3 @@ int SAT_RmsI(const unsigned int n, const int* ar) {
   }
   return (int)(sqrtf((float)(numr/n)));
 }
-
-//----------------------------------------------------------------------
-#endif

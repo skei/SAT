@@ -18,4 +18,5 @@ typedef float               sat_sample_t;
 #include "base/type/sat_color.h"
 #include "base/type/sat_dictionary.h"
 #include "base/type/sat_point.h"
+#include "base/type/sat_queue.h"
 #include "base/type/sat_rect.h"

@@ -11,19 +11,21 @@
 //----------------------------------------------------------------------
 
 class SAT_X11Renderer
-: public SAT_BaseRenderer {
-
+: public SAT_BaseRenderer
+{
     public:
-
         SAT_X11Renderer(SAT_RendererOwner* AOwner, SAT_RenderTarget* ATarget);
         virtual ~SAT_X11Renderer();
-
     public: // BaseRenderer
-
-        void setCurrent(bool ACurrent=true) override;
-        void setViewport(SAT_Rect AViewport) override;
-        void swapBuffers() override;
-        void setVSync(bool ASync) override;
+        bool makeCurrent() final;
+        bool resetCurrent() final;
+        bool beginRendering() final;
+        bool beginRendering(int32_t AWidth, int32_t AHeight) final;
+        bool endRendering() final;
+        bool setViewport(int32_t AXpos, int32_t AYpos, int32_t AWidth, int32_t AHeight) final;
+        bool swapBuffers() final;
+        bool enableVSync() final;
+        bool disableVSync() final;
 };
 
 //----------------------------------------------------------------------
@@ -41,20 +43,51 @@ SAT_X11Renderer::~SAT_X11Renderer()
 {
 }
 
-//----------
+//------------------------------
+// base renderer
+//------------------------------
 
-void SAT_X11Renderer::setCurrent(bool ACurrent)
+bool SAT_X11Renderer::makeCurrent()
 {
+    return true;
 }
 
-void SAT_X11Renderer::setViewport(SAT_Rect AViewport)
+bool SAT_X11Renderer::resetCurrent()
 {
+    return true;
 }
 
-void SAT_X11Renderer::swapBuffers()
+bool SAT_X11Renderer::beginRendering()
 {
+    return true;
 }
 
-void SAT_X11Renderer::setVSync(bool ASync)
+bool SAT_X11Renderer::beginRendering(int32_t AWidth, int32_t AHeight)
 {
+    return true;
+}
+
+bool SAT_X11Renderer::endRendering()
+{
+    return true;
+}
+
+bool SAT_X11Renderer::setViewport(int32_t AXpos, int32_t AYpos, int32_t AWidth, int32_t AHeight)
+{
+    return true;
+}
+
+bool SAT_X11Renderer::swapBuffers()
+{
+    return true;
+}
+
+bool SAT_X11Renderer::enableVSync()
+{
+    return true;
+}
+
+bool SAT_X11Renderer::disableVSync()
+{
+    return true;
 }
