@@ -26,40 +26,6 @@
 //
 //----------------------------------------------------------------------
 
-class myPlugin
-: public SAT_Plugin
-{
-    private:
-        SAT_ClapParams  MParams;
-    public:
-        myPlugin(const clap_plugin_descriptor_t* ADescriptor, const clap_host_t* AHost);
-        virtual ~myPlugin();
-    public:
-        uint32_t params_count() final;
-};
-
-//------------------------------
-//
-//------------------------------
-
-myPlugin::myPlugin(const clap_plugin_descriptor_t* ADescriptor, const clap_host_t* AHost)
-: SAT_Plugin(ADescriptor,AHost)
-{
-    registerExtension( new SAT_ClapGui() );
-    registerStaticExtension(&MParams);
-}
-
-myPlugin::~myPlugin()
-{
-}
-
-uint32_t myPlugin::params_count()
-{
-    return 0;
-}
-
-//----------
-
 const clap_plugin_descriptor_t myDescriptor = 
 {
     .clap_version   = CLAP_VERSION,
@@ -74,7 +40,33 @@ const clap_plugin_descriptor_t myDescriptor =
     .features       = (const char*[]){ CLAP_PLUGIN_FEATURE_AUDIO_EFFECT, nullptr }
 };
 
-//----------
+class myPlugin
+: public SAT_Plugin
+{
+    private:
+        SAT_ClapParams  MParams;
+    public:
+        myPlugin(const clap_plugin_descriptor_t* ADescriptor, const clap_host_t* AHost);
+        virtual ~myPlugin();
+    public:
+        uint32_t params_count() final;
+};
+
+myPlugin::myPlugin(const clap_plugin_descriptor_t* ADescriptor, const clap_host_t* AHost)
+: SAT_Plugin(ADescriptor,AHost)
+{
+    registerStaticExtension(&MParams);
+    registerExtension( new SAT_ClapGui() );
+}
+
+myPlugin::~myPlugin()
+{
+}
+
+uint32_t myPlugin::params_count()
+{
+    return 0;
+}
 
 #ifndef SAT_NO_ENTRY
     #include "plugin/sat_entry.h"
@@ -93,12 +85,8 @@ class myWindow
     public:
         myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
         virtual ~myWindow();
-        void on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) override;
+        void on_window_paint(SAT_PaintContext* AContext, bool AResized=false) override;
 };
-
-//------------------------------
-//
-//------------------------------
 
 myWindow::myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent)
 : SAT_Window(AWidth,AHeight,AParent)
@@ -109,14 +97,15 @@ myWindow::~myWindow()
 {
 }
 
-void myWindow::on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight)
+void myWindow::on_window_paint(SAT_PaintContext* AContext, bool AResized)
 {
-    //SAT_TRACE;
-    SAT_Window::on_window_paint(AXpos,AYpos,AWidth,AHeight);
-    MPainter->setFillColor(SAT_DarkRed);
-    MPainter->fillRect(AXpos,AYpos,AWidth,AHeight);
-    MPainter->setTextColor(SAT_White);
-    MPainter->drawText(SAT_Rect(getWidth(),getHeight()),"Hello world",SAT_TEXT_ALIGN_CENTER);
+    if (AResized) { SAT_PRINT("resized\n"); }
+    SAT_Painter* painter = AContext->painter;
+    SAT_Rect rect = AContext->update_rect;
+    painter->setFillColor(SAT_DarkRed);
+    painter->fillRect(rect.x,rect.y,rect.w,rect.h);
+    painter->setTextColor(SAT_White);
+    painter->drawText(SAT_Rect(getWidth(),getHeight()),"Hello world",SAT_TEXT_ALIGN_CENTER);
 }
 
 //----------------------------------------------------------------------
@@ -127,9 +116,9 @@ void myWindow::on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, ui
 
 void test_debug()
 {
-
     // SAT_Assert(1==0);
     // SAT_PrintCallStack;
+
     // --- memtrace ---
     // uint8_t* test = (uint8_t*)malloc(1024);
     // uint8_t* test2 = new uint8_t[512];
@@ -138,6 +127,7 @@ void test_debug()
     // delete [] test2;
     // //delete test; // mismatch
     // //free(test2); // mismatch
+
     // --- observer ---
     // const char* test_str = "string 123\0";
     // double      test_dbl = 3.14;
@@ -147,13 +137,12 @@ void test_debug()
     // SAT_Observe(SAT_OBSERVE_STR,    &test_str,"test_str");
     // SAT_Observe(SAT_OBSERVE_PTR,    &test_ptr,"test_ptr");
     // SAT_PrintObservers;
+
     // --- crash handler ---
     // int* ptr = nullptr;
     // int a = *ptr;
     // SAT_PRINT("a = %i\n",a);
 }
-
-//----------
 
 int main(void)
 {

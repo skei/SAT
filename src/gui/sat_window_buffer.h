@@ -16,7 +16,8 @@ typedef SAT_SPSCQueue<uint64_t,SAT_WINDOW_RESIZE_QUEUE_SIZE> SAT_ResizeQueue;
 class SAT_WindowBuffer
 {
     public:
-        SAT_WindowBuffer();
+        // SAT_WindowBuffer();
+        SAT_WindowBuffer(SAT_SurfaceOwner* ASurfaceOwner, SAT_PainterOwner* APainterOwner, uint32_t AWidth, uint32_t AHeight);
         ~SAT_WindowBuffer();
     public:
         uint32_t            getWidth();
@@ -24,8 +25,8 @@ class SAT_WindowBuffer
         SAT_Surface*        getSurface();
         SAT_Painter*        getPainter();
     public:
-        bool                initialize(SAT_SurfaceOwner* ASurfaceOwner, SAT_PainterOwner* APainterOwner, uint32_t AWidth, uint32_t AHeight);
-        void                cleanup();
+     // bool                initialize(SAT_SurfaceOwner* ASurfaceOwner, SAT_PainterOwner* APainterOwner, uint32_t AWidth, uint32_t AHeight);
+     // void                cleanup();
         void                createBuffer(uint32_t AWidth, uint32_t AHeight);
         void                deleteBuffer();
         bool                resizeBuffer(uint32_t AWidth, uint32_t AHeight);
@@ -36,7 +37,6 @@ class SAT_WindowBuffer
         SAT_Painter*        MPainter        = nullptr;
         uint32_t            MWidth          = 0;
         uint32_t            MHeight         = 0;
-   
 };
 
 //----------------------------------------------------------------------
@@ -45,12 +45,22 @@ class SAT_WindowBuffer
 //
 //----------------------------------------------------------------------
 
-SAT_WindowBuffer::SAT_WindowBuffer()
+SAT_WindowBuffer::SAT_WindowBuffer(SAT_SurfaceOwner* ASurfaceOwner, SAT_PainterOwner* APainterOwner, uint32_t AWidth, uint32_t AHeight)
 {
+    SAT_Assert(ASurfaceOwner);
+    MSurfaceOwner = ASurfaceOwner;
+    SAT_Assert(APainterOwner);
+    MPainterOwner = APainterOwner;
+    uint32_t width = SAT_NextPowerOfTwo(AWidth);
+    if (width < SAT_WINDOW_BUFFER_MIN_SIZE) width = SAT_WINDOW_BUFFER_MIN_SIZE;
+    uint32_t height = SAT_NextPowerOfTwo(AHeight);
+    if (height < SAT_WINDOW_BUFFER_MIN_SIZE) height = SAT_WINDOW_BUFFER_MIN_SIZE;
+    createBuffer(width,height);
 }
 
 SAT_WindowBuffer::~SAT_WindowBuffer()
 {
+    deleteBuffer();
 }
 
 //------------------------------
@@ -75,29 +85,6 @@ SAT_Surface* SAT_WindowBuffer::getSurface()
 SAT_Painter* SAT_WindowBuffer::getPainter()
 {
     return MPainter;
-}
-
-//------------------------------
-// public
-//------------------------------
-
-bool SAT_WindowBuffer::initialize(SAT_SurfaceOwner* ASurfaceOwner, SAT_PainterOwner* APainterOwner, uint32_t AWidth, uint32_t AHeight)
-{
-    SAT_Assert(ASurfaceOwner);
-    MSurfaceOwner = ASurfaceOwner;
-    SAT_Assert(APainterOwner);
-    MPainterOwner = APainterOwner;
-    uint32_t width = SAT_NextPowerOfTwo(AWidth);
-    if (width < SAT_WINDOW_BUFFER_MIN_SIZE) width = SAT_WINDOW_BUFFER_MIN_SIZE;
-    uint32_t height = SAT_NextPowerOfTwo(AHeight);
-    if (height < SAT_WINDOW_BUFFER_MIN_SIZE) height = SAT_WINDOW_BUFFER_MIN_SIZE;
-    createBuffer(width,height);
-    return true;
-}
-
-void SAT_WindowBuffer::cleanup()
-{
-    deleteBuffer();
 }
 
 //------------------------------

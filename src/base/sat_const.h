@@ -87,14 +87,14 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 //
 //----------------------------------------------------------------------
 
-#define SAT_BUTTON_NONE                 0
-#define SAT_BUTTON_LEFT                 1
-#define SAT_BUTTON_MIDDLE               2
-#define SAT_BUTTON_RIGHT                3
-#define SAT_BUTTON_SCROLL_UP            4
-#define SAT_BUTTON_SCROLL_DOWN          5
-#define SAT_BUTTON_SIDE_BACKWARD        8
-#define SAT_BUTTON_SIDE_FORWARD         9
+#define SAT_BUTTON_NONE                         0
+#define SAT_BUTTON_LEFT                         1
+#define SAT_BUTTON_MIDDLE                       2
+#define SAT_BUTTON_RIGHT                        3
+#define SAT_BUTTON_SCROLL_UP                    4
+#define SAT_BUTTON_SCROLL_DOWN                  5
+#define SAT_BUTTON_SIDE_BACKWARD                8
+#define SAT_BUTTON_SIDE_FORWARD                 9
 
 #define SAT_FILE_READ_BINARY                    (char*)"rb"
 #define SAT_FILE_READ_TEXT                      (char*)"r"
@@ -103,60 +103,100 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_FILE_APPEND_BINARY                  (char*)"ab"
 #define SAT_FILE_APPEND_TEXT                    (char*)"a"
 
-#define SAT_KEY_NONE                    0
-#define SAT_KEY_ENTER                   13
-#define SAT_KEY_ESC                     27
-#define SAT_KEY_SPACE                   32
-#define SAT_KEY_HOME                    36
-#define SAT_KEY_END                     35
-#define SAT_KEY_LEFT                    37
-#define SAT_KEY_RIGHT                   39
-#define SAT_KEY_DELETE                  46
-#define SAT_KEY_BACKSPACE               8
+#define SAT_KEY_NONE                            0
+#define SAT_KEY_ENTER                           13
+#define SAT_KEY_ESC                             27
+#define SAT_KEY_SPACE                           32
+#define SAT_KEY_HOME                            36
+#define SAT_KEY_END                             35
+#define SAT_KEY_LEFT                            37
+#define SAT_KEY_RIGHT                           39
+#define SAT_KEY_DELETE                          46
+#define SAT_KEY_BACKSPACE                       8
 
-#define SAT_OBSERVE_NONE                0
-#define SAT_OBSERVE_FLOAT               1
-#define SAT_OBSERVE_DOUBLE              2
-#define SAT_OBSERVE_INT32               3
-#define SAT_OBSERVE_UINT32              4
-#define SAT_OBSERVE_CHAR                5
-#define SAT_OBSERVE_PTR                 6
-#define SAT_OBSERVE_STR                 7
+#define SAT_OBSERVE_NONE                        0
+#define SAT_OBSERVE_FLOAT                       1
+#define SAT_OBSERVE_DOUBLE                      2
+#define SAT_OBSERVE_INT32                       3
+#define SAT_OBSERVE_UINT32                      4
+#define SAT_OBSERVE_CHAR                        5
+#define SAT_OBSERVE_PTR                         6
+#define SAT_OBSERVE_STR                         7
 
-#define SAT_OS_UNKNOWN                  0
-#define SAT_OS_LINUX                    1
-#define SAT_OS_WIN32                    2
-#define SAT_OS_MAC                      3
+#define SAT_OS_UNKNOWN                          0
+#define SAT_OS_LINUX                            1
+#define SAT_OS_WIN32                            2
+#define SAT_OS_MAC                              3
 
-#define SAT_STATE_SHIFT                 0x01
-#define SAT_STATE_CAPS                  0x02
-#define SAT_STATE_CTRL                  0x04
-#define SAT_STATE_ALT                   0x08
-#define SAT_STATE_ALTGR                 0x10
+#define SAT_STATE_NONE                          0
+#define SAT_STATE_SHIFT                         0x01
+#define SAT_STATE_CAPS                          0x02
+#define SAT_STATE_CTRL                          0x04
+#define SAT_STATE_ALT                           0x08
+#define SAT_STATE_ALTGR                         0x10
 
-#define SAT_TEXT_ALIGN_CENTER           0
-#define SAT_TEXT_ALIGN_LEFT             0x01
-#define SAT_TEXT_ALIGN_RIGHT            0x02
-#define SAT_TEXT_ALIGN_TOP              0x04
-#define SAT_TEXT_ALIGN_BOTTOM           0x08
+#define SAT_TEXT_ALIGN_CENTER                   0
+#define SAT_TEXT_ALIGN_LEFT                     0x01
+#define SAT_TEXT_ALIGN_RIGHT                    0x02
+#define SAT_TEXT_ALIGN_TOP                      0x04
+#define SAT_TEXT_ALIGN_BOTTOM                   0x08
 
-#define SAT_WIDGET_REALIGN_SELF         0x00
-#define SAT_WIDGET_REALIGN_POS          0x01
-#define SAT_WIDGET_REALIGN_SIZE         0x02
-#define SAT_WIDGET_REALIGN_PARENT       0x04
-#define SAT_WIDGET_REALIGN_CHILDREN     0x08
-#define SAT_WIDGET_REALIGN_ROOT         0x10
-#define SAT_WIDGET_REALIGN_RECT         (SAT_WIDGET_REALIGN_POS | SAT_WIDGET_REALIGN_SIZE)
+#define SAT_WIDGET_LAYOUT_NONE                  0
+#define SAT_WIDGET_LAYOUT_ANCHOR_LEFT           0x01
+#define SAT_WIDGET_LAYOUT_ANCHOR_TOP            0x02
+#define SAT_WIDGET_LAYOUT_ANCHOR_RIGHT          0x04
+#define SAT_WIDGET_LAYOUT_ANCHOR_BOTTOM         0x08
+#define SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT       (SAT_WIDGET_LAYOUT_ANCHOR_TOP | SAT_WIDGET_LAYOUT_ANCHOR_LEFT)
+#define SAT_WIDGET_LAYOUT_ANCHOR_TOP_RIGHT      (SAT_WIDGET_LAYOUT_ANCHOR_TOP | SAT_WIDGET_LAYOUT_ANCHOR_RIGHT)
+#define SAT_WIDGET_LAYOUT_ANCHOR_BOTTOM_LEFT    (SAT_WIDGET_LAYOUT_ANCHOR_BOTTOM | SAT_WIDGET_LAYOUT_ANCHOR_LEFT)
+#define SAT_WIDGET_LAYOUT_ANCHOR_BOTTOM_RIGHT   (SAT_WIDGET_LAYOUT_ANCHOR_BOTTOM | SAT_WIDGET_LAYOUT_ANCHOR_RIGHT)
+#define SAT_WIDGET_LAYOUT_ANCHOR_HCENTER        0x10
+#define SAT_WIDGET_LAYOUT_ANCHOR_VCENTER        0x20
+#define SAT_WIDGET_LAYOUT_STRETCH_NONE          0x0000
+#define SAT_WIDGET_LAYOUT_STRETCH_HORIZONTAL    0x0100
+#define SAT_WIDGET_LAYOUT_STRETCH_VERTICAL      0x0200
+#define SAT_WIDGET_LAYOUT_STRETCH_ALL           (SAT_WIDGET_LAYOUT_STRETCH_HORIZONTAL | SAT_WIDGET_LAYOUT_STRETCH_VERTICAL)
+#define SAT_WIDGET_LAYOUT_FILL_NONE             0x000000
+#define SAT_WIDGET_LAYOUT_FILL_LEFT             0x010000
+#define SAT_WIDGET_LAYOUT_FILL_TOP              0x020000
+#define SAT_WIDGET_LAYOUT_FILL_RIGHT            0x040000
+#define SAT_WIDGET_LAYOUT_FILL_BOTTOM           0x080000
+#define SAT_WIDGET_LAYOUT_FILL_ALL              (SAT_WIDGET_LAYOUT_FILL_LEFT | SAT_WIDGET_LAYOUT_FILL_TOP | SAT_WIDGET_LAYOUT_FILL_RIGHT | SAT_WIDGET_LAYOUT_FILL_BOTTOM)
+#define SAT_WIDGET_LAYOUT_RELATIVE_LAYOUT       0x00000000
+#define SAT_WIDGET_LAYOUT_RELATIVE_PARENT       0x01000000
+#define SAT_WIDGET_LAYOUT_RELATIVE_ROOT         0x02000000
+#define SAT_WIDGET_LAYOUT_STACK_HORIZONTAL      0x10000000
+#define SAT_WIDGET_LAYOUT_STACK_VERTICAL        0x20000000
+#define SAT_WIDGET_LAYOUT_STACK_END             0x40000000
 
-#define SAT_WIDGET_REDRAW_SELF          0
-#define SAT_WIDGET_REDRAW_PARENT        1
-#define SAT_WIDGET_REDRAW_ROOT          2
-#define SAT_WIDGET_REDRAW_CHILDREN      4
+#define SAT_WIDGET_OPTION_NONE                  0
+#define SAT_WIDGET_OPTION_AUTO_HIDE             0x01
+#define SAT_WIDGET_OPTION_AUTO_CURSOR           0x02
+#define SAT_WIDGET_OPTION_AUTO_HINT             0x04
 
-#define SAT_WIDGET_UPDATE_VALUE         0
+#define SAT_WIDGET_STATE_NONE                   0x00
+#define SAT_WIDGET_STATE_VISIBLE                0x01
+#define SAT_WIDGET_STATE_ACTIVE                 0x02
+#define SAT_WIDGET_STATE_DISABLED               0x04
+#define SAT_WIDGET_STATE_INTERACT               0x0100
 
-#define SAT_WINDOW_USER_MESSAGE_KILL    666
-#define SAT_WINDOW_USER_MESSAGE_TIMER   667
+#define SAT_WIDGET_REALIGN_SELF                 0x00
+#define SAT_WIDGET_REALIGN_POS                  0x01
+#define SAT_WIDGET_REALIGN_SIZE                 0x02
+#define SAT_WIDGET_REALIGN_PARENT               0x04
+#define SAT_WIDGET_REALIGN_CHILDREN             0x08
+#define SAT_WIDGET_REALIGN_ROOT                 0x10
+#define SAT_WIDGET_REALIGN_RECT                 (SAT_WIDGET_REALIGN_POS | SAT_WIDGET_REALIGN_SIZE)
+
+#define SAT_WIDGET_REDRAW_SELF                  0
+#define SAT_WIDGET_REDRAW_PARENT                1
+#define SAT_WIDGET_REDRAW_ROOT                  2
+#define SAT_WIDGET_REDRAW_CHILDREN              4
+
+#define SAT_WIDGET_UPDATE_VALUE                 0
+
+#define SAT_WINDOW_USER_MESSAGE_KILL            666
+#define SAT_WINDOW_USER_MESSAGE_TIMER           667
 
 //----------------------------------------------------------------------
 //
@@ -170,95 +210,95 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 
 #if defined SAT_LINUX
 
-    #define SAT_TERM_BG_BLACK                     "\e[40m"
-    #define SAT_TERM_BG_RED                       "\e[41m"
-    #define SAT_TERM_BG_GREEN                     "\e[42m"
-    #define SAT_TERM_BG_YELLOW                    "\e[43m"
-    #define SAT_TERM_BG_BLUE                      "\e[44m"
-    #define SAT_TERM_BG_MAGENTA                   "\e[45m"
-    #define SAT_TERM_BG_CYAN                      "\e[46m"
-    #define SAT_TERM_BG_LIGHT_GREY                "\e[47m"
+    #define SAT_TERM_BG_BLACK                   "\e[40m"
+    #define SAT_TERM_BG_RED                     "\e[41m"
+    #define SAT_TERM_BG_GREEN                   "\e[42m"
+    #define SAT_TERM_BG_YELLOW                  "\e[43m"
+    #define SAT_TERM_BG_BLUE                    "\e[44m"
+    #define SAT_TERM_BG_MAGENTA                 "\e[45m"
+    #define SAT_TERM_BG_CYAN                    "\e[46m"
+    #define SAT_TERM_BG_LIGHT_GREY              "\e[47m"
 
-    #define SAT_TERM_BG_GREY                      "\e[100m"
-    #define SAT_TERM_BG_LIGHT_RED                 "\e[101m"
-    #define SAT_TERM_BG_LIGHT_GREEN               "\e[102m"
-    #define SAT_TERM_BG_LIGHT_YELLOW              "\e[103m"
-    #define SAT_TERM_BG_LIGHT_BLUE                "\e[104m"
-    #define SAT_TERM_BG_LIGHT_MAGENTA             "\e[105m"
-    #define SAT_TERM_BG_LIGHT_CYAN                "\e[106m"
-    #define SAT_TERM_BG_WHITE                     "\e[107m"
+    #define SAT_TERM_BG_GREY                    "\e[100m"
+    #define SAT_TERM_BG_LIGHT_RED               "\e[101m"
+    #define SAT_TERM_BG_LIGHT_GREEN             "\e[102m"
+    #define SAT_TERM_BG_LIGHT_YELLOW            "\e[103m"
+    #define SAT_TERM_BG_LIGHT_BLUE              "\e[104m"
+    #define SAT_TERM_BG_LIGHT_MAGENTA           "\e[105m"
+    #define SAT_TERM_BG_LIGHT_CYAN              "\e[106m"
+    #define SAT_TERM_BG_WHITE                   "\e[107m"
 
-    #define SAT_TERM_FG_BLACK                     "\e[30m"
-    #define SAT_TERM_FG_RED                       "\e[31m"
-    #define SAT_TERM_FG_GREEN                     "\e[32m"
-    #define SAT_TERM_FG_YELLOW                    "\e[33m"
-    #define SAT_TERM_FG_BLUE                      "\e[34m"
-    #define SAT_TERM_FG_MAGENTA                   "\e[35m"
-    #define SAT_TERM_FG_CYAN                      "\e[36m"
-    #define SAT_TERM_FG_LIGHT_GREY                "\e[37m"
+    #define SAT_TERM_FG_BLACK                   "\e[30m"
+    #define SAT_TERM_FG_RED                     "\e[31m"
+    #define SAT_TERM_FG_GREEN                   "\e[32m"
+    #define SAT_TERM_FG_YELLOW                  "\e[33m"
+    #define SAT_TERM_FG_BLUE                    "\e[34m"
+    #define SAT_TERM_FG_MAGENTA                 "\e[35m"
+    #define SAT_TERM_FG_CYAN                    "\e[36m"
+    #define SAT_TERM_FG_LIGHT_GREY              "\e[37m"
 
-    #define SAT_TERM_FG_GREY                      "\e[90m"
-    #define SAT_TERM_FG_LIGHT_RED                 "\e[91m"
-    #define SAT_TERM_FG_LIGHT_GREEN               "\e[92m"
-    #define SAT_TERM_FG_LIGHT_YELLOW              "\e[93m"
-    #define SAT_TERM_FG_LIGHT_BLUE                "\e[94m"
-    #define SAT_TERM_FG_LIGHT_MAGENTA             "\e[95m"
-    #define SAT_TERM_FG_LIGHT_CYAN                "\e[96m"
-    #define SAT_TERM_FG_WHITE                     "\e[97m"
+    #define SAT_TERM_FG_GREY                    "\e[90m"
+    #define SAT_TERM_FG_LIGHT_RED               "\e[91m"
+    #define SAT_TERM_FG_LIGHT_GREEN             "\e[92m"
+    #define SAT_TERM_FG_LIGHT_YELLOW            "\e[93m"
+    #define SAT_TERM_FG_LIGHT_BLUE              "\e[94m"
+    #define SAT_TERM_FG_LIGHT_MAGENTA           "\e[95m"
+    #define SAT_TERM_FG_LIGHT_CYAN              "\e[96m"
+    #define SAT_TERM_FG_WHITE                   "\e[97m"
 
-    #define SAT_TERM_RESET                        "\e[0m"
+    #define SAT_TERM_RESET                      "\e[0m"
     
-    #define SAT_TERM_NORMAL                       "\e[0;97m"
-    #define SAT_TERM_BOLD                         "\e[1;97m"
-    #define SAT_TERM_FAINT                        "\e[2;97m"
-    #define SAT_TERM_ITALICS                      "\e[3;97m"
-    #define SAT_TERM_UNDERLINE                    "\e[4;97m"
+    #define SAT_TERM_NORMAL                     "\e[0;97m"
+    #define SAT_TERM_BOLD                       "\e[1;97m"
+    #define SAT_TERM_FAINT                      "\e[2;97m"
+    #define SAT_TERM_ITALICS                    "\e[3;97m"
+    #define SAT_TERM_UNDERLINE                  "\e[4;97m"
   
 #elif defined SAT_WIN32
 
-    #define SAT_TERM_BG_BLACK                     ""
-    #define SAT_TERM_BG_RED                       ""
-    #define SAT_TERM_BG_GREEN                     ""
-    #define SAT_TERM_BG_YELLOW                    ""
-    #define SAT_TERM_BG_BLUE                      ""
-    #define SAT_TERM_BG_MAGENTA                   ""
-    #define SAT_TERM_BG_CYAN                      ""
-    #define SAT_TERM_BG_LIGHT_GREY                ""
+    #define SAT_TERM_BG_BLACK                   ""
+    #define SAT_TERM_BG_RED                     ""
+    #define SAT_TERM_BG_GREEN                   ""
+    #define SAT_TERM_BG_YELLOW                  ""
+    #define SAT_TERM_BG_BLUE                    ""
+    #define SAT_TERM_BG_MAGENTA                 ""
+    #define SAT_TERM_BG_CYAN                    ""
+    #define SAT_TERM_BG_LIGHT_GREY              ""
 
-    #define SAT_TERM_BG_GREY                      ""
-    #define SAT_TERM_BG_LIGHT_RED                 ""
-    #define SAT_TERM_BG_LIGHT_GREEN               ""
-    #define SAT_TERM_BG_LIGHT_YELLOW              ""
-    #define SAT_TERM_BG_LIGHT_BLUE                ""
-    #define SAT_TERM_BG_LIGHT_MAGENTA             ""
-    #define SAT_TERM_BG_LIGHT_CYAN                ""
-    #define SAT_TERM_BG_WHITE                     ""
+    #define SAT_TERM_BG_GREY                    ""
+    #define SAT_TERM_BG_LIGHT_RED               ""
+    #define SAT_TERM_BG_LIGHT_GREEN             ""
+    #define SAT_TERM_BG_LIGHT_YELLOW            ""
+    #define SAT_TERM_BG_LIGHT_BLUE              ""
+    #define SAT_TERM_BG_LIGHT_MAGENTA           ""
+    #define SAT_TERM_BG_LIGHT_CYAN              ""
+    #define SAT_TERM_BG_WHITE                   ""
 
-    #define SAT_TERM_FG_BLACK                     ""
-    #define SAT_TERM_FG_RED                       ""
-    #define SAT_TERM_FG_GREEN                     ""
-    #define SAT_TERM_FG_YELLOW                    ""
-    #define SAT_TERM_FG_BLUE                      ""
-    #define SAT_TERM_FG_MAGENTA                   ""
-    #define SAT_TERM_FG_CYAN                      ""
-    #define SAT_TERM_FG_LIGHT_GREY                ""
+    #define SAT_TERM_FG_BLACK                   ""
+    #define SAT_TERM_FG_RED                     ""
+    #define SAT_TERM_FG_GREEN                   ""
+    #define SAT_TERM_FG_YELLOW                  ""
+    #define SAT_TERM_FG_BLUE                    ""
+    #define SAT_TERM_FG_MAGENTA                 ""
+    #define SAT_TERM_FG_CYAN                    ""
+    #define SAT_TERM_FG_LIGHT_GREY              ""
 
-    #define SAT_TERM_FG_GREY                      ""
-    #define SAT_TERM_FG_LIGHT_RED                 ""
-    #define SAT_TERM_FG_LIGHT_GREEN               ""
-    #define SAT_TERM_FG_LIGHT_YELLOW              ""
-    #define SAT_TERM_FG_LIGHT_BLUE                ""
-    #define SAT_TERM_FG_LIGHT_MAGENTA             ""
-    #define SAT_TERM_FG_LIGHT_CYAN                ""
-    #define SAT_TERM_FG_WHITE                     ""
+    #define SAT_TERM_FG_GREY                    ""
+    #define SAT_TERM_FG_LIGHT_RED               ""
+    #define SAT_TERM_FG_LIGHT_GREEN             ""
+    #define SAT_TERM_FG_LIGHT_YELLOW            ""
+    #define SAT_TERM_FG_LIGHT_BLUE              ""
+    #define SAT_TERM_FG_LIGHT_MAGENTA           ""
+    #define SAT_TERM_FG_LIGHT_CYAN              ""
+    #define SAT_TERM_FG_WHITE                   ""
 
-    #define SAT_TERM_RESET                        ""
+    #define SAT_TERM_RESET                      ""
 
-    #define SAT_TERM_NORMAL                       ""
-    #define SAT_TERM_BOLD                         ""
-    #define SAT_TERM_FAINT                        ""
-    #define SAT_TERM_ITALICS                      ""
-    #define SAT_TERM_UNDERLINE                    ""
+    #define SAT_TERM_NORMAL                     ""
+    #define SAT_TERM_BOLD                       ""
+    #define SAT_TERM_FAINT                      ""
+    #define SAT_TERM_ITALICS                    ""
+    #define SAT_TERM_UNDERLINE                  ""
 
 #else
 

@@ -110,8 +110,7 @@
 #define SAT_PRINT_THREAD
 #define SAT_PRINT_TIME
 
-//------------------------------
-// setup in compile script:
+// ----- setup in compile script -----
 
 // #define SAT_DEBUG
 // #define SAT_INCLUDE_TESTS
@@ -126,8 +125,7 @@
 
 // #define SAT_NO_ENTRY
 
-//------------------------------
-// setup in compile script:
+// ----- setup in compile script -----
 
 // #define SAT_PLUGIN_CLAP
 // #define SAT_PLUGIN_DSSI
@@ -147,8 +145,7 @@
 
 #define SAT_X11_WAIT_FOR_MAPNOTIFY
 
-//------------------------------
-// setup in compile script:
+// ----- setup in compile script -----
 
 // #define SAT_GUI_NONE
 // #define SAT_GUI_NATIVE
@@ -223,12 +220,10 @@
 // plugin
 //----------------------------------------
 
-// we can have multiple libraries
-
 #undef SAT_LIBRARY
 #undef SAT_PLUGIN_FORMAT_DEFINED
 
-//
+//-----
 
 #ifdef SAT_PLUGIN_CLAP
     #define SAT_PLUGIN_FORMAT_DEFINED
@@ -264,7 +259,7 @@
     #define SAT_LIBRARY
 #endif
 
-//
+//-----
 
 #ifndef SAT_PLUGIN_FORMAT_DEFINED
     #warning NO PLUGIN FORMAT DEFINED
@@ -281,7 +276,7 @@
 
 #undef SAT_GUI_TYPE_DEFINED
 
-//
+//-----
 
 #if defined SAT_NO_GUI
 
@@ -315,11 +310,11 @@
 
 #else
 
-    // manually
+    // TODO: manually (window, surface, renderer, painter)
 
 #endif
 
-//
+//-----
 
 #ifndef SAT_GUI_TYPE_DEFINED
     #warning NO GUI TYPE DEFINED

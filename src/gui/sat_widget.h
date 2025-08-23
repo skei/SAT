@@ -21,6 +21,20 @@ typedef SAT_Array<SAT_Widget*> SAT_WidgetArray;
 //
 //----------------------------------------------------------------------
 
+struct SAT_WidgetLayout
+{
+    uint32_t    flags           = SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT;
+    SAT_Rect    inner_border    = {};
+    SAT_Rect    outer_border    = {};
+    SAT_Point   spacing         = {};
+};
+
+//----------------------------------------------------------------------
+//
+//
+//
+//----------------------------------------------------------------------
+
 class SAT_Widget
 {
     public:
@@ -38,10 +52,18 @@ class SAT_Widget
         virtual void do_widget_update(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_UPDATE_VALUE, uint32_t AIndex=0);
         virtual void do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT, uint32_t AIndex=0);
         virtual void do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF, uint32_t AIndex=0);
+    public:
+        SAT_WidgetLayout    layout          = {};
+        uint32_t            options         = 0;
+        uint32_t            state           = SAT_WIDGET_STATE_ACTIVE | SAT_WIDGET_STATE_VISIBLE;
+    protected:
+        SAT_WidgetOwner*    MOwner          = nullptr;
+        SAT_Widget*         MParent         = nullptr;
+        SAT_WidgetArray     MChildren       = {};
+        SAT_Rect            MRect           = {};
     private:
-        SAT_WidgetOwner*    MOwner      = nullptr;
-        SAT_Widget*         MParent     = nullptr;
-        SAT_WidgetArray     MChildren   = {};
+        SAT_Rect            MInitialRect    = {};
+        SAT_Point           MScreenOffset   = {};
 };
 
 //----------------------------------------------------------------------
@@ -52,26 +74,33 @@ class SAT_Widget
 
 SAT_Widget::SAT_Widget(SAT_Rect ARect)
 {
+    MInitialRect = ARect;
 }
 
 SAT_Widget::~SAT_Widget()
 {
+    #ifndef SAT_NO_AUTODELETE
+        deleteChildren();
+    #endif
 }
 
 //------------------------------
-//
+// hierarchy
 //------------------------------
 
 void SAT_Widget::appendChild(SAT_Widget* AWidget)
 {
+    AWidget->MParent = this;
+    MChildren.append(AWidget);
 }
 
 void SAT_Widget::deleteChildren()
 {
+    for (uint32_t i=0; i<MChildren.size(); i++) delete MChildren[i];
 }
 
 //------------------------------
-//
+// widget
 //------------------------------
 
 /*
@@ -86,10 +115,6 @@ void SAT_Widget::on_widget_show(SAT_WidgetOwner* AOwner)
     MOwner = AOwner;
 }
 
-/*
-    the 'inverse' of show..
-*/
-
 void SAT_Widget::on_widget_hide(SAT_WidgetOwner* AOwner)
 {
 }
@@ -101,6 +126,11 @@ void SAT_Widget::on_widget_paint(SAT_PaintContext* AContext)
 void SAT_Widget::on_widget_realign()
 {
 }
+
+// mouse
+// keyboard
+// timer
+// ..
 
 //------------------------------
 //

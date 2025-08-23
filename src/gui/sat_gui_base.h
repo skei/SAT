@@ -240,7 +240,6 @@ class SAT_WidgetOwner
         virtual uint32_t        do_widget_owner_get_height(SAT_Widget* AWidget)         { return 0; }
         virtual bool            do_widget_owner_register_timer(SAT_Widget* AWidget)     { return false; }
         virtual bool            do_widget_owner_unregister_timer(SAT_Widget* AWidget)   { return false; }
-
 };
 
 /*
@@ -266,7 +265,6 @@ class SAT_WidgetOwner
 // };
 
 // window -> editor
-
 class SAT_WindowListener
 {
     public:
