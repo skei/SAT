@@ -28,7 +28,7 @@ class SAT_Surface
 : public SAT_ImplementedSurface
 {
     public:
-        SAT_Surface(SAT_SurfaceOwner* AOwner, uint32_t AWidth, uint32_t AHeight, uint32_t ADepth);
+        SAT_Surface(SAT_SurfaceOwner* AOwner, uint32_t AWidth, uint32_t AHeight, uint32_t ADepth=0);
         virtual ~SAT_Surface();
 };
 

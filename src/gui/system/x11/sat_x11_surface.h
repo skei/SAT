@@ -58,7 +58,6 @@ class SAT_X11Surface
     is on and only with drawables of the same depth.
 */
 
-
 SAT_X11Surface::SAT_X11Surface(SAT_SurfaceOwner* AOwner, uint32_t AWidth, uint32_t AHeight, uint32_t ADepth)
 : SAT_BaseSurface(AOwner,AWidth,AHeight,ADepth)
 {
