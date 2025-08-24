@@ -17,7 +17,8 @@
 
 #include "gui/sat_painter.h"
 #include "gui/sat_widget.h"
-#include "gui/sat_window.h"
+//#include "gui/sat_window.h"
+#include "gui/sat_widget_window.h"
 #include "gui/sat_widget_window.h"
 
 //----------------------------------------------------------------------
@@ -80,7 +81,7 @@ uint32_t myPlugin::params_count()
 //----------------------------------------------------------------------
 
 class myWindow
-: public SAT_Window
+: public SAT_WidgetWindow
 {
     public:
         myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
@@ -89,7 +90,7 @@ class myWindow
 };
 
 myWindow::myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent)
-: SAT_Window(AWidth,AHeight,AParent)
+: SAT_WidgetWindow(AWidth,AHeight,AParent)
 {
 }
 
@@ -99,7 +100,7 @@ myWindow::~myWindow()
 
 void myWindow::on_window_paint(SAT_PaintContext* AContext, bool AResized)
 {
-    if (AResized) { SAT_PRINT("resized\n"); }
+    //if (AResized) { SAT_PRINT("resized\n"); }
     SAT_Painter* painter = AContext->painter;
     SAT_Rect rect = AContext->update_rect;
     painter->setFillColor(SAT_DarkRed);

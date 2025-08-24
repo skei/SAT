@@ -3,28 +3,83 @@
 #include "base/sat_base.h"
 #include "base/type/sat_queue.h"
 
+/*
+    argh..
+    my mem-tracer reports what i believe is false positives
+    when including both the moodycamel and rigtorp queues..
+    not sure how to be certain...
+*/
+
+#define SAT_QUEUE_USE_MOODYCAMEL
+//#define SAT_QUEUE_USE_RIGTORP
+
 //----------------------------------------------------------------------
 //
 // moodycamel
 //
 //----------------------------------------------------------------------
 
-/*
-    hmmm..
-    this wreaks havoc with my mem tracer.. reports memory leaks, and i
-    can't find what it points to.. a ot of weird, modern ++ memory
-    stuff going on in there, that i don't really understand..
-    my tracker does some hackery with new/elete, so probably it's my
-    own fault.. but how can i be sure?
-    so i have problems trusting it totally.. i don't like "it's probably ok",
-    i want "i know it's perfectly ok" :-)
-    todo: look around for something else..
-*/
+#ifdef SAT_QUEUE_USE_MOODYCAMEL
 
-// #include "extern/base/cameron314/concurrentqueue.h"
-// #include "extern/base/cameron314/readerwriterqueue.h"
-// #define SAT_SPSCQueue   moodycamel::ReaderWriterQueue
-// #define SAT_MPMCQueue   moodycamel::ConcurrentQueue
+    #include "extern/base/cameron314/concurrentqueue.h"
+    #include "extern/base/cameron314/readerwriterqueue.h"
+
+    // #define SAT_SPSCQueue   moodycamel::ReaderWriterQueue
+    // #define SAT_MPMCQueue   moodycamel::ConcurrentQueue
+
+    template<class T, int SIZE>
+    class SAT_SPSCQueue
+    {
+        public:
+            bool write(T AItem);
+            bool read(T* AItem);
+        private:
+            moodycamel::ReaderWriterQueue<T> MQueue = moodycamel::ReaderWriterQueue<T>(SIZE);
+    };
+
+    template<class T, int SIZE>
+    class SAT_MPMCQueue
+    {
+        public:
+            bool write(T AItem);
+            bool read(T* AItem);
+        private:
+            moodycamel::ConcurrentQueue<T> MQueue = moodycamel::ConcurrentQueue<T>(SIZE);
+    };
+
+    //------------------------------
+    //
+    //------------------------------
+
+    template<class T, int SIZE>
+    bool SAT_SPSCQueue<T,SIZE>::write(T AItem)
+    {
+        return MQueue.try_enqueue(AItem);
+    }
+
+    template<class T, int SIZE>
+    bool SAT_SPSCQueue<T,SIZE>::read(T* AItem)
+    {
+        return MQueue.try_dequeue(*AItem);
+    }
+
+    //------------------------------
+    //
+    //------------------------------
+
+    template<class T, int SIZE>
+    bool SAT_MPMCQueue<T,SIZE>::write(T AItem)
+    {
+        return MQueue.try_enqueue(AItem);
+    }
+
+    template<class T, int SIZE>
+    bool SAT_MPMCQueue<T,SIZE>::read(T* AItem)
+    {
+        return MQueue.try_dequeue(*AItem);
+    }
+
+#endif // SAT_QUEUE_USE_MOODYCAMEL
 
 //----------------------------------------------------------------------
 //
@@ -32,163 +87,173 @@
 //
 //----------------------------------------------------------------------
 
-#include "extern/base/rigtorp/SPSCQueue.h"
-#include "extern/base/rigtorp/MPMCQueue.h"
+#ifdef SAT_QUEUE_USE_RIGTORP
 
-template<class T, int SIZE>
-class SAT_SPSCQueue
-{
-    public:
-        bool write(T AItem);
-        bool read(T* AItem);
-    private:
-        rigtorp::SPSCQueue<T> MQueue = rigtorp::SPSCQueue<T>(SIZE);
-};
+    #include "extern/base/rigtorp/SPSCQueue.h"
+    #include "extern/base/rigtorp/MPMCQueue.h"
 
-//------------------------------
-//
-//------------------------------
-
-template<class T, int SIZE>
-class SAT_MPMCQueue
-{
-    public:
-        bool write(T AItem);
-        bool read(T* AItem);
-    private:
-        rigtorp::MPMCQueue<T> MQueue = rigtorp::MPMCQueue<T>(SIZE);
-};
-
-//----------------------------------------------------------------------
-//
-//
-//
-//----------------------------------------------------------------------
-
-/*
-
-    SPSCQueue<T>(size_t capacity);
-        Create a SPSCqueue holding items of type T with capacity capacity.
-        Capacity needs to be at least 1.
-    void emplace(Args &&... args);
-        Enqueue an item using inplace construction.
-        Blocks if queue is full.
-    bool try_emplace(Args &&... args);
-        Try to enqueue an item using inplace construction.
-        Returns true on success and false if queue is full.
-    void push(const T &v);
-        Enqueue an item using copy construction.
-        Blocks if queue is full.
-    template <typename P> void push(P &&v);
-        Enqueue an item using move construction.
-        Participates in overload resolution only if std::is_constructible<T, P&&>::value == true.
-        Blocks if queue is full.
-    bool try_push(const T &v);
-        Try to enqueue an item using copy construction.
-        Returns true on success and false if queue is full.
-    template <typename P> bool try_push(P &&v);
-        Try to enqueue an item using move construction.
-        Returns true on success and false if queue is full.
-        Participates in overload resolution only if std::is_constructible<T, P&&>::value == true.
-    T *front();
-        Return pointer to front of queue.
-        Returns nullptr if queue is empty.
-    void pop();
-        Dequeue first item of queue.
-        You must ensure that the queue is non-empty before calling pop.
-        This means that front() must have returned a non-nullptr before each call to pop().
-        Requires std::is_nothrow_destructible<T>::value == true.
-    size_t size();
-        Return the number of items available in the queue.
-    bool empty();
-        Return true if queue is currently empty.
-
-    Only a single writer thread can perform enqueue operations and only a single reader thread
-    can perform dequeue operations. Any other usage is invalid.
-
-*/
-
-template<class T, int SIZE>
-bool SAT_SPSCQueue<T,SIZE>::write(T AItem)
-{
-    return MQueue.try_push(AItem);
-}
-
-template<class T, int SIZE>
-bool SAT_SPSCQueue<T,SIZE>::read(T* AItem)
-{
-    //return MQueue.try_pop(AItem);
-    if (MQueue.front())
+    template<class T, int SIZE>
+    class SAT_SPSCQueue
     {
-        *AItem = *MQueue.front();
-        MQueue.pop();
-        return true;
+        public:
+            bool write(T AItem);
+            bool read(T* AItem);
+        private:
+            rigtorp::SPSCQueue<T> MQueue = rigtorp::SPSCQueue<T>(SIZE);
+    };
+
+    template<class T, int SIZE>
+    class SAT_MPMCQueue
+    {
+        public:
+            bool write(T AItem);
+            bool read(T* AItem);
+        private:
+            rigtorp::MPMCQueue<T> MQueue = rigtorp::MPMCQueue<T>(SIZE);
+    };
+
+    //------------------------------
+    //
+    //------------------------------
+
+    /*
+
+        SPSCQueue<T>(size_t capacity);
+            Create a SPSCqueue holding items of type T with capacity capacity.
+            Capacity needs to be at least 1.
+        void emplace(Args &&... args);
+            Enqueue an item using inplace construction.
+            Blocks if queue is full.
+        bool try_emplace(Args &&... args);
+            Try to enqueue an item using inplace construction.
+            Returns true on success and false if queue is full.
+        void push(const T &v);
+            Enqueue an item using copy construction.
+            Blocks if queue is full.
+        template <typename P> void push(P &&v);
+            Enqueue an item using move construction.
+            Participates in overload resolution only if std::is_constructible<T, P&&>::value == true.
+            Blocks if queue is full.
+        bool try_push(const T &v);
+            Try to enqueue an item using copy construction.
+            Returns true on success and false if queue is full.
+        template <typename P> bool try_push(P &&v);
+            Try to enqueue an item using move construction.
+            Returns true on success and false if queue is full.
+            Participates in overload resolution only if std::is_constructible<T, P&&>::value == true.
+        T *front();
+            Return pointer to front of queue.
+            Returns nullptr if queue is empty.
+        void pop();
+            Dequeue first item of queue.
+            You must ensure that the queue is non-empty before calling pop.
+            This means that front() must have returned a non-nullptr before each call to pop().
+            Requires std::is_nothrow_destructible<T>::value == true.
+        size_t size();
+            Return the number of items available in the queue.
+        bool empty();
+            Return true if queue is currently empty.
+
+        Only a single writer thread can perform enqueue operations and only a single reader thread
+        can perform dequeue operations. Any other usage is invalid.
+
+    */
+
+    template<class T, int SIZE>
+    bool SAT_SPSCQueue<T,SIZE>::write(T AItem)
+    {
+        return MQueue.try_push(AItem);
     }
-    return false;
-}
 
-//------------------------------
-//
-//------------------------------
+    template<class T, int SIZE>
+    bool SAT_SPSCQueue<T,SIZE>::read(T* AItem)
+    {
+        //return MQueue.try_pop(AItem);
+        if (MQueue.front())
+        {
+            *AItem = *MQueue.front();
+            MQueue.pop();
+            return true;
+        }
+        return false;
+    }
 
-/*
-    MPMCQueue<T>(size_t capacity);
-        Constructs a new MPMCQueue holding items of type T with capacity capacity.
-    void emplace(Args &&... args);
-        Enqueue an item using inplace construction.
-        Blocks if queue is full.
-    bool try_emplace(Args &&... args);
-        Try to enqueue an item using inplace construction.
-        Returns true on success and false if queue is full.
-    void push(const T &v);
-        Enqueue an item using copy construction.
-        Blocks if queue is full.
-    template <typename P> void push(P &&v);
-        Enqueue an item using move construction.
-        Participates in overload resolution only if std::is_nothrow_constructible<T, P&&>::value == true.
-        Blocks if queue is full.
-    bool try_push(const T &v);
-        Try to enqueue an item using copy construction.
-        Returns true on success and false if queue is full.
-    template <typename P> bool try_push(P &&v);
-        Try to enqueue an item using move construction.
-        Participates in overload resolution only if std::is_nothrow_constructible<T, P&&>::value == true.
-        Returns true on success and false if queue is full.
-    void pop(T &v);
-        Dequeue an item by copying or moving the item into v.
-        Blocks if queue is empty.
-    bool try_pop(T &v);
-        Try to dequeue an item by copying or moving the item into v.
-        Return true on sucess and false if the queue is empty.
-    ssize_t size();
-        Returns the number of elements in the queue.
-        The size can be negative when the queue is empty and there is at least one reader waiting.
-        Since this is a concurrent queue the size is only a best effort guess until all reader and writer threads have been joined.
-    bool empty();
-        Returns true if the queue is empty.
-        Since this is a concurrent queue this is only a best effort guess until all reader and writer threads have been joined.
+    //------------------------------
+    //
+    //------------------------------
 
-    All operations except construction and destruction are thread safe.
-*/
+    /*
+        MPMCQueue<T>(size_t capacity);
+            Constructs a new MPMCQueue holding items of type T with capacity capacity.
+        void emplace(Args &&... args);
+            Enqueue an item using inplace construction.
+            Blocks if queue is full.
+        bool try_emplace(Args &&... args);
+            Try to enqueue an item using inplace construction.
+            Returns true on success and false if queue is full.
+        void push(const T &v);
+            Enqueue an item using copy construction.
+            Blocks if queue is full.
+        template <typename P> void push(P &&v);
+            Enqueue an item using move construction.
+            Participates in overload resolution only if std::is_nothrow_constructible<T, P&&>::value == true.
+            Blocks if queue is full.
+        bool try_push(const T &v);
+            Try to enqueue an item using copy construction.
+            Returns true on success and false if queue is full.
+        template <typename P> bool try_push(P &&v);
+            Try to enqueue an item using move construction.
+            Participates in overload resolution only if std::is_nothrow_constructible<T, P&&>::value == true.
+            Returns true on success and false if queue is full.
+        void pop(T &v);
+            Dequeue an item by copying or moving the item into v.
+            Blocks if queue is empty.
+        bool try_pop(T &v);
+            Try to dequeue an item by copying or moving the item into v.
+            Return true on sucess and false if the queue is empty.
+        ssize_t size();
+            Returns the number of elements in the queue.
+            The size can be negative when the queue is empty and there is at least one reader waiting.
+            Since this is a concurrent queue the size is only a best effort guess until all reader and writer threads have been joined.
+        bool empty();
+            Returns true if the queue is empty.
+            Since this is a concurrent queue this is only a best effort guess until all reader and writer threads have been joined.
 
-template<class T, int SIZE>
-bool SAT_MPMCQueue<T,SIZE>::write(T AItem)
-{
-    return MQueue.try_push(AItem);
-}
+        All operations except construction and destruction are thread safe.
+    */
 
-template<class T, int SIZE>
-bool SAT_MPMCQueue<T,SIZE>::read(T* AItem)
-{
-    return MQueue.try_pop(AItem);
-    // if (MQueue.front())
-    // {
-    //     *AItem = *MQueue.front();
-    //     MQueue.pop();
-    //     return true;
-    // }
-    // return false;
-}
+    template<class T, int SIZE>
+    bool SAT_MPMCQueue<T,SIZE>::write(T AItem)
+    {
+        return MQueue.try_push(AItem);
+    }
+
+    template<class T, int SIZE>
+    bool SAT_MPMCQueue<T,SIZE>::read(T* AItem)
+    {
+        return MQueue.try_pop(AItem);
+        // if (MQueue.front())
+        // {
+        //     *AItem = *MQueue.front();
+        //     MQueue.pop();
+        //     return true;
+        // }
+        // return false;
+    }
+
+#endif // SAT_QUEUE_USE_RIGTORP
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -311,6 +311,6 @@ class SAT_BaseWindow
         virtual void        on_window_mouse_enter(int32_t AXpos, int32_t AYpos, uint32_t ATime) {}
         virtual void        on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint32_t ATime) {}
         virtual void        on_window_client_message(uint32_t AData) {}  
-        virtual void        on_window_timer(double ADelta) {}
+        virtual void        on_window_timer(uint32_t ATimerId, double ADelta) {}
 };
 

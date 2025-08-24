@@ -6,15 +6,7 @@
 #include "gui/sat_renderer.h"
 #include "gui/sat_window_buffer.h"
 
-typedef SAT_SPSCQueue<SAT_Widget*,SAT_WINDOW_REALIGN_QUEUE_SIZE> SAT_RealignQueue;
-typedef SAT_SPSCQueue<SAT_Widget*,SAT_WINDOW_REDRAW_QUEUE_SIZE> SAT_RedrawQueue;
-typedef SAT_SPSCQueue<SAT_Widget*,SAT_WINDOW_PAINT_QUEUE_SIZE> SAT_PaintQueue;
-
-//----------------------------------------------------------------------
-//
-//
-//
-//----------------------------------------------------------------------
+//----------
 
 #if defined SAT_WINDOW_X11
     #include "gui/system/x11/sat_x11_window.h"
@@ -28,6 +20,8 @@ typedef SAT_SPSCQueue<SAT_Widget*,SAT_WINDOW_PAINT_QUEUE_SIZE> SAT_PaintQueue;
 #else
     #error NO WINDOW_DEFINED
 #endif
+
+typedef SAT_SPSCQueue<uint64_t,SAT_WINDOW_RESIZE_QUEUE_SIZE> SAT_ResizeQueue;
 
 //----------------------------------------------------------------------
 //
@@ -54,6 +48,7 @@ class SAT_Window
         virtual void            windowPrePaint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight);
         virtual void            windowPaint();
         virtual void            windowPostPaint();
+        virtual bool            resizedWindow();
     private:
         void                    handleResizing();
         void                    paintToScreen();
@@ -66,9 +61,6 @@ class SAT_Window
         SAT_RenderContext       MRenderContext  = {};
         SAT_Painter*            MPainter        = nullptr;
         SAT_PaintContext        MPaintContext   = {};
-        SAT_RealignQueue        MRealignQueue   = {};
-        SAT_RedrawQueue         MRedrawQueue    = {};
-        SAT_PaintQueue          MPaintQueue     = {};
         SAT_ResizeQueue         MResizeQueue    = {};
         bool                    MResizedWindow  = false;
         #ifndef SAT_NO_WINDOW_BUFFERING        
@@ -143,14 +135,6 @@ void SAT_Window::on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, 
 }
 
 //------------------------------
-//
-//------------------------------
-
-void on_window_paint(SAT_PaintContext* AContext, bool AResized)
-{
-}
-
-//------------------------------
 // window
 //------------------------------
 
@@ -187,6 +171,11 @@ void SAT_Window::windowPostPaint()
     MResizedWindow = false;
     MPaintContext.previous_time = MPaintContext.current_time;
     MPaintContext.current_frame += 1;
+}
+
+bool SAT_Window::resizedWindow()
+{
+    return MResizedWindow;
 }
 
 //------------------------------

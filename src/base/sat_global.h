@@ -1,5 +1,9 @@
 #pragma once
 
+/*
+    we could have a watchdog timer here...
+*/
+
 #include "base/sat_base.h"
 #include "base/global/sat_global_base.h"
 

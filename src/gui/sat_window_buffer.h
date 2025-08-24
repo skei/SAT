@@ -5,8 +5,6 @@
 #include "gui/sat_gui_base.h"
 #include "gui/sat_surface.h"
 
-typedef SAT_SPSCQueue<uint64_t,SAT_WINDOW_RESIZE_QUEUE_SIZE> SAT_ResizeQueue;
-
 //----------------------------------------------------------------------
 //
 //

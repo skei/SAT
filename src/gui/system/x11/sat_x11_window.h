@@ -652,12 +652,12 @@ uint32_t SAT_X11Window::remapButton(uint32_t AButton, uint32_t AState)
 
 uint32_t SAT_X11Window::remapState(uint32_t AState)
 {
-    uint32_t s = AState; //0; //SAT_STATE_NONE;
-    if (AState & XCB_MOD_MASK_SHIFT)    s += SAT_STATE_SHIFT;
-    if (AState & XCB_MOD_MASK_LOCK)     s += SAT_STATE_CAPS;
-    if (AState & XCB_MOD_MASK_CONTROL)  s += SAT_STATE_CTRL;
-    if (AState & XCB_MOD_MASK_1)        s += SAT_STATE_ALT;
-    if (AState & XCB_MOD_MASK_5)        s += SAT_STATE_ALTGR;
+    uint32_t s = AState; //0; //SAT_KEY_STATE_NONE;
+    if (AState & XCB_MOD_MASK_SHIFT)    s += SAT_KEY_STATE_SHIFT;
+    if (AState & XCB_MOD_MASK_LOCK)     s += SAT_KEY_STATE_CAPS;
+    if (AState & XCB_MOD_MASK_CONTROL)  s += SAT_KEY_STATE_CTRL;
+    if (AState & XCB_MOD_MASK_1)        s += SAT_KEY_STATE_ALT;
+    if (AState & XCB_MOD_MASK_5)        s += SAT_KEY_STATE_ALTGR;
     // if (AState & XCB_MOD_MASK_1) SAT_PRINT("1\n");
     // if (AState & XCB_MOD_MASK_2) SAT_PRINT("2\n");
     // if (AState & XCB_MOD_MASK_3) SAT_PRINT("3\n");
@@ -867,7 +867,7 @@ bool SAT_X11Window::processEvent(xcb_generic_event_t* AEvent)
                 double time = getTime();
                 double delta = time - MPrevTime;
                 MPrevTime = time;
-                on_window_timer(delta);
+                on_window_timer(SAT_WINDOW_USER_MESSAGE_TIMER,delta);
                 free(AEvent);
                 return true;
             }
