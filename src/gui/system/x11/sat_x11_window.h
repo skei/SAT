@@ -102,6 +102,9 @@ class SAT_X11Window
         bool                        MIsMapped                       = false;
         bool                        MIsExposed                      = false;
         sat_atomic_bool_t           MIsEventThreadActive            = false;
+
+//        sat_atomic_bool_t           MWindowIsClosing                = false;
+
 };
 
 //----------------------------------------------------------------------
@@ -691,6 +694,9 @@ xcb_generic_event_t* SAT_X11Window::getEvent(bool ABlock)
 
 bool SAT_X11Window::processEvent(xcb_generic_event_t* AEvent)
 {
+
+//    if (MWindowIsClosing) return false;
+
     switch (AEvent->response_type & ~0x80)
     {
         case XCB_MAP_NOTIFY:

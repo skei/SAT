@@ -21,7 +21,7 @@
     #error NO WINDOW_DEFINED
 #endif
 
-typedef SAT_SPSCQueue<uint64_t,SAT_WINDOW_RESIZE_QUEUE_SIZE> SAT_ResizeQueue;
+typedef SAT_SPSCQueue<uint64_t,SAT_QUEUE_SIZE_RESIZE> SAT_ResizeQueue;
 
 //----------------------------------------------------------------------
 //
@@ -38,17 +38,16 @@ class SAT_Window
     public:
         SAT_Renderer*           getRenderer();
         SAT_Painter*            getPainter();
+        bool                    resizedWindow();
     public: // base window
         void                    on_window_resize(uint32_t AWidth, uint32_t AHeight) override;
         void                    on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) override;
-    public: // window
-        virtual void            on_window_paint(SAT_PaintContext* AContext, bool AResized=false) {}
+        virtual void            on_window_paint(SAT_PaintContext* AContext) {}
     protected: // window
         virtual void            windowResize(uint32_t AWidth, uint32_t AHeight);
         virtual void            windowPrePaint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight);
         virtual void            windowPaint();
         virtual void            windowPostPaint();
-        virtual bool            resizedWindow();
     private:
         void                    handleResizing();
         void                    paintToScreen();
@@ -118,6 +117,11 @@ SAT_Painter* SAT_Window::getPainter()
     return MPainter;
 }
 
+bool SAT_Window::resizedWindow()
+{
+    return MResizedWindow;
+}
+
 //------------------------------
 // base window
 //------------------------------
@@ -173,11 +177,6 @@ void SAT_Window::windowPostPaint()
     MPaintContext.current_frame += 1;
 }
 
-bool SAT_Window::resizedWindow()
-{
-    return MResizedWindow;
-}
-
 //------------------------------
 // private
 //------------------------------
@@ -193,11 +192,11 @@ void SAT_Window::handleResizing()
         uint32_t width  = (size & 0xffffffff00000000) >> 32;
         uint32_t height = (size & 0x00000000ffffffff);
         // todo: check if new size != prevous size?
-        // SAT.STATISTICS->report_resize_window(count,width,height);
+        // SAT.STATISTICS->report_WindowResizeQueue(count,width,height);
         MResizedWindow = true;
         #ifndef SAT_NO_WINDOW_BUFFERING
             MResizedBuffer = MBuffer->resizeBuffer(width,height);
-            // SAT.STATISTICS->report_resize_window_buffer(width,height);
+            // SAT.STATISTICS->report_WindowBufferResize(width,height);
         #endif
     }
 }
@@ -208,7 +207,7 @@ void SAT_Window::paintToScreen()
     SAT_Assert(painter);
     MPaintContext.painter = painter;
     painter->beginPainting(getWidth(),getHeight());
-    on_window_paint(&MPaintContext,MResizedWindow);
+    on_window_paint(&MPaintContext);
     painter->endPainting();
 }
 
@@ -220,7 +219,7 @@ void SAT_Window::paintToScreen()
         SAT_Assert(painter);
         MPaintContext.painter = painter;
         painter->beginPainting(getWidth(),getHeight()); // buffer width/height?
-        on_window_paint(&MPaintContext,MResizedWindow); // MResizedBuffer
+        on_window_paint(&MPaintContext);
         painter->endPainting();
     }
 

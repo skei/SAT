@@ -5,6 +5,7 @@
 #include "gui/sat_gui_base.h"
 #include "gui/sat_painter.h"
 #include "gui/sat_renderer.h"
+#include "gui/sat_tween_manager.h"
 #include "gui/sat_widget.h"
 #include "gui/sat_window.h"
 
@@ -12,22 +13,10 @@
     NOTE: all using SPSC queues!
 */
 
-typedef SAT_SPSCQueue<SAT_Widget*,SAT_WINDOW_REALIGN_QUEUE_SIZE> SAT_WidgetRealignQueue;
-typedef SAT_SPSCQueue<SAT_Widget*,SAT_WINDOW_REDRAW_QUEUE_SIZE> SAT_WidgetRedrawQueue;
-typedef SAT_SPSCQueue<SAT_Widget*,SAT_WINDOW_PAINT_QUEUE_SIZE> SAT_WidgetPaintQueue;
-
-/*
-    parameter updates -> widget redraws coming in from the audio thread..
-        processor calls processor_listener = plugin
-        plugin calls plugin_listener -> editor
-        editor calls editor_listener -> window
-        window writes to update_queue -> timer
-        timer writes to paint_queue -> gui
-        gui >_ paints...
-*/
-
-typedef SAT_SPSCQueue<SAT_Widget*,SAT_WINDOW_UPDATE_QUEUE_SIZE> SAT_WidgetUpdateQueue;
-
+typedef SAT_SPSCQueue<SAT_Widget*,SAT_QUEUE_SIZE_REALIGN>   SAT_WidgetRealignQueue;
+typedef SAT_SPSCQueue<SAT_Widget*,SAT_QUEUE_SIZE_REDRAW>    SAT_WidgetRedrawQueue;
+typedef SAT_SPSCQueue<SAT_Widget*,SAT_QUEUE_SIZE_PAINT>     SAT_WidgetPaintQueue;
+typedef SAT_SPSCQueue<SAT_Widget*,SAT_QUEUE_SIZE_UPDATE>    SAT_WidgetUpdateQueue;
 
 //----------------------------------------------------------------------
 //
@@ -45,16 +34,16 @@ class SAT_WidgetWindow
         SAT_WidgetWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
         virtual ~SAT_WidgetWindow();
     public:
+        virtual void        setListener(SAT_WindowListener* AListener);
         virtual void        setHintWidget(SAT_Widget* AWidget);
         virtual void        appendTimerWidget(SAT_Widget* AWidget);
         virtual void        removeTimerWidget(SAT_Widget* AWidget);
-        virtual void        handleTweening(double ADelta);
-        virtual void        flushRealignQueue();
-        virtual SAT_Rect    flushRedrawQueue();
+        virtual void        handleTimer(uint32_t ATimerId, double ADelta);
+
     public: // timer
         void                on_TimerListener_update(SAT_Timer* ATimer, double ADelta) final;
     public: // window
-        void                on_window_paint(SAT_PaintContext* AContext, bool AResized=false) override;
+        void                on_window_paint(SAT_PaintContext* AContext) override;
     public: // base window
         void                on_window_show() override;
         void                on_window_hide() override;
@@ -80,6 +69,7 @@ class SAT_WidgetWindow
         void                do_widget_update(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_UPDATE_VALUE, uint32_t AIndex=0) override;
         void                do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT, uint32_t AIndex=0) override;
         void                do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF, uint32_t AIndex=0) override;
+        void                do_widget_tween(SAT_Widget* AWidget, SAT_TweenChain* AChain) override;
         void                do_widget_notify(SAT_Widget* AWidget, uint32_t AType, int32_t AValue) override;
         void                do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint) override;
         void                do_widget_modal(SAT_Widget* AWidget) override;
@@ -87,22 +77,26 @@ class SAT_WidgetWindow
         void                do_widget_capture_mouse(SAT_Widget* AWidget) override;
         void                do_widget_capture_keyboard(SAT_Widget* AWidget) override;
     private:
-        SAT_WidgetUpdateQueue   MWidgetUpdateQueue      = {};
-        SAT_WidgetRealignQueue  MWidgetRealignQueue     = {};
-        SAT_WidgetRedrawQueue   MWidgetRedrawQueue      = {};
-        SAT_WidgetPaintQueue    MWidgetPaintQueue       = {};
-    private:
-        SAT_Timer*              MWindowTimer            = nullptr;
-        uint32_t                MCurrentTimerTick       = 0;
-        SAT_WidgetArray         MTimerWidgets           = {};
-    private:
-        SAT_Widget*             MHoverWidget            = nullptr;
-        SAT_Widget*             MModalWidget            = nullptr;
-        SAT_Widget*             MCapturedMouseWidget    = nullptr;
-        SAT_Widget*             MCapturedKeyWidget      = nullptr;
-        SAT_Widget*             MClickedWidget          = nullptr;
-        SAT_Widget*             MDragWidget             = nullptr;
-        SAT_Widget*             MHintWidget             = nullptr;
+        SAT_WindowListener*     MListener               = nullptr;  // aka editor
+        SAT_TweenManager        MTweenManager           = {};       // widget animations
+    private: // queues
+        SAT_WidgetUpdateQueue   MWidgetUpdateQueue      = {};       // value changed
+        SAT_WidgetRealignQueue  MWidgetRealignQueue     = {};       // needs to be realigned
+        SAT_WidgetRedrawQueue   MWidgetRedrawQueue      = {};       // needs to be redrawn
+        SAT_WidgetPaintQueue    MWidgetPaintQueue       = {};       // will be painted
+    private: // timer
+        SAT_Timer*              MWindowTimer            = nullptr;  // timer
+        uint32_t                MCurrentTimerTick       = 0;        // increasing tick counter
+        sat_atomic_bool_t       MTimerBlocked           {false};    // if this is true, timer handler returns immediately
+        SAT_WidgetArray         MTimerWidgets           = {};       // array of widgets that want timer ticks
+    private: // runtime
+        SAT_Widget*             MCapturedKeyWidget      = nullptr;  // send key events directoy to this
+        SAT_Widget*             MCapturedMouseWidget    = nullptr;  // send mouse events directly to this
+        SAT_Widget*             MClickedWidget          = nullptr;  // clicked widget
+        SAT_Widget*             MDragWidget             = nullptr;  // drag'n'drop, start widget (drag from)
+        SAT_Widget*             MHintWidget             = nullptr;  // widget receiving hints
+        SAT_Widget*             MHoverWidget            = nullptr;  // currently hovering over
+        SAT_Widget*             MModalWidget            = nullptr;  // exclusive widget, all other widgets ignored
 };
 
 //----------------------------------------------------------------------
@@ -131,6 +125,11 @@ SAT_WidgetWindow::~SAT_WidgetWindow()
 //
 //------------------------------
 
+void SAT_WidgetWindow::setListener(SAT_WindowListener* AListener)
+{
+    MListener = AListener;
+}
+
 void SAT_WidgetWindow::setHintWidget(SAT_Widget* AWidget)
 {
     MHintWidget = AWidget;
@@ -138,7 +137,7 @@ void SAT_WidgetWindow::setHintWidget(SAT_Widget* AWidget)
 
 /*
     only call these in the gui-thread!
-    timer (via x11 user message) might be reading the queue
+    on_window_timer reads from this
 */
 
 void SAT_WidgetWindow::appendTimerWidget(SAT_Widget* AWidget)
@@ -153,36 +152,46 @@ void SAT_WidgetWindow::removeTimerWidget(SAT_Widget* AWidget)
     MTimerWidgets.remove(AWidget);
 }
 
-void SAT_WidgetWindow::handleTweening(double ADelta)
+void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
 {
-    //TODO
-}
-
-/*
-    save previous_realign_timertick, and previous_redraw_timertick in widgets
-    compare with MCurrentTimerTick, if same, already processed/nhandles this tick..
-*/
-
-void SAT_WidgetWindow::flushRealignQueue()
-{
+    MTimerBlocked = true;
+    // ----- widget timers -----
+    for (uint32_t i=0; i<MTimerWidgets.size(); i++)
+    {
+        MTimerWidgets[i]->on_widget_timer(ATimerId,ADelta);
+    }
+    // ----- tweening -----
+    MTweenManager.process(ADelta);
+    // ----- realign queue -----
+    uint32_t count = 0;
     SAT_Widget* widget;
     while (MWidgetRealignQueue.read(&widget))
     {
-        widget->realignChildren();
+        count += 1;
+        //widget->realignChildren();
+        widget->on_widget_realign();
         MWidgetRedrawQueue.write(widget);
     }
-}
-
-SAT_Rect SAT_WidgetWindow::flushRedrawQueue()
-{
+    // SAT.STATISTICS.report_WindwRealignQueue(count);
+    // ----- redraw queue -----
+    count = 0;
     SAT_Rect rect;
-    SAT_Widget* widget;
     while (MWidgetRedrawQueue.read(&widget))
     {
+        count += 1;
         rect.combine(widget->getRect());
         MWidgetPaintQueue.write(widget);
     }
-    return SAT_Rect();
+    // SAT.STATISTICS.report_WindwRedrawQueue(count,rect);
+    // ----- invalidate -----
+    if (rect.isNotEmpty())
+    {
+        SAT_PRINT("invalidate\n");
+        invalidate(rect.x,rect.y,rect.w,rect.h);
+    }
+    // -----
+    MCurrentTimerTick += 1;
+    MTimerBlocked = false;
 }
 
 //------------------------------
@@ -191,13 +200,20 @@ SAT_Rect SAT_WidgetWindow::flushRedrawQueue()
 
 /*
     [TIMER-THREAD]
-    don't handle the tick here..
-    post an x11 user/client messsage, and handle the event when it comes back
-    via the event thread and we're in the gui thread..
+    don't handle the tick here.. post an x11 user/client messsage,
+    and handle the event when the os/system calls us back via
+    the event thread [GUI THREAD]..
+
+    see SAT_X11Window.processEvent(XCB_CLIENT_MESSAGE),
+    and SAT_WidgetWindow.on_window_timer()
+
+    MTimerBlocked set to true at the start of on_window_timer,
+    and back to false at the end..
 */
 
 void SAT_WidgetWindow::on_TimerListener_update(SAT_Timer* ATimer, double ADelta)
 {
+    if (MTimerBlocked) return;
     sendClientMessage(SAT_WINDOW_USER_MESSAGE_TIMER,0);
 };
 
@@ -205,15 +221,17 @@ void SAT_WidgetWindow::on_TimerListener_update(SAT_Timer* ATimer, double ADelta)
 // window
 //------------------------------
 
-void SAT_WidgetWindow::on_window_paint(SAT_PaintContext* AContext, bool AResized)
+void SAT_WidgetWindow::on_window_paint(SAT_PaintContext* AContext)
 {
-    //paintChildren();
+    uint32_t count = 0;
     SAT_Widget* widget;
     while (MWidgetPaintQueue.read(&widget))
     {
-        //widget->on_widget_paint(AContext);
-        widget->paintChildren(AContext);
+        count += 1;
+        //widget->paintChildren(AContext);
+        widget->on_widget_paint(AContext);
     }
+    // SAT.STATISTICS.report_WindwPaintQueue(count);
 }
 
 //------------------------------
@@ -331,29 +349,9 @@ void SAT_WidgetWindow::on_window_client_message(uint32_t AData)
     SAT_PRINT("AData = %i\n",AData);
 }
 
-/*
-    1. handle widgets requesting timer ticks
-    2. tweening..
-    3. flush realign queue, handle realigning..
-    4. flush redraw queue, post to paint queue
-    5. invalidate
-*/
-
 void SAT_WidgetWindow::on_window_timer(uint32_t ATimerId, double ADelta)
 {
-    for (uint32_t i=0; i<MTimerWidgets.size(); i++)
-    {
-        MTimerWidgets[i]->on_widget_timer(ATimerId,ADelta);
-    }
-    handleTweening(ADelta);
-    flushRealignQueue();
-    SAT_Rect rect = flushRedrawQueue();
-    if (rect.isNotEmpty())
-    {
-        SAT_PRINT("invalidate\n");
-        invalidate(rect.x,rect.y,rect.w,rect.h);
-    }
-    MCurrentTimerTick += 1;
+    handleTimer(ATimerId,ADelta);
 }
 
 //------------------------------
@@ -404,12 +402,17 @@ bool SAT_WidgetWindow::do_widget_owner_unregister_timer(SAT_Widget* AWidget)
 //------------------------------
 
 /*
-    -> editor -> plugin -> processor
+    widget value has changed..
+    if it is connected to a parameter, we notify the editor (window_listener)
 */
 
 void SAT_WidgetWindow::do_widget_update(SAT_Widget* AWidget, uint32_t AMode, uint32_t AIndex)
 {
-    // if (MListener) MListener->do_widget_update(AWidget);
+    void* parameter = AWidget->getParameter();
+    if (MListener && parameter)
+    {
+        MListener->do_widget_update(AWidget);
+    }
 }
 
 void SAT_WidgetWindow::do_widget_realign(SAT_Widget* AWidget, uint32_t AMode, uint32_t AIndex)
@@ -420,6 +423,11 @@ void SAT_WidgetWindow::do_widget_realign(SAT_Widget* AWidget, uint32_t AMode, ui
 void SAT_WidgetWindow::do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode, uint32_t AIndex)
 {
     MWidgetRedrawQueue.write(AWidget);
+}
+
+void SAT_WidgetWindow::do_widget_tween(SAT_Widget* AWidget, SAT_TweenChain* AChain)
+{
+    MTweenManager.appendChain(AChain);
 }
 
 void SAT_WidgetWindow::do_widget_notify(SAT_Widget* AWidget, uint32_t AType, int32_t AValue)

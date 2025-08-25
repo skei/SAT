@@ -39,18 +39,22 @@
 //----------------------------------------
 
 // #define SAT_PAINTER_CLIP_RECT_STACK_SIZE            256
+
+#define SAT_QUEUE_SIZE_PAINT                        256
+#define SAT_QUEUE_SIZE_REALIGN                      256
+#define SAT_QUEUE_SIZE_REDRAW                       256
+#define SAT_QUEUE_SIZE_RESIZE                       256
+#define SAT_QUEUE_SIZE_TWEEN                        256
+#define SAT_QUEUE_SIZE_UPDATE                       256
+
 #define SAT_RENDERER_MAJOR_VERSION                  3
 #define SAT_RENDERER_MINOR_VERSION                  2
-// #define SAT_TWEEN_MAX_VALUES                        4
+#define SAT_TWEEN_MAX_VALUES                        4
+#define SAT_TWEEN_FINISHED                          0xffffffff
 // #define SAT_WIDGET_NUM_VALUES                       16
 #define SAT_WINDOW_BUFFER_MIN_SIZE                  256
 #define SAT_WINDOW_MOUSE_DBL_CLICK_MS               200
-#define SAT_WINDOW_REALIGN_QUEUE_SIZE               256
-#define SAT_WINDOW_REDRAW_QUEUE_SIZE                256
-#define SAT_WINDOW_RESIZE_QUEUE_SIZE                256
-#define SAT_WINDOW_PAINT_QUEUE_SIZE                 256
 #define SAT_WINDOW_TIMER_MS                         20
-#define SAT_WINDOW_UPDATE_QUEUE_SIZE                256
 
 //----------------------------------------
 // other

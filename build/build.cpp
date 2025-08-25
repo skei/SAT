@@ -86,7 +86,7 @@ class myWindow
     public:
         myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
         virtual ~myWindow();
-        void on_window_paint(SAT_PaintContext* AContext, bool AResized=false) override;
+        void on_window_paint(SAT_PaintContext* AContext) override;
 };
 
 myWindow::myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent)
@@ -98,7 +98,7 @@ myWindow::~myWindow()
 {
 }
 
-void myWindow::on_window_paint(SAT_PaintContext* AContext, bool AResized)
+void myWindow::on_window_paint(SAT_PaintContext* AContext)
 {
     //if (AResized) { SAT_PRINT("resized\n"); }
     SAT_Painter* painter = AContext->painter;

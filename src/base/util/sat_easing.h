@@ -69,7 +69,7 @@ float SAT_EaseInBounce(float t, float b, float c, float d);
 float SAT_EaseInOutBounce(float t, float b, float c, float d);
 float SAT_EaseOutInBounce(float t, float b, float c, float d);
 
-float fixTime(float t, float d);
+float SAT_EasingFixTime(float t, float d);
 float SAT_Easing(uint32_t typ, float t, float b, float c, float d, bool AMirror=false);
 
 //----------------------------------------------------------------------
@@ -81,7 +81,7 @@ float SAT_Easing(uint32_t typ, float t, float b, float c, float d, bool AMirror=
 // Mirroring of all easing floats
 
 //NO_INLINE
-float fixTime(float t, float d) {
+float SAT_EasingFixTime(float t, float d) {
   if (t < d/2) {
     t = t * 2;
   }
@@ -94,7 +94,7 @@ float fixTime(float t, float d) {
 
 //----------
 
-float SAT_Easing(uint32_t typ, float t, float b, float c, float d, bool AMirror=false);
+float SAT_Easing(uint32_t typ, float t, float b, float c, float d, bool AMirror);
 
 //----------------------------------------------------------------------
 //
@@ -590,16 +590,16 @@ float SAT_EaseOutInBounce(float t, float b, float c, float d) {
 // Mirroring of all easing floats
 
 //NO_INLINE
-float fixTime(float t, float d) {
-  if (t < d/2) {
-    t = t * 2;
-  }
-  else {
-    t = t - d/2;
-    t = d - t*2;
-  }
-  return t;
-}
+// float fixTime(float t, float d) {
+//   if (t < d/2) {
+//     t = t * 2;
+//   }
+//   else {
+//     t = t - d/2;
+//     t = d - t*2;
+//   }
+//   return t;
+// }
 
 //----------
 
@@ -646,57 +646,55 @@ float fixTime(float t, float d) {
 // #define SAT_EASING_INOUT_BOUNCE   40
 // #define SAT_EASING_OUTIN_BOUNCE   41
 
-float SAT_Easing(uint32_t typ, float t, float b, float c, float d, bool AMirror=false) {
-  if (AMirror) t = fixTime(t,d);
-  switch (typ) {
-    case 1:   return SAT_LinearTween(t,b,c,d);
-    case 2:   return SAT_EaseInQuad(t,b,c,d);
-    case 3:   return SAT_EaseOutQuad(t,b,c,d);
-    case 4:   return SAT_EaseInOutQuad(t,b,c,d);
-    case 5:   return SAT_EaseOutInQuad(t,b,c,d);
-    case 6:   return SAT_EaseInCubic(t,b,c,d);
-    case 7:   return SAT_EaseOutCubic(t,b,c,d);
-    case 8:   return SAT_EaseInOutCubic(t,b,c,d);
-    case 9:   return SAT_EaseOutInCubic(t,b,c,d);
-    case 10:  return SAT_EaseInQuart(t,b,c,d);
-    case 11:  return SAT_EaseOutQuart(t,b,c,d);
-    case 12:  return SAT_EaseInOutQuart(t,b,c,d);
-    case 13:  return SAT_EaseOutInQuart(t,b,c,d);
-    case 14:  return SAT_EaseInQuint(t,b,c,d);
-    case 15:  return SAT_EaseOutQuint(t,b,c,d);
-    case 16:  return SAT_EaseInOutQuint(t,b,c,d);
-    case 17:  return SAT_EaseOutInQuint(t,b,c,d);
-    case 18:  return SAT_EaseInSine(t,b,c,d);
-    case 19:  return SAT_EaseOutSine(t,b,c,d);
-    case 20:  return SAT_EaseInOutSine(t,b,c,d);
-    case 21:  return SAT_EaseOutInSine(t,b,c,d);
-    case 22:  return SAT_EaseInExpo(t,b,c,d);
-    case 23:  return SAT_EaseOutExpo(t,b,c,d);
-    case 24:  return SAT_EaseInOutExpo(t,b,c,d);
-    case 25:  return SAT_EaseOutInExpo(t,b,c,d);
-    case 26:  return SAT_EaseInCirc(t,b,c,d);
-    case 27:  return SAT_EaseOutCirc(t,b,c,d);
-    case 28:  return SAT_EaseInOutCirc(t,b,c,d);
-    case 29:  return SAT_EaseOutInCirc(t,b,c,d);
-    case 30:  return SAT_EaseInElastic(t,b,c,d);
-    case 31:  return SAT_EaseOutElastic(t,b,c,d);
-    case 32:  return SAT_EaseInOutElastic(t,b,c,d);
-    case 33:  return SAT_EaseOutInElastic(t,b,c,d);
-    case 34:  return SAT_EaseInBack(t,b,c,d);
-    case 35:  return SAT_EaseOutBack(t,b,c,d);
-    case 36:  return SAT_EaseInOutBack(t,b,c,d);
-    case 37:  return SAT_EaseOutInBack(t,b,c,d);
-    case 38:  return SAT_EaseOutBounce(t,b,c,d);
-    case 39:  return SAT_EaseInBounce(t,b,c,d);
-    case 40:  return SAT_EaseInOutBounce(t,b,c,d);
-    case 41:  return SAT_EaseOutInBounce(t,b,c,d);
-    default:  return 0.0;
-  }
+float SAT_Easing(uint32_t typ, float t, float b, float c, float d, bool AMirror)
+{
+    if (AMirror) t = SAT_EasingFixTime(t,d);
+    switch (typ)
+    {
+        case 1:   return SAT_LinearTween(t,b,c,d);
+        case 2:   return SAT_EaseInQuad(t,b,c,d);
+        case 3:   return SAT_EaseOutQuad(t,b,c,d);
+        case 4:   return SAT_EaseInOutQuad(t,b,c,d);
+        case 5:   return SAT_EaseOutInQuad(t,b,c,d);
+        case 6:   return SAT_EaseInCubic(t,b,c,d);
+        case 7:   return SAT_EaseOutCubic(t,b,c,d);
+        case 8:   return SAT_EaseInOutCubic(t,b,c,d);
+        case 9:   return SAT_EaseOutInCubic(t,b,c,d);
+        case 10:  return SAT_EaseInQuart(t,b,c,d);
+        case 11:  return SAT_EaseOutQuart(t,b,c,d);
+        case 12:  return SAT_EaseInOutQuart(t,b,c,d);
+        case 13:  return SAT_EaseOutInQuart(t,b,c,d);
+        case 14:  return SAT_EaseInQuint(t,b,c,d);
+        case 15:  return SAT_EaseOutQuint(t,b,c,d);
+        case 16:  return SAT_EaseInOutQuint(t,b,c,d);
+        case 17:  return SAT_EaseOutInQuint(t,b,c,d);
+        case 18:  return SAT_EaseInSine(t,b,c,d);
+        case 19:  return SAT_EaseOutSine(t,b,c,d);
+        case 20:  return SAT_EaseInOutSine(t,b,c,d);
+        case 21:  return SAT_EaseOutInSine(t,b,c,d);
+        case 22:  return SAT_EaseInExpo(t,b,c,d);
+        case 23:  return SAT_EaseOutExpo(t,b,c,d);
+        case 24:  return SAT_EaseInOutExpo(t,b,c,d);
+        case 25:  return SAT_EaseOutInExpo(t,b,c,d);
+        case 26:  return SAT_EaseInCirc(t,b,c,d);
+        case 27:  return SAT_EaseOutCirc(t,b,c,d);
+        case 28:  return SAT_EaseInOutCirc(t,b,c,d);
+        case 29:  return SAT_EaseOutInCirc(t,b,c,d);
+        case 30:  return SAT_EaseInElastic(t,b,c,d);
+        case 31:  return SAT_EaseOutElastic(t,b,c,d);
+        case 32:  return SAT_EaseInOutElastic(t,b,c,d);
+        case 33:  return SAT_EaseOutInElastic(t,b,c,d);
+        case 34:  return SAT_EaseInBack(t,b,c,d);
+        case 35:  return SAT_EaseOutBack(t,b,c,d);
+        case 36:  return SAT_EaseInOutBack(t,b,c,d);
+        case 37:  return SAT_EaseOutInBack(t,b,c,d);
+        case 38:  return SAT_EaseOutBounce(t,b,c,d);
+        case 39:  return SAT_EaseInBounce(t,b,c,d);
+        case 40:  return SAT_EaseInOutBounce(t,b,c,d);
+        case 41:  return SAT_EaseOutInBounce(t,b,c,d);
+        default:  return 0.0;
+    }
 }
-
-
-
-
 
 //----------------------------------------------------------------------
 

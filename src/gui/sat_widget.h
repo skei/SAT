@@ -12,6 +12,9 @@
 #include "base/sat_base.h"
 #include "gui/sat_gui_base.h"
 
+//#include "gui/sat_tween_manager.h"
+class SAT_TweenChain;
+
 class SAT_Widget;
 typedef SAT_Array<SAT_Widget*> SAT_WidgetArray;
 
@@ -68,6 +71,7 @@ class SAT_Widget
         virtual ~SAT_Widget();
     public:
         virtual SAT_Rect    getRect();
+        virtual void*       getParameter();
     public:
         virtual void        appendChild(SAT_Widget* AWidget);
         virtual void        removeChild(SAT_Widget* AWidget);
@@ -87,6 +91,7 @@ class SAT_Widget
         virtual void        on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode=SAT_WIDGET_REDRAW_SELF, uint32_t AIndex=0);
         virtual void        on_widget_realign(uint32_t AMode=SAT_WIDGET_REALIGN_PARENT, uint32_t AIndex=0);
         virtual void        on_widget_timer(uint32_t ATimerId, double ADelta);
+        virtual void        on_widget_tween(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues);
         virtual void        on_widget_hint(uint32_t AType, const char* AHint);
         virtual void        on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime);
         virtual void        on_widget_mouse_dbl_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime);
@@ -97,6 +102,7 @@ class SAT_Widget
         virtual void        on_widget_mouse_enter(SAT_Widget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime);
         virtual void        on_widget_mouse_leave(SAT_Widget* ATo, int32_t AXpos, int32_t AYpos, uint32_t ATime);
 
+
         // virtual bool        on_widget_drag_accept(SAT_Widget* ASrc, int32_t ADragId);
         // virtual void        on_widget_drag_drop(SAT_Widget* AFrom, int32_t ADragId, void* ADragData);
         // virtual void        on_widget_drag_accepted(SAT_Widget* ADst, int32_t ADragId);
@@ -105,6 +111,7 @@ class SAT_Widget
         virtual void        do_widget_update(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_UPDATE_VALUE, uint32_t AIndex=0);
         virtual void        do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT, uint32_t AIndex=0);
         virtual void        do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF, uint32_t AIndex=0);
+        virtual void        do_widget_tween(SAT_Widget* AWidget, SAT_TweenChain* AChain);
         virtual void        do_widget_notify(SAT_Widget* AWidget, uint32_t AType=0, int32_t AValue=0);
         virtual void        do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint);
         virtual void        do_widget_modal(SAT_Widget* AWidget);
@@ -148,14 +155,17 @@ class SAT_Widget
 
         };
     protected: // hierarvhy
-        SAT_WidgetOwner*    MOwner          = nullptr;
-        SAT_Widget*         MParent         = nullptr;
-        SAT_WidgetArray     MChildren       = {};
+        SAT_WidgetOwner*    MOwner              = nullptr;
+        SAT_Widget*         MParent             = nullptr;
+        SAT_WidgetArray     MChildren           = {};
     private: // visual
-        SAT_Rect            MRect           = {};
-        SAT_Rect            MInitialRect    = {};
-        SAT_Point           MScreenOffset   = {};
-        SAT_Rect            MContentRect    = {};
+        SAT_Rect            MRect               = {};
+        SAT_Rect            MInitialRect        = {};
+        SAT_Point           MScreenOffset       = {};
+        SAT_Rect            MContentRect        = {};
+    private: // state
+        void*               MParameter          = nullptr;
+
 };
 
 //----------------------------------------------------------------------
@@ -180,7 +190,8 @@ SAT_Widget::~SAT_Widget()
 // hierarchy
 //------------------------------
 
-SAT_Rect SAT_Widget::getRect() { return MRect; }
+SAT_Rect    SAT_Widget::getRect()       { return MRect; }
+void*       SAT_Widget::getParameter()  { return MParameter; }
 
 //------------------------------
 // hierarchy
@@ -247,7 +258,7 @@ bool SAT_Widget::isRecursivelyVisible()
 }
 
 //------------------------------
-// widget
+// on widget
 //------------------------------
 
 void SAT_Widget::on_widget_show(SAT_WidgetOwner* AOwner)
@@ -279,6 +290,10 @@ void SAT_Widget::on_widget_realign(uint32_t AMode, uint32_t AIndex)
 }
 
 void SAT_Widget::on_widget_timer(uint32_t ATimerId, double ADelta)
+{
+}
+
+void SAT_Widget::on_widget_tween(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues)
 {
 }
 
@@ -319,7 +334,7 @@ void SAT_Widget::on_widget_mouse_leave(SAT_Widget* ATo, int32_t AXpos, int32_t A
 }
 
 //------------------------------
-//
+// do widget
 //------------------------------
 
 void SAT_Widget::do_widget_update(SAT_Widget* AWidget, uint32_t AMode, uint32_t AIndex)
@@ -335,6 +350,11 @@ void SAT_Widget::do_widget_realign(SAT_Widget* AWidget, uint32_t AMode, uint32_t
 void SAT_Widget::do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode, uint32_t AIndex)
 {
     if (MParent) MParent->do_widget_redraw(AWidget,AMode);
+}
+
+void SAT_Widget::do_widget_tween(SAT_Widget* AWidget, SAT_TweenChain* AChain)
+{
+    if (MParent) MParent->do_widget_tween(AWidget,AChain);
 }
 
 void SAT_Widget::do_widget_notify(SAT_Widget* AWidget, uint32_t AType, int32_t AValue)
