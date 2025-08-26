@@ -7,18 +7,7 @@
 //----------------------------------------------------------------------
 
 #include "base/sat.h"
-
 #include "plugin/sat_plugin.h"
-#include "plugin/sat_processor.h"
-
-#include "plugin/format/clap/sat_clap_extensions.h"
-#include "plugin/format/clap/sat_clap_host_proxy.h"
-#include "plugin/format/clap/sat_clap_plugin_proxy.h"
-
-#include "gui/sat_painter.h"
-#include "gui/sat_widget.h"
-//#include "gui/sat_window.h"
-#include "gui/sat_widget_window.h"
 #include "gui/sat_widget_window.h"
 
 //----------------------------------------------------------------------
@@ -27,7 +16,7 @@
 //
 //----------------------------------------------------------------------
 
-const clap_plugin_descriptor_t myDescriptor = 
+const clap_plugin_descriptor_t myDescriptor =
 {
     .clap_version   = CLAP_VERSION,
     .id             = "myPlugin",
@@ -42,7 +31,7 @@ const clap_plugin_descriptor_t myDescriptor =
 };
 
 class myPlugin
-: public SAT_Plugin
+: public SAT_Plugin 
 {
     private:
         SAT_ClapParams  MParams;
@@ -86,7 +75,7 @@ class myWindow
     public:
         myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
         virtual ~myWindow();
-        void on_window_paint(SAT_PaintContext* AContext) override;
+        void on_window_paint(SAT_PaintContext* AContext, bool ABuffered=false) override;
 };
 
 myWindow::myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent)
@@ -98,8 +87,9 @@ myWindow::~myWindow()
 {
 }
 
-void myWindow::on_window_paint(SAT_PaintContext* AContext)
+void myWindow::on_window_paint(SAT_PaintContext* AContext, bool ABuffered)
 {
+
     //if (AResized) { SAT_PRINT("resized\n"); }
     SAT_Painter* painter = AContext->painter;
     SAT_Rect rect = AContext->update_rect;
@@ -107,6 +97,10 @@ void myWindow::on_window_paint(SAT_PaintContext* AContext)
     painter->fillRect(rect.x,rect.y,rect.w,rect.h);
     painter->setTextColor(SAT_White);
     painter->drawText(SAT_Rect(getWidth(),getHeight()),"Hello world",SAT_TEXT_ALIGN_CENTER);
+
+    // handle widget system...
+    SAT_WidgetWindow::on_window_paint(AContext);
+
 }
 
 //----------------------------------------------------------------------

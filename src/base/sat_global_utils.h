@@ -48,6 +48,9 @@
 
 #ifdef SAT_DEBUG_MEMTRACE
 
+    // todo: save the file/line into the global SAT_Debug object!
+    // for example, something like SAT.DEBUG->MEMTRACE->setPrefix(file,line);
+    
     static __thread char*         sat_memtrace_prefix_file;
     static __thread unsigned int  sat_memtrace_prefix_line;
 

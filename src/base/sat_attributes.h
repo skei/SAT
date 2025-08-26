@@ -17,7 +17,7 @@
     #define __SAT_PUBLIC
     #define __SAT_LOCAL
 #else
-    #error NO IMPLEMENTED YET
+    #error NOT IMPLEMENTED YET
 #endif
 
 //------------------------------

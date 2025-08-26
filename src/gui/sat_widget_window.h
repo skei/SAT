@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+    note to self:
+    remember to keep the widget part in sync with the window parts (size, rect, etc)
+*/
+
 #include "base/sat_base.h"
 #include "base/system/sat_timer.h"
 #include "gui/sat_gui_base.h"
@@ -10,13 +15,13 @@
 #include "gui/sat_window.h"
 
 /*
-    NOTE: all using SPSC queues!
+    NOTE: all SPSC queues!
 */
 
+// typedef SAT_SPSCQueue<SAT_Widget*,SAT_QUEUE_SIZE_UPDATE>    SAT_WidgetUpdateQueue;
 typedef SAT_SPSCQueue<SAT_Widget*,SAT_QUEUE_SIZE_REALIGN>   SAT_WidgetRealignQueue;
 typedef SAT_SPSCQueue<SAT_Widget*,SAT_QUEUE_SIZE_REDRAW>    SAT_WidgetRedrawQueue;
 typedef SAT_SPSCQueue<SAT_Widget*,SAT_QUEUE_SIZE_PAINT>     SAT_WidgetPaintQueue;
-typedef SAT_SPSCQueue<SAT_Widget*,SAT_QUEUE_SIZE_UPDATE>    SAT_WidgetUpdateQueue;
 
 //----------------------------------------------------------------------
 //
@@ -39,17 +44,16 @@ class SAT_WidgetWindow
         virtual void        appendTimerWidget(SAT_Widget* AWidget);
         virtual void        removeTimerWidget(SAT_Widget* AWidget);
         virtual void        handleTimer(uint32_t ATimerId, double ADelta);
-
-    public: // timer
-        void                on_TimerListener_update(SAT_Timer* ATimer, double ADelta) final;
-    public: // window
-        void                on_window_paint(SAT_PaintContext* AContext) override;
-    public: // base window
+        virtual void        handlePainting(SAT_PaintContext* AContext);
+    public:
+        void                on_timer_listener_update(SAT_Timer* ATimer, double ADelta) override;
+        void                on_window_paint(SAT_PaintContext* AContext, bool ABuffered=false) override;
+    public:
         void                on_window_show() override;
         void                on_window_hide() override;
         void                on_window_move(int32_t AXpos, int32_t AYpos) override;
         void                on_window_resize(uint32_t AWidth, uint32_t AHeight) override;
-        //void              on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) override;
+     // void                on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) override;
         void                on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
         void                on_window_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
         void                on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
@@ -59,13 +63,13 @@ class SAT_WidgetWindow
         void                on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint32_t ATime) override;
         void                on_window_client_message(uint32_t AData) override;  
         void                on_window_timer(uint32_t ATimerId, double ADelta) override;
-    public: // widget owner
-        SAT_Painter*        do_widget_owner_get_painter(SAT_Widget* AWidget);
-        uint32_t            do_widget_owner_get_width(SAT_Widget* AWidget);
-        uint32_t            do_widget_owner_get_height(SAT_Widget* AWidget);
-        bool                do_widget_owner_register_timer(SAT_Widget* AWidget);
-        bool                do_widget_owner_unregister_timer(SAT_Widget* AWidget);
-    public: // widget
+    public:
+        SAT_Painter*        do_widget_owner_get_painter(SAT_Widget* AWidget) override;
+        uint32_t            do_widget_owner_get_width(SAT_Widget* AWidget) override;
+        uint32_t            do_widget_owner_get_height(SAT_Widget* AWidget) override;
+        bool                do_widget_owner_register_timer(SAT_Widget* AWidget) override;
+        bool                do_widget_owner_unregister_timer(SAT_Widget* AWidget) override;
+    public:
         void                do_widget_update(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_UPDATE_VALUE, uint32_t AIndex=0) override;
         void                do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT, uint32_t AIndex=0) override;
         void                do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF, uint32_t AIndex=0) override;
@@ -79,17 +83,16 @@ class SAT_WidgetWindow
     private:
         SAT_WindowListener*     MListener               = nullptr;  // aka editor
         SAT_TweenManager        MTweenManager           = {};       // widget animations
-    private: // queues
-        SAT_WidgetUpdateQueue   MWidgetUpdateQueue      = {};       // value changed
+        SAT_Timer*              MWindowTimer            = nullptr;  // timer
+        SAT_WidgetArray         MTimerWidgets           = {};       // array of widgets that want timer ticks
+        uint32_t                MCurrentTimerTick       = 0;        // increasing tick counter
+        sat_atomic_bool_t       MTimerBlocked           {false};    // if this is true, timer handler returns immediately
+    private:
+     // SAT_WidgetUpdateQueue   MWidgetUpdateQueue      = {};       // value changed
         SAT_WidgetRealignQueue  MWidgetRealignQueue     = {};       // needs to be realigned
         SAT_WidgetRedrawQueue   MWidgetRedrawQueue      = {};       // needs to be redrawn
         SAT_WidgetPaintQueue    MWidgetPaintQueue       = {};       // will be painted
-    private: // timer
-        SAT_Timer*              MWindowTimer            = nullptr;  // timer
-        uint32_t                MCurrentTimerTick       = 0;        // increasing tick counter
-        sat_atomic_bool_t       MTimerBlocked           {false};    // if this is true, timer handler returns immediately
-        SAT_WidgetArray         MTimerWidgets           = {};       // array of widgets that want timer ticks
-    private: // runtime
+    private:
         SAT_Widget*             MCapturedKeyWidget      = nullptr;  // send key events directoy to this
         SAT_Widget*             MCapturedMouseWidget    = nullptr;  // send mouse events directly to this
         SAT_Widget*             MClickedWidget          = nullptr;  // clicked widget
@@ -135,11 +138,6 @@ void SAT_WidgetWindow::setHintWidget(SAT_Widget* AWidget)
     MHintWidget = AWidget;
 }
 
-/*
-    only call these in the gui-thread!
-    on_window_timer reads from this
-*/
-
 void SAT_WidgetWindow::appendTimerWidget(SAT_Widget* AWidget)
 {
     SAT_Assert(AWidget);
@@ -151,6 +149,11 @@ void SAT_WidgetWindow::removeTimerWidget(SAT_Widget* AWidget)
     SAT_Assert(AWidget);
     MTimerWidgets.remove(AWidget);
 }
+
+/*
+    TODO: widget redrawing originating from audio automation & modulation
+    MWidgetUpdateQueue ?
+*/
 
 void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
 {
@@ -194,34 +197,7 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
     MTimerBlocked = false;
 }
 
-//------------------------------
-// timer
-//------------------------------
-
-/*
-    [TIMER-THREAD]
-    don't handle the tick here.. post an x11 user/client messsage,
-    and handle the event when the os/system calls us back via
-    the event thread [GUI THREAD]..
-
-    see SAT_X11Window.processEvent(XCB_CLIENT_MESSAGE),
-    and SAT_WidgetWindow.on_window_timer()
-
-    MTimerBlocked set to true at the start of on_window_timer,
-    and back to false at the end..
-*/
-
-void SAT_WidgetWindow::on_TimerListener_update(SAT_Timer* ATimer, double ADelta)
-{
-    if (MTimerBlocked) return;
-    sendClientMessage(SAT_WINDOW_USER_MESSAGE_TIMER,0);
-};
-
-//------------------------------
-// window
-//------------------------------
-
-void SAT_WidgetWindow::on_window_paint(SAT_PaintContext* AContext)
+void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
 {
     uint32_t count = 0;
     SAT_Widget* widget;
@@ -235,14 +211,41 @@ void SAT_WidgetWindow::on_window_paint(SAT_PaintContext* AContext)
 }
 
 //------------------------------
+//
+//------------------------------
+
+/*
+    [TIMER-THREAD]
+*/
+
+void SAT_WidgetWindow::on_timer_listener_update(SAT_Timer* ATimer, double ADelta)
+{
+    if (MTimerBlocked)
+    {
+        // double time = SAT_GetTime();
+        // SAT.STATISTICS.report_WindowTimerBlocked(time);
+        return;
+    }
+    sendClientMessage(SAT_WINDOW_USER_MESSAGE_TIMER,0);
+};
+
+void SAT_WidgetWindow::on_window_paint(SAT_PaintContext* AContext, bool ABuffered)
+{
+    // SAT_Window::on_window_paint(AContext,ABuffered);
+    handlePainting(AContext);
+}
+
+//------------------------------
 // base window
 //------------------------------
 
 void SAT_WidgetWindow::on_window_show()
 {
-    for (uint32_t i=0; i<MChildren.size(); i++)
+    uint32_t num = getNumChildren();
+    for (uint32_t i=0; i<num; i++)
     {
-        MChildren[i]->on_widget_show(this);
+        SAT_Widget* child = getChild(i);
+        child->on_widget_show(this);
     }
     MWindowTimer->start(SAT_WINDOW_TIMER_MS);
 }
@@ -250,9 +253,11 @@ void SAT_WidgetWindow::on_window_show()
 void SAT_WidgetWindow::on_window_hide()
 {
     if (MWindowTimer->isRunning()) MWindowTimer->stop();
-    for (uint32_t i=0; i<MChildren.size(); i++)
+    uint32_t num = getNumChildren();
+    for (uint32_t i=0; i<num; i++)
     {
-        MChildren[i]->on_widget_hide(this);
+        SAT_Widget* child = getChild(i);
+        child->on_widget_hide(this);
     }
 }
 
@@ -348,6 +353,10 @@ void SAT_WidgetWindow::on_window_client_message(uint32_t AData)
 {
     SAT_PRINT("AData = %i\n",AData);
 }
+
+/*
+    [GUI THREAD]
+*/
 
 void SAT_WidgetWindow::on_window_timer(uint32_t ATimerId, double ADelta)
 {

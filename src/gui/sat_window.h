@@ -25,7 +25,7 @@ typedef SAT_SPSCQueue<uint64_t,SAT_QUEUE_SIZE_RESIZE> SAT_ResizeQueue;
 
 //----------------------------------------------------------------------
 //
-// 
+//
 //
 //----------------------------------------------------------------------
 
@@ -39,11 +39,11 @@ class SAT_Window
         SAT_Renderer*           getRenderer();
         SAT_Painter*            getPainter();
         bool                    resizedWindow();
-    public: // base window
+    public:
         void                    on_window_resize(uint32_t AWidth, uint32_t AHeight) override;
         void                    on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) override;
-        virtual void            on_window_paint(SAT_PaintContext* AContext) {}
-    protected: // window
+        virtual void            on_window_paint(SAT_PaintContext* AContext, bool ABuffered=false) {}
+    protected:
         virtual void            windowResize(uint32_t AWidth, uint32_t AHeight);
         virtual void            windowPrePaint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight);
         virtual void            windowPaint();
@@ -57,10 +57,10 @@ class SAT_Window
         #endif
     private:
         SAT_Renderer*           MRenderer       = nullptr;
-        SAT_RenderContext       MRenderContext  = {};
         SAT_Painter*            MPainter        = nullptr;
-        SAT_PaintContext        MPaintContext   = {};
         SAT_ResizeQueue         MResizeQueue    = {};
+        SAT_RenderContext       MRenderContext  = {};
+        SAT_PaintContext        MPaintContext   = {};
         bool                    MResizedWindow  = false;
         #ifndef SAT_NO_WINDOW_BUFFERING        
             bool                MResizedBuffer  = false;
@@ -207,7 +207,7 @@ void SAT_Window::paintToScreen()
     SAT_Assert(painter);
     MPaintContext.painter = painter;
     painter->beginPainting(getWidth(),getHeight());
-    on_window_paint(&MPaintContext);
+    on_window_paint(&MPaintContext,false);
     painter->endPainting();
 }
 
@@ -219,7 +219,7 @@ void SAT_Window::paintToScreen()
         SAT_Assert(painter);
         MPaintContext.painter = painter;
         painter->beginPainting(getWidth(),getHeight()); // buffer width/height?
-        on_window_paint(&MPaintContext);
+        on_window_paint(&MPaintContext,true);
         painter->endPainting();
     }
 

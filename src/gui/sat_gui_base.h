@@ -57,7 +57,6 @@ struct SAT_PaintContext
     uint32_t        current_frame   = 0;
     double          current_time    = 0.0;
     double          previous_time   = 0.0;
-
 };
 
 class SAT_PaintSource

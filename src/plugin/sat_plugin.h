@@ -72,6 +72,7 @@ class SAT_Plugin
         int32_t             findParameterIndex(const char* AName, const char* AModule=nullptr);
 
     public: // presets
+    
     public: // audio ports
 
         void                appendAudioPort(SAT_AudioPort* APort);
