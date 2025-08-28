@@ -8,7 +8,7 @@
 
 #define SAT_VENDOR                  "skei.audio"
 #define SAT_URL                     "https://github.com/skei/SA_Toolkit"
-#define SAT_VERSION                 "0.0.1"
+#define SAT_VERSION                 "0.0.0"
 #define SAT_LOG_DIRECTORY           "Desktop/skei.audio"
 #define SAT_USER_CONFIG_FILE        "user_config.h"
 
@@ -39,14 +39,12 @@
 //----------------------------------------
 
 // #define SAT_PAINTER_CLIP_RECT_STACK_SIZE            256
-
 #define SAT_QUEUE_SIZE_PAINT                        256
 #define SAT_QUEUE_SIZE_REALIGN                      256
 #define SAT_QUEUE_SIZE_REDRAW                       256
 #define SAT_QUEUE_SIZE_RESIZE                       256
 #define SAT_QUEUE_SIZE_TWEEN                        256
 #define SAT_QUEUE_SIZE_UPDATE                       256
-
 #define SAT_RENDERER_MAJOR_VERSION                  3
 #define SAT_RENDERER_MINOR_VERSION                  2
 #define SAT_TWEEN_MAX_VALUES                        4
@@ -98,17 +96,13 @@
 // #define SAT_DEBUG_MEMTRACE
 #define SAT_DEBUG_OBSERVER
 // #define SAT_DEBUG_WINDOW
-
 #define SAT_INCLUDE_LOG
 #define SAT_INCLUDE_REGISTRY
 #define SAT_INCLUDE_STATISTICS
-
 #define SAT_LOG_TIME
 #define SAT_LOG_THREAD
-
 // #define SAT_NO_AUTODELETE
 // #define SAT_NO_GLOBAL
-
 // #define SAT_PRINT_ALWAYS
 // #define SAT_PRINT_PRETTY_FUNCTION
 // #define SAT_PRINT_SOCKET
@@ -127,7 +121,6 @@
 
 // #define SAT_INCLUDE_ARA_EXTENSIONS
 // #define SAT_INCLUDE_REAPER_EXTENSIONS
-
 // #define SAT_NO_ENTRY
 
 // ----- setup in compile script -----
@@ -147,7 +140,7 @@
 // #define SAT_NO_BITMAP_DECODE
 // #define SAT_NO_BITMAP_DECODE_FILE
 // #define SAT_NO_WINDOW_BUFFERING
-
+#define SAT_WINDOW_REDIRECT_TIMER_TO_GUI_THREAD
 #define SAT_X11_WAIT_FOR_MAPNOTIFY
 
 // ----- setup in compile script -----
@@ -156,29 +149,24 @@
 // #define SAT_GUI_NATIVE
 // #define SAT_GUI_CPU
 // #define SAT_GUI_GPU
-
 // #define SAT_PAINTER_BLEND2D
 // #define SAT_PAINTER_CAIRO
 // #define SAT_PAINTER_CANVAS_ITY
 // #define SAT_PAINTER_NANOVG
 // #define SAT_PAINTER_WIN32
 // #define SAT_PAINTER_X11
-
 // #define SAT_RENDERER_EGL
 // #define SAT_RENDERER_GDI
 // #define SAT_RENDERER_GLX
 // #define SAT_RENDERER_WGL
 // #define SAT_RENDERER_X11
-
 // #define SAT_SURFACE_BITMAP
 // #define SAT_SURFACE_NANOVG
 // #define SAT_SURFACE_WIN32
 // #define SAT_SURFACE_X11  
-
 // #define SAT_USE_CAIRO
 // #define SAT_USE_X11
 // #define SAT_USE_X11_XRENDER
-
 // #define SAT_WINDOW_WAYLAND
 // #define SAT_WINDOW_WIN32
 // #define SAT_WINDOW_X11

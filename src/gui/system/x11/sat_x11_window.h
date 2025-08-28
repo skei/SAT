@@ -246,7 +246,7 @@ void SAT_X11Window::show()
     xcb_flush(MConnection);
     #ifdef SAT_X11_WAIT_FOR_MAPNOTIFY
         waitForMapNotify();
-        MIsMapped = true;
+        //MIsMapped = true; // set in waitForMapNotify()
         on_window_show();
     #endif
     if (MIsEmbedded) startEventThread();
@@ -543,21 +543,70 @@ void SAT_X11Window::wantQuitEvents()
     free(close_reply);    
 }
 
+/*
+    hmmm...
+    we get a REPARENT_NOTIFY, and three CONFIGURE_NOTIFY events, before the
+    first MAP_NOTIFY event.. maybe we should save the window info,
+    and call on_window_move, on_window_size as soon as we get the map_notify?
+*/
+
 void SAT_X11Window::waitForMapNotify()
 {
+    /*
+        int16_t x = 0;
+        int16_t y = 0;
+        uint16_t w = 0;
+        uint16_t h = 0;
+        bool configure = false;
+    */
     xcb_flush(MConnection);
     while (1)
     {
         xcb_generic_event_t* event;
         event = xcb_wait_for_event(MConnection);
         uint8_t e = event->response_type & ~0x80;
+        /*
+            switch(e)
+            {
+                // case XCB_REPARENT_NOTIFY:
+                // {
+                //     xcb_reparent_notify_event_t* reparent_notify = (xcb_reparent_notify_event_t*)event;
+                //     xcb_window_t parent = reparent_notify->parent;
+                //     int16_t x = reparent_notify->x;
+                //     int16_t y = reparent_notify->y;
+                //     break;
+                // }
+                case XCB_CONFIGURE_NOTIFY:
+                {
+                    xcb_configure_notify_event_t* configure_notify = (xcb_configure_notify_event_t*)event;
+                    x  = configure_notify->x;
+                    y  = configure_notify->y;
+                    w = configure_notify->width;
+                    h = configure_notify->height;
+                    configure = true;
+                    break;
+                }
+                case XCB_MAP_NOTIFY:
+                {
+                    MIsMapped = true;
+                    break;
+                }
+            }
+        */
         free(event); // not malloc'ed
-        if (e == XCB_MAP_NOTIFY)
-        {
-            MIsMapped = true;
-            break;
-        }
+        if (e == XCB_MAP_NOTIFY) break;
+        /*
+            if (MIsMapped) break; // while
+        */
     }
+    MIsMapped = true;
+    /*
+        if (configure)
+        {
+            on_window_move(x,y);
+            on_window_resize(w,h);
+        }
+    */
 }
 
 void SAT_X11Window::setXcbCursor(xcb_cursor_t ACursor)
@@ -696,6 +745,15 @@ bool SAT_X11Window::processEvent(xcb_generic_event_t* AEvent)
     // if (MWindowIsClosing) return false;
     switch (AEvent->response_type & ~0x80)
     {
+
+        /*
+            if SAT_X11_WAIT_FOR_MAPNOTIFY is defined, we wait for the first MAP_NOTIFY
+            in waitForMapNotify(), and set MIsMapped = true, and call on_window_show()
+            todo: check if we still get this event.. and, btw, do we get other x11
+            events before that first MAP_NOTIFY, that we are ignoring?
+            (a SAT_TRACE both here and in waitForMapNotify, only prints this one..)
+        */
+
         case XCB_MAP_NOTIFY:
         {
             MIsMapped = true;
@@ -708,6 +766,14 @@ bool SAT_X11Window::processEvent(xcb_generic_event_t* AEvent)
             on_window_hide();
             break;
         }
+        // case XCB_REPARENT_NOTIFY:
+        // {
+        //     xcb_reparent_notify_event_t* reparent_notify = (xcb_reparent_notify_event_t*)AEvent;
+        //     xcb_window_t parent = reparent_notify->parent;
+        //     int16_t x = reparent_notify->x;
+        //     int16_t y = reparent_notify->y;
+        //     break;
+        // }
         /*
             (where is this from?)
             "Well... personally, I never needed these fancy functions.
@@ -725,6 +791,7 @@ bool SAT_X11Window::processEvent(xcb_generic_event_t* AEvent)
             int16_t y  = configure_notify->y;
             uint16_t w = configure_notify->width;
             uint16_t h = configure_notify->height;
+            //SAT_PRINT("configure: x %i y %i w %i h %i\n",x,y,w,h);
             if ((x != MXpos) || (y != MYpos))
             {
                 on_window_move(x,y);

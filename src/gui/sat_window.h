@@ -230,7 +230,7 @@ void SAT_Window::paintToScreen()
         SAT_Rect rect = MPaintContext.update_rect;
         MPaintContext.painter = painter;
         painter->beginPainting(getWidth(),getHeight());
-        painter->drawImage(rect.x,rect.y,MBuffer->getSurface(),rect);
+        painter->drawImage(rect.getPos(),MBuffer->getSurface(),rect);
         painter->endPainting();
     }
 

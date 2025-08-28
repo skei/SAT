@@ -110,9 +110,7 @@ class SAT_BasePainter
     public:
         virtual void        beginPainting(uint32_t AWidth, uint32_t AHeight) = 0;
         virtual void        endPainting() = 0;
-     // virtual void        setPaintTarget(SAT_PaintTarget* ATarget) = 0;
-     // virtual void        resetPaintTarget(SAT_PaintTarget* ATarget) = 0;
-        virtual void        setClip(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) = 0;
+        virtual void        setClip(SAT_Rect ARect) = 0;
         virtual void        resetClip() = 0;
     public: // state
         virtual void        setDrawColor(SAT_Color AColor) = 0;
@@ -120,18 +118,18 @@ class SAT_BasePainter
         virtual void        setTextColor(SAT_Color AColor) = 0;
         virtual void        setLineWidth(sat_coord_t AWidth) = 0;
     public: // raster
-        virtual void        drawLine(sat_coord_t AX1, sat_coord_t AY1, sat_coord_t AX2, sat_coord_t AY2) = 0;
-        virtual void        drawRect(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t AWidth, sat_coord_t AHeight) = 0;
-        virtual void        drawArc(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2) = 0;
-        virtual void        fillRect(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t AWidth, sat_coord_t AHeight) = 0;
-        virtual void        fillArc(sat_coord_t AXposx, sat_coord_t AYpos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2) = 0;
-        virtual void        drawText(sat_coord_t AXpos, sat_coord_t AYpos, const char* AText) = 0;
+        virtual void        drawLine(SAT_Point AFrom, SAT_Point ATo) = 0;
+        virtual void        drawRect(SAT_Rect ARect) = 0;
+        virtual void        drawArc(SAT_Point APos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2) = 0;
+        virtual void        fillRect(SAT_Rect ARect) = 0;
+        virtual void        fillArc(SAT_Point APos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2) = 0;
+        virtual void        drawText(SAT_Point APos, const char* AText) = 0;
         virtual void        drawText(SAT_Rect ARect, const char* AText, uint32_t AAlignment) = 0;
         virtual sat_coord_t getTextBounds(const char* AText, sat_coord_t* ABounds) = 0;
         virtual sat_coord_t getTextWidth(const char* AText) = 0;
         virtual sat_coord_t getTextHeight(const char* AText) = 0;
-        virtual void        drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSource* ASource) = 0;
-        virtual void        drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSource* ASource, SAT_Rect ASrc) = 0;
+        virtual void        drawImage(SAT_Point APos, SAT_PaintSource* ASource) = 0;
+        virtual void        drawImage(SAT_Point APos, SAT_PaintSource* ASource, SAT_Rect ASrc) = 0;
         virtual void        drawImage(SAT_Rect ADst, SAT_PaintSource* ASource, SAT_Rect ASrc) = 0;
     public: // vector
         // TODO

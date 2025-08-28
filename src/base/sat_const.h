@@ -197,14 +197,14 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 // #define SAT_WIDGET_OPTION_AUTO_SCALE            0x40
 // #define SAT_WIDGET_OPTION_WANT_HOVER_EVENTS     0x80
 
-#define SAT_WIDGET_REALIGN_NORMAL               0
-#define SAT_WIDGET_REALIGN_SELF                 0x01
-#define SAT_WIDGET_REALIGN_POS                  0x02
-#define SAT_WIDGET_REALIGN_SIZE                 0x04
-#define SAT_WIDGET_REALIGN_PARENT               0x08
-#define SAT_WIDGET_REALIGN_CHILDREN             0x10
-#define SAT_WIDGET_REALIGN_ROOT                 0x20
-#define SAT_WIDGET_REALIGN_RECT                 (SAT_WIDGET_REALIGN_POS | SAT_WIDGET_REALIGN_SIZE)
+// #define SAT_WIDGET_REALIGN_NORMAL               0
+#define SAT_WIDGET_REALIGN_CHILDREN             0
+#define SAT_WIDGET_REALIGN_PARENT               0x01
+#define SAT_WIDGET_REALIGN_ROOT                 0x02
+#define SAT_WIDGET_REALIGN_SELF                 0x04
+// #define SAT_WIDGET_REALIGN_POS                  0x02
+// #define SAT_WIDGET_REALIGN_SIZE                 0x04
+// #define SAT_WIDGET_REALIGN_RECT                 (SAT_WIDGET_REALIGN_POS | SAT_WIDGET_REALIGN_SIZE)
 
 #define SAT_WIDGET_REDRAW_NORMAL                0
 #define SAT_WIDGET_REDRAW_SELF                  0x01

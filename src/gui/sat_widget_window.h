@@ -100,6 +100,9 @@ class SAT_WidgetWindow
         SAT_Widget*             MHintWidget             = nullptr;  // widget receiving hints
         SAT_Widget*             MHoverWidget            = nullptr;  // currently hovering over
         SAT_Widget*             MModalWidget            = nullptr;  // exclusive widget, all other widgets ignored
+    private:
+        bool                    MNeedFullRealignment    = false;    // force full alignment (all widgets)
+        bool                    MNeedFullRepaint        = false;    // force full repaint (all widgets)
 };
 
 //----------------------------------------------------------------------
@@ -112,6 +115,7 @@ SAT_WidgetWindow::SAT_WidgetWindow(uint32_t AWidth, uint32_t AHeight, intptr_t A
 : SAT_Window(AWidth, AHeight, AParent)
 , SAT_Widget(SAT_Rect(AWidth,AHeight))
 {
+    MRect = MInitialRect;
     MWindowTimer = new SAT_Timer(this);
 }
 
@@ -151,6 +155,10 @@ void SAT_WidgetWindow::removeTimerWidget(SAT_Widget* AWidget)
 }
 
 /*
+    if SAT_WINDOW_REDIRECT_TIMER_TO_GUI_THREAD is defined, this is called
+    on the gui thread (x11 event handler), otherwise it's called directly
+    from the timer callback (timer thread)..
+
     TODO: widget redrawing originating from audio automation & modulation
     MWidgetUpdateQueue ?
 */
@@ -171,9 +179,9 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
     while (MWidgetRealignQueue.read(&widget))
     {
         count += 1;
-        //widget->realignChildren();
-        widget->on_widget_realign();
-        MWidgetRedrawQueue.write(widget);
+        // widget->realignChildren();
+        // MWidgetRedrawQueue.write(widget); // called during realignment..
+        widget->on_widget_realign(SAT_WIDGET_REALIGN_CHILDREN,0);
     }
     // SAT.STATISTICS.report_WindwRealignQueue(count);
     // ----- redraw queue -----
@@ -199,15 +207,29 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
 
 void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
 {
-    uint32_t count = 0;
-    SAT_Widget* widget;
-    while (MWidgetPaintQueue.read(&widget))
+    if (MNeedFullRepaint)
     {
-        count += 1;
-        //widget->paintChildren(AContext);
-        widget->on_widget_paint(AContext);
+        uint32_t num = getNumChildren();
+        for (uint32_t i=0; i<num; i++)
+        {
+            SAT_Widget* child = getChild(i);
+            child->on_widget_paint(AContext);
+        }
+        // SAT.STATISTICS.report_WindowPaintAll();
+        MNeedFullRepaint = false;
     }
-    // SAT.STATISTICS.report_WindwPaintQueue(count);
+    else
+    {
+        uint32_t count = 0;
+        SAT_Widget* widget;
+        while (MWidgetPaintQueue.read(&widget))
+        {
+            count += 1;
+            //widget->paintChildren(AContext);
+            widget->on_widget_paint(AContext);
+        }
+        // SAT.STATISTICS.report_WindowPaintQueue(count);
+    }
 }
 
 //------------------------------
@@ -226,7 +248,13 @@ void SAT_WidgetWindow::on_timer_listener_update(SAT_Timer* ATimer, double ADelta
         // SAT.STATISTICS.report_WindowTimerBlocked(time);
         return;
     }
-    sendClientMessage(SAT_WINDOW_USER_MESSAGE_TIMER,0);
+    #ifdef SAT_WINDOW_REDIRECT_TIMER_TO_GUI_THREAD
+        sendClientMessage(SAT_WINDOW_USER_MESSAGE_TIMER,0);
+    #else
+        // this is probably too dagerous! handleTimer reads from the
+        // MTimerWidgets array, calls MTweenManager, writes to MRedrawQueue..
+        handleTimer(ATimerId,ADelta);
+    #endif
 };
 
 void SAT_WidgetWindow::on_window_paint(SAT_PaintContext* AContext, bool ABuffered)
@@ -247,6 +275,8 @@ void SAT_WidgetWindow::on_window_show()
         SAT_Widget* child = getChild(i);
         child->on_widget_show(this);
     }
+    realignChildren();
+    MNeedFullRepaint = true;
     MWindowTimer->start(SAT_WINDOW_TIMER_MS);
 }
 
@@ -268,7 +298,9 @@ void SAT_WidgetWindow::on_window_move(int32_t AXpos, int32_t AYpos)
 void SAT_WidgetWindow::on_window_resize(uint32_t AWidth, uint32_t AHeight)
 {
     SAT_Window::windowResize(AWidth,AHeight);
+    MRect = SAT_Rect(AWidth,AHeight);
     realignChildren();
+    MNeedFullRepaint = true;
 }
 
 // void SAT_WidgetWindow::on_window_paint(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight)

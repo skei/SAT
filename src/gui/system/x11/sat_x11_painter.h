@@ -22,7 +22,7 @@ class SAT_X11Painter
 
         void        beginPainting(uint32_t AWidth, uint32_t AHeight) override;
         void        endPainting() override;
-        void        setClip(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight) override;
+        void        setClip(SAT_Rect ARect) override;
         void        resetClip() override;
 
     public:        
@@ -34,18 +34,18 @@ class SAT_X11Painter
 
     public:
 
-        void        drawLine(sat_coord_t AX1, sat_coord_t AY1, sat_coord_t AX2, sat_coord_t AY2) override;
-        void        drawRect(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t AWidth, sat_coord_t AHeight) override;
-        void        drawArc(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2) override;
-        void        fillRect(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t AWidth, sat_coord_t AHeight) override;
-        void        fillArc(sat_coord_t AXposx, sat_coord_t AYpos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2) override;
-        void        drawText(sat_coord_t AXpos, sat_coord_t AYpos, const char* AText) override;
+        void        drawLine(SAT_Point AFrom, SAT_Point ATo) override;
+        void        drawRect(SAT_Rect ARect) override;
+        void        drawArc(SAT_Point APos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2) override;
+        void        fillRect(SAT_Rect ARect) override;
+        void        fillArc(SAT_Point APos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2) override;
+        void        drawText(SAT_Point APos, const char* AText) override;
         void        drawText(SAT_Rect ARect, const char* AText, uint32_t AAlignment) override;
         sat_coord_t getTextBounds(const char* AText, sat_coord_t* ABounds) override;
         sat_coord_t getTextWidth(const char* AText) override;
         sat_coord_t getTextHeight(const char* AText) override;
-        void        drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSource* ASource) override;
-        void        drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSource* ASource, SAT_Rect ASrc) override;
+        void        drawImage(SAT_Point APos, SAT_PaintSource* ASource) override;
+        void        drawImage(SAT_Point APos, SAT_PaintSource* ASource, SAT_Rect ASrc) override;
         void        drawImage(SAT_Rect ADst, SAT_PaintSource* ASource, SAT_Rect ASrc) override;
 
     private: // X11
@@ -168,14 +168,14 @@ void SAT_X11Painter::endPainting()
 // clipping
 //------------------------------
 
-void SAT_X11Painter::setClip(int32_t AXpos, int32_t AYpos, uint32_t AWidth, uint32_t AHeight)
+void SAT_X11Painter::setClip(SAT_Rect ARect)
 {
     //resetClip();
     xcb_rectangle_t rectangles[] = {{
-        (int16_t)AXpos,
-        (int16_t)AYpos,
-        (uint16_t)(AWidth + 1),
-        (uint16_t)(AHeight + 1),
+        (int16_t)ARect.x,
+        (int16_t)ARect.y,
+        (uint16_t)(ARect.w + 1),
+        (uint16_t)(ARect.h + 1),
     }};
     xcb_set_clip_rectangles(
         MConnection,
@@ -230,15 +230,15 @@ void SAT_X11Painter::setLineWidth(sat_coord_t AWidth)
 // draw
 //------------------------------
 
-void SAT_X11Painter::drawLine(sat_coord_t AX1, sat_coord_t AY1, sat_coord_t AX2, sat_coord_t AY2)
+void SAT_X11Painter::drawLine(SAT_Point AFrom, SAT_Point ATo)
 {
-    xcb_point_t polyline[] = { (int16_t)AX1, (int16_t)AY1, (int16_t)AX2, (int16_t)AY2 };
+    xcb_point_t polyline[] = { (int16_t)AFrom.x, (int16_t)AFrom.y, (int16_t)ATo.x, (int16_t)ATo.y };
     xcb_poly_line(MConnection,XCB_COORD_MODE_ORIGIN,MDrawable,MGC,2,polyline);
 }
 
-void SAT_X11Painter::drawRect(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t AWidth, sat_coord_t AHeight)
+void SAT_X11Painter::drawRect(SAT_Rect ARect)
 {
-    xcb_rectangle_t rectangles[] = {{ (int16_t)AXpos, (int16_t)AYpos, (uint16_t)AWidth, (uint16_t)AHeight }};
+    xcb_rectangle_t rectangles[] = {{ (int16_t)ARect.x, (int16_t)ARect.y, (uint16_t)ARect.w, (uint16_t)ARect.h }};
     xcb_poly_rectangle(MConnection,MDrawable,MGC,1,rectangles);
 }
   
@@ -250,12 +250,12 @@ void SAT_X11Painter::drawRect(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t 
                             // positive = clockwise, negative = counter-clockwise
 */
 
-void SAT_X11Painter::drawArc(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2)
+void SAT_X11Painter::drawArc(SAT_Point APos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2)
 {
-    sat_coord_t x = AXpos - ARadius;
-    sat_coord_t y = AYpos - ARadius;
-    sat_coord_t w = AXpos + ARadius;
-    sat_coord_t h = AYpos + ARadius;
+    sat_coord_t x = APos.x - ARadius;
+    sat_coord_t y = APos.y - ARadius;
+    sat_coord_t w = APos.x + ARadius;
+    sat_coord_t h = APos.y + ARadius;
     sat_coord_t a1 = AAngle1;
     sat_coord_t a2 = AAngle2;
     xcb_arc_t arcs[] = {
@@ -273,18 +273,18 @@ void SAT_X11Painter::drawArc(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t A
 // fill
 //------------------------------
 
-void SAT_X11Painter::fillRect(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t AWidth, sat_coord_t AHeight)
+void SAT_X11Painter::fillRect(SAT_Rect ARect)
 {
-    xcb_rectangle_t rectangles[] = {{ (int16_t)AXpos, (int16_t)AYpos, (uint16_t)AWidth, (uint16_t)AHeight }};
+    xcb_rectangle_t rectangles[] = {{ (int16_t)ARect.x, (int16_t)ARect.y, (uint16_t)ARect.w, (uint16_t)ARect.h }};
     xcb_poly_fill_rectangle(MConnection,MDrawable,MGC,1,rectangles);
 }
 
-void SAT_X11Painter::fillArc(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2)
+void SAT_X11Painter::fillArc(SAT_Point APos, sat_coord_t ARadius, sat_coord_t AAngle1, sat_coord_t AAngle2)
 {
-    sat_coord_t x = AXpos - ARadius;
-    sat_coord_t y = AYpos - ARadius;
-    sat_coord_t w = AXpos + ARadius;
-    sat_coord_t h = AYpos + ARadius;
+    sat_coord_t x = APos.x - ARadius;
+    sat_coord_t y = APos.y - ARadius;
+    sat_coord_t w = APos.x + ARadius;
+    sat_coord_t h = APos.y + ARadius;
     sat_coord_t a1 = AAngle1;
     sat_coord_t a2 = AAngle2;
     xcb_arc_t arcs[] = {
@@ -302,30 +302,31 @@ void SAT_X11Painter::fillArc(sat_coord_t AXpos, sat_coord_t AYpos, sat_coord_t A
 // text
 //------------------------------
 
-void SAT_X11Painter::drawText(sat_coord_t AXpos, sat_coord_t AYpos, const char* AText)
+void SAT_X11Painter::drawText(SAT_Point APos, const char* AText)
 {
     uint8_t buffer[512];
     SAT_XcbPolyText8 pt;
     pt.data = buffer;
     pt.used = 0;
     addStringText8(&pt,AText);
-    xcb_poly_text_8(MConnection,MDrawable,MGC,AXpos,AYpos,pt.used,pt.data);
+    xcb_poly_text_8(MConnection,MDrawable,MGC,(int16_t)APos.x,(int16_t)APos.y,pt.used,pt.data);
 }
 
 void SAT_X11Painter::drawText(SAT_Rect ARect, const char* AText, uint32_t AAlignment)
 {
     measure_string(AText);
-    sat_coord_t x,y,w;
+    SAT_Point pos;
+    sat_coord_t w;
     // sat_coord_t x2 = ARect.x + ARect.w;
     // sat_coord_t y2 = ARect.y + ARect.h;
-    if (AAlignment & SAT_TEXT_ALIGN_TOP) y = ARect.y    + MFontAscent;
-    else if (AAlignment & SAT_TEXT_ALIGN_BOTTOM) y = ARect.y2() - MFontDescent;
-    else y = ARect.y + (MFontAscent * 0.5f) + (ARect.h * 0.5f);
+    if (AAlignment & SAT_TEXT_ALIGN_TOP) pos.y = ARect.y    + MFontAscent;
+    else if (AAlignment & SAT_TEXT_ALIGN_BOTTOM) pos.y = ARect.y2() - MFontDescent;
+    else pos.y = ARect.y + (MFontAscent * 0.5f) + (ARect.h * 0.5f);
     w = MFontWidth;
-    if (AAlignment & SAT_TEXT_ALIGN_LEFT) x = ARect.x;
-    else if (AAlignment & SAT_TEXT_ALIGN_RIGHT) x = ARect.x2() - w;
-    else x = ARect.x + (ARect.w * 0.5f) - (w * 0.5f);
-    drawText(x,y,AText);
+    if (AAlignment & SAT_TEXT_ALIGN_LEFT) pos.x = ARect.x;
+    else if (AAlignment & SAT_TEXT_ALIGN_RIGHT) pos.x = ARect.x2() - w;
+    else pos.x = ARect.x + (ARect.w * 0.5f) - (w * 0.5f);
+    drawText(pos,AText);
   }
 
 sat_coord_t SAT_X11Painter::getTextBounds(const char* AText, sat_coord_t* ABounds)
@@ -357,7 +358,7 @@ sat_coord_t SAT_X11Painter::getTextHeight(const char* AText)
 
 // draw entire image
 
-void SAT_X11Painter::drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSource* ASource)
+void SAT_X11Painter::drawImage(SAT_Point APos, SAT_PaintSource* ASource)
 {
     uint32_t width  = ASource->getWidth();
     uint32_t height = ASource->getHeight();
@@ -382,13 +383,13 @@ void SAT_X11Painter::drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSo
                                             //            by mallocing sufficient storage and filling in base.
         );
         xcb_image_put(
-            MConnection,    // xcb_connection_t*  conn,
-            MDrawable,      // xcb_drawable_t     draw,
-            MGC,            // xcb_gcontext_t     gc,
-            image,          // xcb_image_t*       image,
-            AXpos,          // int16_t            x,
-            AYpos,          // int16_t            y,
-            0               // uint8_t            left_pad
+            MConnection,        // xcb_connection_t*  conn,
+            MDrawable,          // xcb_drawable_t     draw,
+            MGC,                // xcb_gcontext_t     gc,
+            image,              // xcb_image_t*       image,
+            (int16_t)APos.x,    // int16_t            x,
+            (int16_t)APos.y,    // int16_t            y,
+            0                   // uint8_t            left_pad
         );
         image->base = nullptr;
         xcb_image_destroy(image);
@@ -422,8 +423,8 @@ void SAT_X11Painter::drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSo
                 MGC,                        // A Graphic Context
                 0,                          // Top left x coordinate of the region we want to copy
                 0,                          // Top left y coordinate of the region we want to copy
-                AXpos,                      // Top left x coordinate of the region where we want to copy
-                AYpos,                      // Top left y coordinate of the region where we want to copy
+                (int16_t)APos.x,            // Top left x coordinate of the region where we want to copy
+                (int16_t)APos.y,            // Top left y coordinate of the region where we want to copy
                 width,                      // Width                 of the region we want to copy
                 height                      // Height of the region we want to copy
             );
@@ -434,7 +435,7 @@ void SAT_X11Painter::drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSo
 
 // draw part of image
 
-void SAT_X11Painter::drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSource* ASource, SAT_Rect ASrc)
+void SAT_X11Painter::drawImage(SAT_Point APos, SAT_PaintSource* ASource, SAT_Rect ASrc)
 {
     if (ASource->isBitmap())
     {
@@ -448,8 +449,8 @@ void SAT_X11Painter::drawImage(sat_coord_t AXpos, sat_coord_t AYpos, SAT_PaintSo
             MGC,                        // A Graphic Context
             ASrc.x,                     // Top left x coordinate of the region we want to copy
             ASrc.y,                     // Top left y coordinate of the region we want to copy
-            AXpos,                      // Top left x coordinate of the region where we want to copy
-            AYpos,                      // Top left y coordinate of the region where we want to copy
+            (int16_t)APos.x,            // Top left x coordinate of the region where we want to copy
+            (int16_t)APos.y,            // Top left y coordinate of the region where we want to copy
             ASrc.w,                     // Width                 of the region we want to copy
             ASrc.h                      // Height of the region we want to copy
         );

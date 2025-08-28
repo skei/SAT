@@ -159,12 +159,11 @@ class SAT_Widget
             .interactive        = false
 
         };
-    private:
+    protected:
+        SAT_WidgetOwner*        MOwner          = nullptr;
         SAT_Widget*             MParent         = nullptr;
         SAT_WidgetArray         MChildren       = {};
         SAT_Rect                MRect           = {};
-    private:
-        SAT_WidgetOwner*        MOwner          = nullptr;
         SAT_Rect                MInitialRect    = {};
         SAT_Point               MScreenOffset   = {};
         SAT_Rect                MContentRect    = {};
@@ -181,6 +180,7 @@ class SAT_Widget
 SAT_Widget::SAT_Widget(SAT_Rect ARect)
 {
     MInitialRect = ARect;
+    // MRect = ARect;  // TODO: -> realign
 }
 
 SAT_Widget::~SAT_Widget()
@@ -231,6 +231,12 @@ void SAT_Widget::deleteChildren()
 
 void SAT_Widget::paintChildren(SAT_PaintContext* AContext)
 {
+    uint32_t num = getNumChildren();
+    for(uint32_t i=0; i<num; i++)
+    {
+        SAT_Widget* widget = getChild(i);
+        widget->on_widget_paint(AContext);
+    }
 }
 
 /*
@@ -239,6 +245,17 @@ void SAT_Widget::paintChildren(SAT_PaintContext* AContext)
 
 void SAT_Widget::realignChildren()
 {
+    SAT_Rect parent_rect = MRect;
+    uint32_t num = MChildren.size();
+    for (uint32_t i=0; i<num; i++)
+    {
+        SAT_Widget* widget = MChildren[i];
+        SAT_Rect rect = widget->MInitialRect;
+        rect.x += parent_rect.x;
+        rect.y += parent_rect.y;
+        widget->MRect = rect;
+        widget->realignChildren();
+    }
 }
 
 /*
