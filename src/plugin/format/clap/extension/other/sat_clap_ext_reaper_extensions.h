@@ -27,7 +27,6 @@
     {
         INT_PTR *(*inline_editor)(const clap_plugin_t *plugin, int msg, void *param1, void *param2);
     };
-
 */
 
 //----------

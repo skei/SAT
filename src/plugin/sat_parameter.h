@@ -156,7 +156,7 @@ void SAT_Parameter::setId(uint32_t AId)                 { MInfo.id = AId; }
 void SAT_Parameter::setFlags(uint32_t AFlags)           { MInfo.flags = AFlags; }
 void SAT_Parameter::addFlags(uint32_t AFlags)           { MInfo.flags |= AFlags; }
 void SAT_Parameter::setName(const char* AName)          { SAT_Strlcpy(MInfo.name,AName,CLAP_NAME_SIZE); }
-void SAT_Parameter::setModule(const char* AModule)      { SAT_Strlcpy(MInfo.name,AModule,CLAP_PATH_SIZE); }
+void SAT_Parameter::setModule(const char* AModule)      { SAT_Strlcpy(MInfo.module,AModule,CLAP_PATH_SIZE); }
 void SAT_Parameter::setMinValue(sat_param_t AValue)     { MInfo.min_value = AValue; }
 void SAT_Parameter::setMaxValue(sat_param_t AValue)     { MInfo.max_value = AValue; }
 void SAT_Parameter::setDefaultValue(sat_param_t AValue) { MInfo.default_value = AValue; }
