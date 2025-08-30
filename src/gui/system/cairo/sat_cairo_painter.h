@@ -1,8 +1,6 @@
 #pragma once
 
-/*
-    click/drag with mouse to edit value
-*/
+#include "base/sat_base.h"
 
 //----------------------------------------------------------------------
 //

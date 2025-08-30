@@ -1,8 +1,6 @@
 #pragma once
 
-/*
-    manages a container with child widgets
-*/
+#include "base/sat_base.h"
 
 //----------------------------------------------------------------------
 //

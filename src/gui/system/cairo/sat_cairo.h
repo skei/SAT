@@ -1,9 +1,6 @@
 #pragma once
 
-/*
-    witget with value(s)
-    can be connected to parameter(s)
-*/
+#include "base/sat_base.h"
 
 //----------------------------------------------------------------------
 //

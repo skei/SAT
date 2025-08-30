@@ -1,8 +1,6 @@
 #pragma once
 
-/*
-    render to offscreen buffer
-*/
+#include "base/sat_base.h"
 
 //----------------------------------------------------------------------
 //

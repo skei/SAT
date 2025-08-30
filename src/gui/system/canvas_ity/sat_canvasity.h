@@ -1,8 +1,6 @@
 #pragma once
 
-/*
-    handles the layout of child widgets
-*/
+#include "base/sat_base.h"
 
 //----------------------------------------------------------------------
 //

@@ -37,6 +37,7 @@ class SAT_Painter
         void                endPainting() override;
     public:
         virtual void        pushClipRect(SAT_Rect ARect);
+        virtual void        pushOverlappingClipRect(SAT_Rect ARect);
         virtual void        popClipRect();
         virtual SAT_Rect    getClipRect();
     public:
@@ -80,6 +81,13 @@ void SAT_Painter::pushClipRect(SAT_Rect ARect)
     MClipRectStack.push(MCurrentClipRect);
     setClip(ARect);
     MCurrentClipRect = ARect;
+}
+
+void SAT_Painter::pushOverlappingClipRect(SAT_Rect ARect)
+{
+    SAT_Rect r = ARect;
+    r.overlap(MCurrentClipRect);
+    pushClipRect(r);
 }
 
 void SAT_Painter::popClipRect()

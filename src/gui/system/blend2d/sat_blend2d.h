@@ -1,8 +1,6 @@
 #pragma once
 
-/*
-    movable/sizable widget
-*/
+#include "base/sat_base.h"
 
 //----------------------------------------------------------------------
 //

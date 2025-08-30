@@ -17,7 +17,7 @@ class myWidget
         myWidget(SAT_Rect ARect);
         virtual ~myWidget();
 
-        void on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode=SAT_WIDGET_REDRAW_SELF, uint32_t AIndex=0) override;
+        void on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode=SAT_WIDGET_PAINT_NORMAL, uint32_t AIndex=0) override;
 };
 
 //------------------------------
@@ -42,8 +42,6 @@ void myWidget::on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode, uint3
     painter->fillRect(MRect);
     painter->setTextColor(SAT_White);
     painter->drawText(MRect,"Hello world",SAT_TEXT_ALIGN_CENTER);
-    // handle widgets..
-    // SAT_Widget::on_widget_paint(AContext,AMode,AIndex);
     paintChildren(AContext);    
 }
 

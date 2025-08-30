@@ -1,9 +1,6 @@
 #pragma once
 
-/*
-    base widget for drawing
-    background, border
-*/
+#include "base/sat_base.h"
 
 //----------------------------------------------------------------------
 //

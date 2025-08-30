@@ -1,8 +1,6 @@
 #pragma once
 
-/*
-    connection between widget and window
-*/
+#include "base/sat_base.h"
 
 //----------------------------------------------------------------------
 //
