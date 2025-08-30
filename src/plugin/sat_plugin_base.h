@@ -39,16 +39,19 @@ struct ParameterEvent
 
 /*
     aka plugin
-    info when creating editor
+    setup
 */
 
-// class SAT_EditorOwner
-// {
-// };
+class SAT_EditorOwner
+{
+    public:
+        // getDefaultSize
+        // getParameters
+};
 
 /*
     aka plugin?
-    editor -> plugin
+    runtime, editor -> plugin
 */
 
 class SAT_EditorListener

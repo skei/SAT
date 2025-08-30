@@ -1,23 +1,21 @@
 #pragma once
 
+/*
+    widget pos/size, relative to parent and other widgets
+*/
+
+/*
+    todo/consider:
+        - movable/sizable (affects layout, pos/size)
+        - tweening - offset (from layout/alignment)
+        - scrolling (scroll_box) - offset (from layout/alignment)
+*/
+
+//----------------------------------------------------------------------
+
 #include "base/sat_base.h"
 //#include "gui/sat_gui_base.h"
 #include "gui/widget/base/sat_visual_widget.h"
-
-// struct SAT_WidgetLayout
-// {
-//     uint32_t    anchor          = SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT;
-//     uint32_t    stretch         = SAT_WIDGET_LAYOUT_STRETCH_NONE;
-//     uint32_t    fill            = SAT_WIDGET_LAYOUT_FILL_NONE;
-//     uint32_t    relative        = SAT_WIDGET_LAYOUT_RELATIVE_NONE;
-//     uint32_t    stack           = SAT_WIDGET_LAYOUT_STACK_NONE;
-//     SAT_Rect    inner_border    = {0,0,0,0};
-//     SAT_Rect    outer_border    = {0,0,0,0};
-//     SAT_Point   spacing         = {0,0};
-//     SAT_Point   minSize         = {-1,-1};
-//     SAT_Point   maxSize         = {-1,-1};
-//     double      scale           = 1.0;
-// };
 
 //----------------------------------------------------------------------
 //
@@ -51,9 +49,13 @@ class SAT_LayoutWidget
 
     protected:
 
-        SAT_Rect        MBaseRect       = {};
-        SAT_Rect        MInitialRect    = {};
+        SAT_Rect        MBaseRect       = {};   // starting point for alignment
+        SAT_Rect        MInitialRect    = {};   // pos/size when created (may be percentages)
         SAT_Rect        MContentRect    = {};
+
+     // SAT_Point       MLayoutOffset       = {0,0};
+     // sat_coord_t     MChildScale         = 1.0;
+     // sat_coord_t     MAccumulatedScale   = 1.0;
 
 };
 
@@ -66,7 +68,6 @@ class SAT_LayoutWidget
 SAT_LayoutWidget::SAT_LayoutWidget(SAT_Rect ARect)
 : SAT_VisualWidget(ARect)
 {
-    MWidgetType     = 0;
     MWidgetTypeName = "SAT_LayoutWidget";
     MInitialRect    = ARect;
     MBaseRect       = ARect;
@@ -108,16 +109,15 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
     sat_coord_t scale = 1.0;
     SAT_Rect root_rect = getRect();//{0};
 
-    // hmmm... we want to realign before window is initially shown.. :-/
-    //SAT_Assert(MOwner);
-    
-    if (MOwner)
-    {
+    // on_window_show -> on_widget_show should have set this..
+    SAT_Assert(MOwner);
+    //if (MOwner)
+    //{
         scale = MOwner->do_widget_owner_get_scale(this);
         sat_coord_t w = MOwner->do_widget_owner_get_width(this);
         sat_coord_t h = MOwner->do_widget_owner_get_height(this);
         root_rect = SAT_Rect(w,h);
-    }
+    //}
 
     SAT_Rect inner_border = Layout.inner_border;
     inner_border.scale(scale);

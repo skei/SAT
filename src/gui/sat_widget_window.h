@@ -360,6 +360,7 @@ void SAT_WidgetWindow::on_window_paint(SAT_PaintContext* AContext, bool ABuffere
 
 void SAT_WidgetWindow::on_window_show()
 {
+    setOwner(this);
     uint32_t num = getNumChildren();
     for (uint32_t i=0; i<num; i++)
     {
@@ -373,6 +374,7 @@ void SAT_WidgetWindow::on_window_show()
 
 void SAT_WidgetWindow::on_window_hide()
 {
+    setOwner(nullptr);
     if (MWindowTimer->isRunning()) MWindowTimer->stop();
     uint32_t num = getNumChildren();
     for (uint32_t i=0; i<num; i++)
@@ -648,7 +650,7 @@ void SAT_WidgetWindow::do_widget_realign(SAT_BaseWidget* AWidget, uint32_t AMode
                 {
                     case SAT_WIDGET_REDRAW_SELF:
                     {
-                        if (AWidget->Options.opaque) MQueues.queueRedraw(AWidget);
+                        if (AWidget->State.opaque) MQueues.queueRedraw(AWidget);
                         else
                         {
                             SAT_Widget* opaque_parent = AWidget->findOpaqueParent();
@@ -662,7 +664,7 @@ void SAT_WidgetWindow::do_widget_realign(SAT_BaseWidget* AWidget, uint32_t AMode
                         SAT_Widget* widget = AWidget->getParent();
                         if (widget)
                         {
-                            if (widget->Options.opaque) MQueues.queueRedraw(widget);
+                            if (widget->State.opaque) MQueues.queueRedraw(widget);
                             else
                             {
                                 SAT_Widget* opaque_parent = widget->findOpaqueParent();

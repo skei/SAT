@@ -2,6 +2,7 @@
 
 #include "base/sat_base.h"
 #include "plugin/sat_plugin_base.h"
+#include "gui/sat_window.h"
 
 //----------------------------------------------------------------------
 //
@@ -9,7 +10,8 @@
 //
 //----------------------------------------------------------------------
 
-class SAT_ExePlugin
+class SAT_ExeWindow
+: public SAT_Window
 {
 };
 

@@ -1,5 +1,18 @@
 #pragma once
 
+/*
+    widget internal value(s)
+    connection to parameter(s)
+*/
+
+/*
+    todo/consider:
+        - modulation
+        - param indication
+*/
+
+//----------------------------------------------------------------------
+
 #include "base/sat_base.h"
 //#include "gui/sat_gui_base.h"
 #include "gui/widget/base/sat_interactive_widget.h"
@@ -40,7 +53,6 @@ class SAT_ValueWidget
 SAT_ValueWidget::SAT_ValueWidget(SAT_Rect ARect)
 : SAT_InteractiveWidget(ARect)
 {
-    MWidgetType     = 0;
     MWidgetTypeName = "SAT_ValueWidget";
 }
 

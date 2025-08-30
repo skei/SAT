@@ -1,5 +1,11 @@
 #pragma once
 
+/*
+    widget hierarchy, parent/children
+*/
+
+//----------------------------------------------------------------------
+
 #include "base/sat_base.h"
 //#include "gui/sat_gui_base.h"
 #include "gui/sat_painter.h"
@@ -60,7 +66,6 @@ class SAT_HierarchyWidget
 SAT_HierarchyWidget::SAT_HierarchyWidget()
 : SAT_BaseWidget()
 {
-    MWidgetType     = 0;
     MWidgetTypeName = "SAT_HierarchyWidget";
 }
 
@@ -143,11 +148,16 @@ void SAT_HierarchyWidget::deleteChildren()
 
 SAT_BaseWidget* SAT_HierarchyWidget::findWidget(const char* AName, bool ARecursive)
 {
+    const char* name = getName();
+    if (strcmp(AName,name) == 0)
+    {
+        return this;
+    }
     for (uint32_t i=0; i<getNumChildren(); i++)
     {
         SAT_BaseWidget* child = getChild(i);
-        const char* name = child->getName();
-        if (strcmp(AName,name) == 0)
+        name = child->getName();
+        if (strcmp(AName,name) == 0) 
         {
             return child;
         }

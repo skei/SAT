@@ -1,5 +1,18 @@
 #pragma once
 
+/*
+    how a widget looks, how to draw it..
+    how it appears on screen (and where)
+*/
+
+/*
+    todo/consider
+        - last drawn frame to avoid excess drawing..
+        - layered widgets (transrency, opacity, redrawing parent widgets..)
+*/
+
+//----------------------------------------------------------------------
+
 #include "base/sat_base.h"
 //#include "gui/sat_gui_base.h"
 #include "gui/sat_painter.h"
@@ -57,7 +70,6 @@ class SAT_VisualWidget
 SAT_VisualWidget::SAT_VisualWidget(SAT_Rect ARect)
 : SAT_HierarchyWidget()
 {
-    MWidgetType     = 0;
     MWidgetTypeName = "SAT_VisualWidget";
     MRect           = ARect;
 }
@@ -81,7 +93,7 @@ bool SAT_VisualWidget::isVisible()
 }
 bool SAT_VisualWidget::isOpaque()
 {
-    return Options.opaque;
+    return State.opaque;
 }
 
 //----------
@@ -106,7 +118,7 @@ void SAT_VisualWidget::setVisible(bool AState, bool ARecursive)
 
 void SAT_VisualWidget::setOpaque(bool AState, bool ARecursive)
 {
-    Options.opaque = AState;
+    State.opaque = AState;
     if (ARecursive)
     {
         for (uint32_t i=0; i<getNumChildren(); i++)
@@ -172,13 +184,13 @@ SAT_Rect SAT_VisualWidget::findParentClipRect(SAT_Rect ARect)
 SAT_BaseWidget* SAT_VisualWidget::findOpaqueParent(SAT_Rect ARect)
 {
     // SAT_TRACE;
-    // if (Options.opaque == true) return this;
+    // if (State.opaque == true) return this;
     // else
     // {
         SAT_BaseWidget* parent = getParent();
         if (parent)
         {
-            if (parent->Options.opaque == true) return parent;
+            if (parent->State.opaque == true) return parent;
             else return parent->findOpaqueParent(ARect);
         }
         else return nullptr;
@@ -206,7 +218,7 @@ bool SAT_VisualWidget::isRecursivelyVisible()
 
 bool SAT_VisualWidget::isRecursivelyOpaque()
 {
-    if (!Options.opaque) return false;
+    if (!State.opaque) return false;
     SAT_BaseWidget* parent = getParent();
     if (!parent) return true;
     return parent->isRecursivelyOpaque();

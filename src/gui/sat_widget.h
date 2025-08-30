@@ -2,9 +2,7 @@
 
 /*
     todo / consider
-        - movable, sizable
-        - layers (transparency)
-        - buffered/cached
+        - context menu
 */
 
 #include "base/sat_base.h"

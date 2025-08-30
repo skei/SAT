@@ -28,6 +28,7 @@ typedef SAT_Array<SAT_NotePort*>        SAT_NotePortArray;
 
 class SAT_Plugin
 : public SAT_ClapPlugin
+, public SAT_EditorOwner
 , public SAT_EditorListener
 , public SAT_ProcessorListener
 {
@@ -491,6 +492,13 @@ void SAT_Plugin::do_processor_update_parameter(uint32_t AId, sat_param_t AValue)
 //------------------------------
 // editor
 //------------------------------
+
+//------------------------------
+// editor owner
+//------------------------------
+
+// getDefaultSize
+// getParameters
 
 //------------------------------
 // editor listener

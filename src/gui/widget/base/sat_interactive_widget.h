@@ -1,22 +1,14 @@
 #pragma once
 
+/*
+    interact with the widget
+*/
+
+//----------------------------------------------------------------------
+
 #include "base/sat_base.h"
 //#include "gui/sat_gui_base.h"
 #include "gui/widget/base/sat_layout_widget.h"
-
-// struct SAT_WidgetOptions
-// {
-//     bool auto_capture           = true;
-//     bool auto_clip              = true;
-//     bool auto_cursor_shape      = true;
-//     bool auto_cursor_lock       = true;
-//     bool auto_cursor_hide       = true;
-//     bool auto_hint              = false;
-//     bool auto_scale             = false;
-//     bool want_hover_events      = false;
-//     bool opaque                 = false;
-//     bool realign_if_invisible   = false;
-// };
 
 //----------------------------------------------------------------------
 //
@@ -64,7 +56,6 @@ class SAT_InteractiveWidget
 SAT_InteractiveWidget::SAT_InteractiveWidget(SAT_Rect ARect)
 : SAT_LayoutWidget(ARect)
 {
-    MWidgetType     = 0;
     MWidgetTypeName = "SAT_InteractiveWidget";
 }
 
