@@ -203,6 +203,7 @@ void SAT_Window::handleResizing()
 
 void SAT_Window::paintToScreen()
 {
+    //SAT_TRACE;
     SAT_Painter* painter = getPainter();
     SAT_Assert(painter);
     MPaintContext.painter = painter;
@@ -215,6 +216,7 @@ void SAT_Window::paintToScreen()
 
     void SAT_Window::paintToBuffer()
     {
+        //SAT_TRACE;
         SAT_Painter* painter = MBuffer->getPainter();
         SAT_Assert(painter);
         MPaintContext.painter = painter;
@@ -225,6 +227,7 @@ void SAT_Window::paintToScreen()
 
     void SAT_Window::copyBufferToScreen()
     {
+        //SAT_TRACE;
         SAT_Painter* painter = getPainter();
         SAT_Assert(painter);
         SAT_Rect rect = MPaintContext.update_rect;

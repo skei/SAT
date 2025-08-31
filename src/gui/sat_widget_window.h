@@ -233,7 +233,6 @@ void SAT_WidgetWindow::removeTimerWidget(SAT_BaseWidget* AWidget)
 
 void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
 {
-
     // MTimerDelta += ADelta;
     // if (MIsClosing)  return;
     // if (MIsPainting) return;
@@ -278,7 +277,7 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
     // ----- invalidate -----
     if (rect.isNotEmpty())
     {
-        SAT_PRINT("invalidate\n");
+        //SAT_PRINT("invalidate\n");
         invalidate(rect.x,rect.y,rect.w,rect.h);
     }
     // -----
@@ -299,6 +298,7 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
 {
     if (MNeedFullRepaint)
     {
+        //SAT_PRINT("full repaint\n");
         // AContext->update_rect = MRect;
         uint32_t num = getNumChildren();
         for (uint32_t i=0; i<num; i++)
@@ -315,6 +315,7 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
         SAT_BaseWidget* widget;
         while (MWidgetPaintQueue.read(&widget))
         {
+            //SAT_PRINT("painting widget %i\n",count);
             count += 1;
             //widget->paintChildren(AContext);
             widget->on_widget_paint(AContext);
@@ -360,7 +361,7 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
         if (!MHoverWidget)
         {
             // we have just entered the window, didn't leave anything            
-            SAT_PRINT("entering: %s\n",hover->getWidgetTypeName());
+            //SAT_PRINT("entering: %s\n",hover->getWidgetTypeName());
             hover->on_widget_mouse_enter(MHoverWidget,AXpos,AYpos,ATime);
             MHoverWidget = hover;
         }
@@ -370,9 +371,9 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
             if (hover != MHoverWidget)
             {
                 // differemt, leave the old, enter the new
-                SAT_PRINT("leaving: %s\n",MHoverWidget->getWidgetTypeName());
+                //SAT_PRINT("leaving: %s\n",MHoverWidget->getWidgetTypeName());
                 MHoverWidget->on_widget_mouse_leave(hover,AXpos,AYpos,ATime);
-                SAT_PRINT("entering: %s\n",hover->getWidgetTypeName());
+                //SAT_PRINT("entering: %s\n",hover->getWidgetTypeName());
                 hover->on_widget_mouse_enter(MHoverWidget,AXpos,AYpos,ATime);
                 MHoverWidget = hover;
             }
@@ -509,7 +510,7 @@ void SAT_WidgetWindow::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint3
     }
     else
     {
-        SAT_PRINT("MHoverWidget = null.. MMouseInsideWindow = %s -> ignore\n",MMouseInsideWindow?"true":"false");
+        //SAT_PRINT("MHoverWidget = null.. MMouseInsideWindow = %s -> ignore\n",MMouseInsideWindow?"true":"false");
         // we are probably outside of the window..
         // ignore..
     }
@@ -555,7 +556,7 @@ void SAT_WidgetWindow::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32
         }
         else
         {
-            SAT_PRINT("MCapturedMouseWidget = null, MHoverWidget = null.. MMouseInsideWindow = %s -> ignore\n",MMouseInsideWindow?"true":"false");
+            //SAT_PRINT("MCapturedMouseWidget = null, MHoverWidget = null.. MMouseInsideWindow = %s -> ignore\n",MMouseInsideWindow?"true":"false");
             // probably outside of the window (hoverwidget = null), ignore
         }
     }
@@ -587,13 +588,13 @@ void SAT_WidgetWindow::on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint3
     //SAT_Assert(MHoverWidget);
     if (MHoverWidget)
     {
-        SAT_PRINT("leaving: %s\n",MHoverWidget->getWidgetTypeName());
+        //SAT_PRINT("leaving: %s\n",MHoverWidget->getWidgetTypeName());
         MHoverWidget->on_widget_mouse_leave(nullptr,AXpos,AYpos,ATime);
         MHoverWidget = nullptr;
     }
     else
     {
-        SAT_PRINT("mouse leave message.. but MHoverWidget == nullptr\n");
+        //SAT_PRINT("mouse leave message.. but MHoverWidget == nullptr\n");
     }
 }
 
