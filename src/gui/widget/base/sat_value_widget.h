@@ -7,8 +7,10 @@
 
 /*
     todo/consider:
+        - multiple values/parameters
         - modulation
         - param indication
+        - if connected to parameter - (de-) normalization, etc..
 */
 
 //----------------------------------------------------------------------

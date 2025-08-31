@@ -102,6 +102,16 @@ SAT_Rect SAT_LayoutWidget::getContentRect()
 
 /*
     realign all child widgets (recursively)
+    note: MOwner (SAT_WidgetOwner) needs to be set..
+    (this func calls int it, to ask for window.scaling and root.size, etc)
+
+    called directly from:
+        SAT_WidgetWindow.on_window_show     // after on_widget_show() has been called to 'deliver' the WidgetOwner to the widgets)
+        SAT_WidgetWindow.on_window_resize   // we are waiting for the initial MAP_NOTIFY events when opning the window,
+                                            // (if SAT_X11_WAIT_FOR_MAPNOTIFY is defined, see SAT_X11Window.show())
+                                            // so we shouldn't get any resize events, and thus, realignChildren() calls, before on_window_show()?
+    via on_widget_realign:
+        SAT_WidgetWindow.handleTimer        // via SAT_WidgetWindow.on_timer_listener_update() (in timer thread!) -> x11 gui thread -> handleTimer
 */
 
 void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARecursive)

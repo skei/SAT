@@ -32,6 +32,7 @@ class SAT_Widget
 SAT_Widget::SAT_Widget(SAT_Rect ARect)
 : SAT_ValueWidget(ARect)
 {
+    MWidgetTypeName = "SAT_Widget";
 }
 
 SAT_Widget::~SAT_Widget()

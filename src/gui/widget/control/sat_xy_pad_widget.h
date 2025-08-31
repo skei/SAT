@@ -1,0 +1,3 @@
+// single x/y pad = 2 values/parameters...
+// multiple values = multiple 'dots' or crosses?
+// think: modulation, polyphony..
