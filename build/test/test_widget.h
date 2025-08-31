@@ -18,6 +18,13 @@ class myWidget
         virtual ~myWidget();
 
         void on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode=SAT_WIDGET_PAINT_NORMAL, uint32_t AIndex=0) override;
+        void on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
+
+    private:
+
+        SAT_Color   MColor1 = SAT_DarkRed;
+        SAT_Color   MColor2 = SAT_Grey;
+
 };
 
 //------------------------------
@@ -38,12 +45,21 @@ void myWidget::on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode, uint3
     // if (AResized) { SAT_PRINT("resized\n"); }
     SAT_Painter* painter = AContext->painter;
     SAT_Rect rect = AContext->update_rect;
-    painter->setFillColor(SAT_DarkRed);
+    painter->setFillColor(MColor1);
     painter->fillRect(MRect);
-    painter->setTextColor(SAT_White);
+    painter->setTextColor(MColor2);
     painter->drawText(MRect,"Hello world",SAT_TEXT_ALIGN_CENTER);
     paintChildren(AContext);    
 }
+
+void myWidget::on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
+{
+    SAT_Color temp = MColor1;
+    MColor1 = MColor2;
+    MColor2 = temp;
+    do_widget_redraw(this);
+};
+
 
 //----------------------------------------------------------------------
 //
