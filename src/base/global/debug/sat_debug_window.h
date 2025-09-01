@@ -124,13 +124,13 @@ public:
     root->Layout.innerBorder = {10,10,10,10};
 
     MTextBox = new SAT_TextBoxWidget(200,true,true);
-    MTextBox->Layout.flags = SAT_WIDGET_LAYOUT_ANCHOR_TOP_RIGHT | SAT_WIDGET_LAYOUT_STRETCH_VERT | SAT_WIDGET_LAYOUT_FILL_RIGHT;
+    MTextBox->Layout.flags = SAT_WIDGET_LAYOUT_ANCHOR_TOP_RIGHT | SAT_WIDGET_LAYOUT_STRETCH_VERT | SAT_WIDGET_LAYOUT_CROP_RIGHT;
     root->appendChild(MTextBox);
 
     #ifdef SAT_DEBUG_OBSERVER
       MObserver = new SAT_DebugObserverWidget(200);
       root->appendChild(MObserver);
-      MObserver->Layout.flags = SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT | SAT_WIDGET_LAYOUT_STRETCH_VERT | SAT_WIDGET_LAYOUT_FILL_LEFT;
+      MObserver->Layout.flags = SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT | SAT_WIDGET_LAYOUT_STRETCH_VERT | SAT_WIDGET_LAYOUT_CROP_LEFT;
       MObserver->setFillBackground(true);
       MObserver->setBackgroundColor(SAT_Grey);
     #endif

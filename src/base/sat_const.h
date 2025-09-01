@@ -169,20 +169,20 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_WIDGET_LAYOUT_STRETCH_VERTICAL          (SAT_WIDGET_LAYOUT_STRETCH_TOP | SAT_WIDGET_LAYOUT_STRETCH_BOTTOM)
 #define SAT_WIDGET_LAYOUT_STRETCH_ALL               (SAT_WIDGET_LAYOUT_STRETCH_HORIZONTAL | SAT_WIDGET_LAYOUT_STRETCH_VERTICAL)
 
-#define SAT_WIDGET_LAYOUT_FILL_NONE                 0
-#define SAT_WIDGET_LAYOUT_FILL_LEFT                 0x01
-#define SAT_WIDGET_LAYOUT_FILL_TOP                  0x02
-#define SAT_WIDGET_LAYOUT_FILL_RIGHT                0x04
-#define SAT_WIDGET_LAYOUT_FILL_BOTTOM               0x08
-#define SAT_WIDGET_LAYOUT_FILL_HORIZONTAL           (SAT_WIDGET_LAYOUT_FILL_LEFT | SAT_WIDGET_LAYOUT_FILL_RIGHT)
-#define SAT_WIDGET_LAYOUT_FILL_VERTICAL             (SAT_WIDGET_LAYOUT_FILL_TOP | SAT_WIDGET_LAYOUT_FILL_BOTTOM)
-#define SAT_WIDGET_LAYOUT_FILL_ALL                  (SAT_WIDGET_LAYOUT_FILL_HORIZONTAL | SAT_WIDGET_LAYOUT_FILL_VERTICAL)
+#define SAT_WIDGET_LAYOUT_CROP_NONE                 0
+#define SAT_WIDGET_LAYOUT_CROP_LEFT                 0x01
+#define SAT_WIDGET_LAYOUT_CROP_TOP                  0x02
+#define SAT_WIDGET_LAYOUT_CROP_RIGHT                0x04
+#define SAT_WIDGET_LAYOUT_CROP_BOTTOM               0x08
+#define SAT_WIDGET_LAYOUT_CROP_HORIZONTAL           (SAT_WIDGET_LAYOUT_CROP_LEFT | SAT_WIDGET_LAYOUT_CROP_RIGHT)
+#define SAT_WIDGET_LAYOUT_CROP_VERTICAL             (SAT_WIDGET_LAYOUT_CROP_TOP | SAT_WIDGET_LAYOUT_CROP_BOTTOM)
+#define SAT_WIDGET_LAYOUT_CROP_ALL                  (SAT_WIDGET_LAYOUT_CROP_HORIZONTAL | SAT_WIDGET_LAYOUT_CROP_VERTICAL)
 
 #define SAT_WIDGET_LAYOUT_RELATIVE_NONE             0
-#define SAT_WIDGET_LAYOUT_RELATIVE_PERCENT          0x01
-#define SAT_WIDGET_LAYOUT_RELATIVE_PARENT           0x02
-#define SAT_WIDGET_LAYOUT_RELATIVE_LAYOUT           0x04
-#define SAT_WIDGET_LAYOUT_RELATIVE_ROOT             0x08
+// #define SAT_WIDGET_LAYOUT_RELATIVE_PERCENT       0x01
+#define SAT_WIDGET_LAYOUT_RELATIVE_PARENT           1 // 0x01
+#define SAT_WIDGET_LAYOUT_RELATIVE_LAYOUT           2 // 0x02
+#define SAT_WIDGET_LAYOUT_RELATIVE_ROOT             3 // 0x04
 
 #define SAT_WIDGET_LAYOUT_STACK_NONE                0
 #define SAT_WIDGET_LAYOUT_STACK_HORIZONTAL          0x01
@@ -196,41 +196,24 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_WIDGET_NOTIFY_OPEN                      4
 #define SAT_WIDGET_NOTIFY_CLOSE                     5
 
-// #define SAT_WIDGET_OPTION_NONE                      0
-// #define SAT_WIDGET_OPTION_AUTO_CAPTURE              0x01
-// #define SAT_WIDGET_OPTION_AUTO_CLIP                 0x02
-// #define SAT_WIDGET_OPTION_AUTO_CURSOR_SHAPE         0x04
-// #define SAT_WIDGET_OPTION_AUTO_CURSOR_LOCK          0x08
-// #define SAT_WIDGET_OPTION_AUTO_CURSOR_HIDE          0x10
-// #define SAT_WIDGET_OPTION_AUTO_HINT                 0x20
-// #define SAT_WIDGET_OPTION_AUTO_SCALE                0x40
-// #define SAT_WIDGET_OPTION_WANT_HOVER_EVENTS         0x80
-
 #define SAT_WIDGET_PAINT_NORMAL                     0
 #define SAT_WIDGET_PAINT_VALUE                      1
 #define SAT_WIDGET_PAINT_MODULATION                 2
 
-// #define SAT_WIDGET_REALIGN_NORMAL                   0
+#define SAT_WIDGET_REALIGN_NORMAL                   0
 #define SAT_WIDGET_REALIGN_CHILDREN                 0
 #define SAT_WIDGET_REALIGN_PARENT                   0x01
 #define SAT_WIDGET_REALIGN_ROOT                     0x02
 #define SAT_WIDGET_REALIGN_SELF                     0x04
-// #define SAT_WIDGET_REALIGN_POS                      0x02
-// #define SAT_WIDGET_REALIGN_SIZE                     0x04
-// #define SAT_WIDGET_REALIGN_RECT                     (SAT_WIDGET_REALIGN_POS | SAT_WIDGET_REALIGN_SIZE)
+// #define SAT_WIDGET_REALIGN_POS                   0x02
+// #define SAT_WIDGET_REALIGN_SIZE                  0x04
+// #define SAT_WIDGET_REALIGN_RECT                  (SAT_WIDGET_REALIGN_POS | SAT_WIDGET_REALIGN_SIZE)
 
 #define SAT_WIDGET_REDRAW_NORMAL                    0
 #define SAT_WIDGET_REDRAW_SELF                      0x01
 #define SAT_WIDGET_REDRAW_PARENT                    0x02
 #define SAT_WIDGET_REDRAW_ROOT                      0x04
 #define SAT_WIDGET_REDRAW_CHILDREN                  0x08
-
-// #define SAT_WIDGET_STATE_NONE                       0
-// #define SAT_WIDGET_STATE_VISIBLE                    0x01
-// #define SAT_WIDGET_STATE_ACTIVE                     0x02
-// #define SAT_WIDGET_STATE_DISABLED                   0x04
-// #define SAT_WIDGET_STATE_OPAQUE                     0x08
-// #define SAT_WIDGET_STATE_INTERACTIVE                0x0100
 
 #define SAT_WIDGET_UPDATE_VALUE                     0
 

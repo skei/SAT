@@ -175,7 +175,6 @@ SAT_WidgetWindow::SAT_WidgetWindow(uint32_t AWidth, uint32_t AHeight, intptr_t A
 , SAT_Widget(SAT_Rect(AWidth,AHeight))
 {
     MWidgetTypeName = "SAT_WidgetWindow";
-    MInitialRect = SAT_Rect(0,0,AWidth,AHeight);
     MWindowTimer = new SAT_Timer(this);
 };
 

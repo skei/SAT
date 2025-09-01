@@ -26,7 +26,7 @@ struct SAT_WidgetLayout
 {
     uint32_t    anchor          = SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT;    // snap widget pos to parent
     uint32_t    stretch         = SAT_WIDGET_LAYOUT_STRETCH_NONE;       // stretch widget sides (after snapping)
-    uint32_t    fill            = SAT_WIDGET_LAYOUT_FILL_NONE;          // crop widget rect out of 'available' layout rect (for following widgets)
+    uint32_t    crop            = SAT_WIDGET_LAYOUT_CROP_NONE;          // crop widget rect out of 'available' layout rect (for following widgets)
     uint32_t    relative        = SAT_WIDGET_LAYOUT_RELATIVE_NONE;      // pos/size relative to parent, layout (percentages)
     uint32_t    stack           = SAT_WIDGET_LAYOUT_STACK_NONE;         // horiz/vert stacked (icon view)
     SAT_Rect    inner_border    = {0,0,0,0};                            // border around child widgets
@@ -74,7 +74,7 @@ class SAT_BaseWidget
 
     public: // base
 
-        virtual uint32_t            getWidgetType();
+     // virtual uint32_t            getWidgetType();
         virtual const char*         getWidgetTypeName();
         virtual const char*         getName();
         virtual void                setName(const char* AName);
@@ -175,7 +175,7 @@ class SAT_BaseWidget
 
     protected: // base
     
-        uint32_t                    MWidgetType     = 0;
+     // uint32_t                    MWidgetType     = 0;
         const char*                 MWidgetTypeName = "SAT_BaseWidget";
         const char*                 MName           = "";
 };
@@ -198,10 +198,10 @@ SAT_BaseWidget::~SAT_BaseWidget()
 // base
 //------------------------------
 
-uint32_t SAT_BaseWidget::getWidgetType()
-{
-    return MWidgetType;
-}
+// uint32_t SAT_BaseWidget::getWidgetType()
+// {
+//     return MWidgetType;
+// }
 
 const char* SAT_BaseWidget::getWidgetTypeName()
 {

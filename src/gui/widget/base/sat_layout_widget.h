@@ -116,18 +116,13 @@ SAT_Rect SAT_LayoutWidget::getContentRect()
 
 void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARecursive)
 {
-    sat_coord_t scale = 1.0;
-    SAT_Rect root_rect = getRect();//{0};
-
     // on_window_show -> on_widget_show should have set this..
     SAT_Assert(MOwner);
-    //if (MOwner)
-    //{
-        scale = MOwner->do_widget_owner_get_scale(this);
-        sat_coord_t w = MOwner->do_widget_owner_get_width(this);
-        sat_coord_t h = MOwner->do_widget_owner_get_height(this);
-        root_rect = SAT_Rect(w,h);
-    //}
+
+    sat_coord_t scale = MOwner->do_widget_owner_get_scale(this);
+    sat_coord_t w = MOwner->do_widget_owner_get_width(this);
+    sat_coord_t h = MOwner->do_widget_owner_get_height(this);
+    SAT_Rect root_rect = SAT_Rect(w,h);
 
     SAT_Rect inner_border = Layout.inner_border;
     inner_border.scale(scale);
@@ -157,6 +152,8 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
     for (uint32_t i=0; i<MChildren.size(); i++)
     {
         SAT_BaseWidget* child = MChildren[i];
+        SAT_Assert(child);
+
         SAT_Rect child_rect;
 
         bool need_realign = (child->State.visible || child->Options.realign_if_invisible);
@@ -165,27 +162,27 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
 
             // --- relative ---
 
-            if (child->Layout.relative & SAT_WIDGET_LAYOUT_RELATIVE_PERCENT)
+            if (child->Layout.relative)
             {
-                if (child->Layout.relative & SAT_WIDGET_LAYOUT_RELATIVE_ROOT)
+                if (child->Layout.relative == SAT_WIDGET_LAYOUT_RELATIVE_ROOT)
                 {
                     child_rect = SAT_Rect(root_rect.w,root_rect.h,root_rect.w,root_rect.h);
                     child_rect.scale(child->getInitialRect());
                     child_rect.scale(0.01);
                 }
-                else if (child->Layout.relative & SAT_WIDGET_LAYOUT_RELATIVE_PARENT)
+                else if (child->Layout.relative == SAT_WIDGET_LAYOUT_RELATIVE_PARENT)
                 {
                     child_rect = SAT_Rect(parent_rect.w,parent_rect.h,parent_rect.w,parent_rect.h);
                     child_rect.scale(child->getInitialRect());
                     child_rect.scale(0.01);
                 }
-                else if (child->Layout.relative & SAT_WIDGET_LAYOUT_RELATIVE_LAYOUT)
+                else if (child->Layout.relative == SAT_WIDGET_LAYOUT_RELATIVE_LAYOUT)
                 {
                     child_rect = SAT_Rect(layout_rect.w,layout_rect.h,layout_rect.w,layout_rect.h);
                     child_rect.scale(child->getInitialRect());
                     child_rect.scale(0.01);
                 }
-                else
+                else // relative to current/self ??
                 {
                     child_rect = SAT_Rect(mrect.w,mrect.h,mrect.w,mrect.h);
                     child_rect.scale(child->getInitialRect());
@@ -198,12 +195,16 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
                 child_rect.scale(scale);
             }
 
+            // --- TODO: tweening / manual movemen ---
+            
             /*
                 SAT_Rect manual = child->MManualTween;
                 manual.scale(scale);
                 child_rect.add(manual);
                 //child_rect.add(child->MManuallyMoved);
             */
+
+            // --- pre-align ---
 
             child_rect = child->on_widget_pre_align(child_rect);
 
@@ -226,9 +227,9 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
 
             if (child->Layout.stack & SAT_WIDGET_LAYOUT_STACK_HORIZONTAL)
             {
-                if ((stackx + child_rect.w /*+ border.w - spacing.x*/) >= layout_rect.w)
+                if ((stackx + child_rect.w) >= layout_rect.w)
                 {
-                    if (stackx != 0) // first widget..
+                    if (stackx != 0)
                     {
                         stackx = 0;
                         stacky += stack_highest + spacing.y;
@@ -243,13 +244,11 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
                 if (child_rect.h > stack_highest) stack_highest = child_rect.h;
             }
 
-            if (child->Layout.stack & SAT_WIDGET_LAYOUT_STACK_HORIZONTAL)
+            if (child->Layout.stack & SAT_WIDGET_LAYOUT_STACK_VERTICAL)
             {
-                // xanchored = true;
-                // yanchored = true;
-                if ((stacky + child_rect.h /*+ border.h - spacing.y*/) >= layout_rect.h)
+                if ((stacky + child_rect.h) >= layout_rect.h)
                 {
-                    if (stacky != 0) // first widget..
+                    if (stacky != 0)
                     {
                         stacky = 0;
                         stackx += stack_widest + spacing.x;
@@ -274,12 +273,12 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
             if (child->Layout.stretch & SAT_WIDGET_LAYOUT_STRETCH_RIGHT)       { child_rect.setX2( layout_rect.x2()); }
             if (child->Layout.stretch & SAT_WIDGET_LAYOUT_STRETCH_BOTTOM)      { child_rect.setY2( layout_rect.y2()); }
 
-            // --- fill (crop) ---
+            // --- crop ---
 
-            if (child->Layout.fill & SAT_WIDGET_LAYOUT_FILL_LEFT)           { layout_rect.setX1( child_rect.x2()); layout_rect.x += spacing.x; layout_rect.w -= spacing.x; }
-            if (child->Layout.fill & SAT_WIDGET_LAYOUT_FILL_TOP)            { layout_rect.setY1( child_rect.y2()); layout_rect.y += spacing.y; layout_rect.h -= spacing.y; }
-            if (child->Layout.fill & SAT_WIDGET_LAYOUT_FILL_RIGHT)          { layout_rect.setX2( child_rect.x   ); layout_rect.w -= spacing.x; }
-            if (child->Layout.fill & SAT_WIDGET_LAYOUT_FILL_BOTTOM)         { layout_rect.setY2( child_rect.y   ); layout_rect.h -= spacing.y; }
+            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_LEFT)           { layout_rect.setX1( child_rect.x2()); layout_rect.x += spacing.x; layout_rect.w -= spacing.x; }
+            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_TOP)            { layout_rect.setY1( child_rect.y2()); layout_rect.y += spacing.y; layout_rect.h -= spacing.y; }
+            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_RIGHT)          { layout_rect.setX2( child_rect.x   ); layout_rect.w -= spacing.x; }
+            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_BOTTOM)         { layout_rect.setY2( child_rect.y   ); layout_rect.h -= spacing.y; }
 
             // --- stack end ---
 
@@ -305,6 +304,7 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
             double min_height = child->Layout.minSize.h * scale;
             double max_width  = child->Layout.maxSize.w * scale;
             double max_height = child->Layout.maxSize.h * scale;
+
             if ((min_width  >= 0) && (child_rect.w < min_width )) child_rect.w = min_width;
             if ((min_height >= 0) && (child_rect.h < min_height)) child_rect.h = min_height;
             if ((max_width  >= 0) && (child_rect.w > max_width )) child_rect.w = max_width;
@@ -320,7 +320,11 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
             outer_border.scale(scale);
             child_rect.shrink(outer_border);
 
+            // --- post-align ---
+
             child_rect = child->on_widget_post_align(child_rect);
+
+            // --- set child rect ---
 
             child->setRect(child_rect);
 
@@ -328,11 +332,14 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
 
             if (ARecursive) child->on_widget_realign(AMode,AIndex);
 
-            // child->realignChildren(ARecursive);
-            // if (child_layout & SAT_WIDGET_LAYOUT_CONTENT_SIZE) {
-            //   SAT_Rect child_content = child->getContentRect();
-            //   child->setRect(child_content);
-            // }
+            /*
+                child->realignChildren(ARecursive);
+                if (child_layout & SAT_WIDGET_LAYOUT_CONTENT_SIZE)
+                {
+                    SAT_Rect child_content = child->getContentRect();
+                    child->setRect(child_content);
+                }
+            */
 
         } // need_realign
 
@@ -351,10 +358,20 @@ void SAT_LayoutWidget::on_widget_realign(uint32_t AMode, uint32_t AIndex)
     realignChildren(AMode,AIndex,true);
 }
 
+/*
+    called before calculating new rect
+    here we can remember the starting rect, prepare things..
+*/
+
 SAT_Rect SAT_LayoutWidget::on_widget_pre_align(SAT_Rect ARect, uint32_t AMode, uint32_t AIndex)
 {
     return ARect;
 }
+
+/*
+    called after new rect has been calculated
+    cwe can do some final adjustments, or undo things..
+*/
 
 SAT_Rect SAT_LayoutWidget::on_widget_post_align(SAT_Rect ARect, uint32_t AMode, uint32_t AIndex)
 {

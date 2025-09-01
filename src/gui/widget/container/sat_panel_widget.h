@@ -64,6 +64,7 @@ class SAT_PanelWidget
 SAT_PanelWidget::SAT_PanelWidget(SAT_Rect ARect)
 : SAT_Widget(ARect)
 {
+    MWidgetTypeName = "SAT_PanelWidget";
 }
 
 SAT_PanelWidget::~SAT_PanelWidget()
