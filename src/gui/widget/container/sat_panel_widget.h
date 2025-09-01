@@ -53,7 +53,7 @@ class SAT_PanelWidget
         SAT_Color   MBackgroundColor    = SAT_DarkGrey;
         bool        MDrawBorder         = true;
         SAT_Color   MBorderColor        = SAT_LighterGrey;
-        sat_coord_t MBorderWidth        = 2.0;
+        sat_coord_t MBorderWidth        = 1.0;
 
 };
 
@@ -110,7 +110,9 @@ void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
 void SAT_PanelWidget::on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode, uint32_t AIndex)
 {
     fillBackground(AContext);
+    pushClip(AContext);
     paintChildren(AContext);    
+    popClip(AContext);
     drawBorder(AContext);
 }
 

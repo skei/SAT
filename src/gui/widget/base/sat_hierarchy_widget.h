@@ -27,19 +27,20 @@ class SAT_HierarchyWidget
 
     public: // hierarchy
 
-        SAT_WidgetOwner*        getOwner() override;
-        SAT_BaseWidget*         getParent() override;
-        uint32_t                getNumChildren() override;
-        SAT_BaseWidget*         getChild(uint32_t AIndex) override;
-        uint32_t                getIndex() override;
-
         void                    setOwner(SAT_WidgetOwner* AOwner) override;
         void                    setParent(SAT_BaseWidget* AParent) override;
         void                    setIndex(uint32_t AIndex) override;
 
+        SAT_WidgetOwner*        getOwner() override;
+        SAT_BaseWidget*         getParent() override;
+        uint32_t                getIndex() override;
+
         SAT_BaseWidget*         appendChild(SAT_BaseWidget* AWidget) override;
-        void                    removeChild(SAT_BaseWidget* AWidget) override;
         void                    deleteChildren() override;
+        void                    removeChild(SAT_BaseWidget* AWidget) override;
+        uint32_t                getNumChildren() override;
+        SAT_BaseWidget*         getChild(uint32_t AIndex) override;
+
         SAT_BaseWidget*         findWidget(const char* AName, bool ARecursive=true) override;
 
     public: // on_
@@ -80,31 +81,6 @@ SAT_HierarchyWidget::~SAT_HierarchyWidget()
 //
 //------------------------------
 
-SAT_WidgetOwner* SAT_HierarchyWidget::getOwner()
-{
-    return MOwner;
-}
-
-SAT_BaseWidget* SAT_HierarchyWidget::getParent()
-{
-    return MParent;
-}
-
-uint32_t SAT_HierarchyWidget::getNumChildren()
-{
-    return MChildren.size();
-}
-
-SAT_BaseWidget* SAT_HierarchyWidget::getChild(uint32_t AIndex)
-{
-    return MChildren[AIndex];
-}
-
-uint32_t SAT_HierarchyWidget::getIndex()
-{
-    return MIndex;
-}
-
 void SAT_HierarchyWidget::setOwner(SAT_WidgetOwner* AOwner)
 {
     MOwner = AOwner;
@@ -122,6 +98,23 @@ void SAT_HierarchyWidget::setIndex(uint32_t AIndex)
 
 //----------
 
+SAT_WidgetOwner* SAT_HierarchyWidget::getOwner()
+{
+    return MOwner;
+}
+
+SAT_BaseWidget* SAT_HierarchyWidget::getParent()
+{
+    return MParent;
+}
+
+uint32_t SAT_HierarchyWidget::getIndex()
+{
+    return MIndex;
+}
+
+//----------
+
 SAT_BaseWidget* SAT_HierarchyWidget::appendChild(SAT_BaseWidget* AWidget)
 {
     AWidget->setParent(this);
@@ -129,12 +122,6 @@ SAT_BaseWidget* SAT_HierarchyWidget::appendChild(SAT_BaseWidget* AWidget)
     AWidget->setIndex(index);
     MChildren.append(AWidget);
     return AWidget;
-}
-
-void SAT_HierarchyWidget::removeChild(SAT_BaseWidget* AWidget)
-{
-    AWidget->setParent(nullptr);
-    MChildren.remove(AWidget);
 }
 
 void SAT_HierarchyWidget::deleteChildren()
@@ -145,6 +132,24 @@ void SAT_HierarchyWidget::deleteChildren()
         if (widget) delete widget;
     }
 }
+
+void SAT_HierarchyWidget::removeChild(SAT_BaseWidget* AWidget)
+{
+    AWidget->setParent(nullptr);
+    MChildren.remove(AWidget);
+}
+
+uint32_t SAT_HierarchyWidget::getNumChildren()
+{
+    return MChildren.size();
+}
+
+SAT_BaseWidget* SAT_HierarchyWidget::getChild(uint32_t AIndex)
+{
+    return MChildren[AIndex];
+}
+
+//----------
 
 SAT_BaseWidget* SAT_HierarchyWidget::findWidget(const char* AName, bool ARecursive)
 {

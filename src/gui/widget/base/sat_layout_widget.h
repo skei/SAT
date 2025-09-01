@@ -33,9 +33,15 @@ class SAT_LayoutWidget
 
     public:
 
+        void            setBaseRect(SAT_Rect ARect) override;
+        void            setContentScale(sat_coord_t AScale) override;
+        void            setAccumulatedScale(sat_coord_t AScale) override;
+
         SAT_Rect        getBaseRect() override;
         SAT_Rect        getInitialRect() override;
         SAT_Rect        getContentRect() override;
+        sat_coord_t     getContentScale() override;
+        sat_coord_t     getAccumulatedScale() override;
 
     public:
 
@@ -49,13 +55,15 @@ class SAT_LayoutWidget
 
     protected:
 
-        SAT_Rect        MBaseRect       = {};   // starting point for alignment
-        SAT_Rect        MInitialRect    = {};   // pos/size when created (may be percentages)
-        SAT_Rect        MContentRect    = {};
+        SAT_Rect        MBaseRect           = {};   // starting point for alignment
+        SAT_Rect        MInitialRect        = {};   // pos/size when created (may be percentages)
+        SAT_Rect        MContentRect        = {};
+
+        sat_coord_t     MContentScale       = 1.0;
+        sat_coord_t     MAccumulatedScale   = 1.0;
 
      // SAT_Point       MLayoutOffset       = {0,0};
-     // sat_coord_t     MChildScale         = 1.0;
-     // sat_coord_t     MAccumulatedScale   = 1.0;
+
 
 };
 
@@ -69,8 +77,8 @@ SAT_LayoutWidget::SAT_LayoutWidget(SAT_Rect ARect)
 : SAT_VisualWidget(ARect)
 {
     MWidgetTypeName = "SAT_LayoutWidget";
-    MInitialRect    = ARect;
     MBaseRect       = ARect;
+    MInitialRect    = ARect;
 }
 
 SAT_LayoutWidget::~SAT_LayoutWidget()
@@ -80,6 +88,27 @@ SAT_LayoutWidget::~SAT_LayoutWidget()
 //------------------------------
 //
 //------------------------------
+
+/*
+    base rect is the 'starting point' during (re-) alignment
+    coords in 'create-space', reliative to initial size of window
+    when creating it.. (unscaled)..
+*/
+
+void SAT_LayoutWidget::setBaseRect(SAT_Rect ARect)
+{
+    MBaseRect = ARect;
+}
+
+void SAT_LayoutWidget::setContentScale(sat_coord_t AScale)
+{
+    MContentScale = AScale;
+}
+
+void SAT_LayoutWidget::setAccumulatedScale(sat_coord_t AScale)
+{
+    MAccumulatedScale = AScale;
+}
 
 SAT_Rect SAT_LayoutWidget::getBaseRect()
 {
@@ -94,6 +123,16 @@ SAT_Rect SAT_LayoutWidget::getInitialRect()
 SAT_Rect SAT_LayoutWidget::getContentRect()
 {
     return MContentRect;
+}
+
+sat_coord_t SAT_LayoutWidget::getContentScale()
+{
+    return MContentScale;
+}
+
+sat_coord_t SAT_LayoutWidget::getAccumulatedScale()
+{
+    return MAccumulatedScale;
 }
 
 //------------------------------
@@ -120,9 +159,14 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
     SAT_Assert(MOwner);
 
     sat_coord_t scale = MOwner->do_widget_owner_get_scale(this);
+    scale *= getAccumulatedScale();
+    scale *= getContentScale();
+
     sat_coord_t w = MOwner->do_widget_owner_get_width(this);
     sat_coord_t h = MOwner->do_widget_owner_get_height(this);
     SAT_Rect root_rect = SAT_Rect(w,h);
+
+    SAT_Rect rect = getRect();
 
     SAT_Rect inner_border = Layout.inner_border;
     inner_border.scale(scale);
@@ -130,15 +174,15 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
     SAT_Point spacing = Layout.spacing;
     spacing.scale(scale);
 
-    SAT_Rect mrect = getRect();
+    //SAT_Rect rect = getRect();
 
-    SAT_Rect parent_rect = mrect;
+    SAT_Rect parent_rect = rect;
     parent_rect.shrink(inner_border);
 
-    SAT_Rect layout_rect = mrect;
+    SAT_Rect layout_rect = rect;
     layout_rect.shrink(inner_border);
 
-    MContentRect = SAT_Rect( mrect.x,mrect.y, 0,0 );
+    MContentRect = SAT_Rect( rect.x,rect.y, 0,0 );
 
     double layout_xcenter   = layout_rect.x + (layout_rect.w * 0.5);
     double layout_ycenter   = layout_rect.y + (layout_rect.h * 0.5);
@@ -184,7 +228,7 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
                 }
                 else // relative to current/self ??
                 {
-                    child_rect = SAT_Rect(mrect.w,mrect.h,mrect.w,mrect.h);
+                    child_rect = SAT_Rect(rect.w,rect.h,rect.w,rect.h);
                     child_rect.scale(child->getInitialRect());
                     child_rect.scale(0.01);
                 }
@@ -195,7 +239,7 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
                 child_rect.scale(scale);
             }
 
-            // --- TODO: tweening / manual movemen ---
+            // --- TODO: tweening / manual movement ---
             
             /*
                 SAT_Rect manual = child->MManualTween;
@@ -207,6 +251,12 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
             // --- pre-align ---
 
             child_rect = child->on_widget_pre_align(child_rect);
+
+            // --- scale ---
+            
+            sat_coord_t accum_scale = getAccumulatedScale();
+            accum_scale *= getContentScale();
+            child->setAccumulatedScale(accum_scale);
 
             /*
                 child_rect.add(child->MManuallyMoved);
@@ -263,8 +313,8 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
                 if (child_rect.w > stack_widest) stack_widest = child_rect.w;
             }
 
-            if (!xanchored) child_rect.x += mrect.x;
-            if (!yanchored) child_rect.y += mrect.y;
+            if (!xanchored) child_rect.x += rect.x;
+            if (!yanchored) child_rect.y += rect.y;
 
             // --- stretch ---
 

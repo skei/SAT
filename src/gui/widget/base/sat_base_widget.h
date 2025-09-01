@@ -45,7 +45,7 @@ struct SAT_WidgetOptions
     bool auto_cursor_lock       = true;     // lock cursor in place (when dragging)
     bool auto_cursor_hide       = true;     // auto hide cursor when dragging
     bool auto_hint              = false;    // auto send hint when hovering
-    bool auto_scale             = false;    // scale/zoom widget (or content) relative to rect/size (text/font)
+    bool auto_size              = false;    // scale/zoom widget (content) relative to rect/size (f.ex. font size)
     bool want_hover_events      = false;    // want hover, move, etc mouse events even when not captured
     bool realign_if_invisible   = false;    // realign (child) widgets, even if not visible (menus, etc)
 };
@@ -74,24 +74,26 @@ class SAT_BaseWidget
 
     public: // base
 
-     // virtual uint32_t            getWidgetType();
-        virtual const char*         getWidgetTypeName();
-        virtual const char*         getName();
         virtual void                setName(const char* AName);
+        virtual void                setHint(const char* AHint);
+
+        virtual const char*         getName();
+        virtual const char*         getHint();
+        virtual const char*         getWidgetTypeName();
 
     public: // hierarchy
 
-        virtual SAT_WidgetOwner*    getOwner()                                                          { return nullptr; }
-        virtual SAT_BaseWidget*     getParent()                                                         { return nullptr; }
-        virtual uint32_t            getNumChildren()                                                    { return 0; }
-        virtual SAT_BaseWidget*     getChild(uint32_t AIndex)                                           { return nullptr; }
-        virtual uint32_t            getIndex()                                                          { return 0; }
         virtual void                setOwner(SAT_WidgetOwner* AOwner)                                   { }
         virtual void                setParent(SAT_BaseWidget* AParent)                                  { }
         virtual void                setIndex(uint32_t AIndex)                                           { }
+        virtual SAT_WidgetOwner*    getOwner()                                                          { return nullptr; }
+        virtual SAT_BaseWidget*     getParent()                                                         { return nullptr; }
+        virtual uint32_t            getIndex()                                                          { return 0; }
         virtual SAT_BaseWidget*     appendChild(SAT_BaseWidget* AWidget)                                { return AWidget; }
-        virtual void                removeChild(SAT_BaseWidget* AWidget)                                { }
         virtual void                deleteChildren()                                                    { }
+        virtual void                removeChild(SAT_BaseWidget* AWidget)                                { }
+        virtual uint32_t            getNumChildren()                                                    { return 0; }
+        virtual SAT_BaseWidget*     getChild(uint32_t AIndex)                                           { return nullptr; }
         virtual SAT_BaseWidget*     findWidget(const char* AName, bool ARecursive=true)                 { return nullptr; }
 
     public: // visual
@@ -110,9 +112,14 @@ class SAT_BaseWidget
 
     public: // layout
 
+        virtual void                setBaseRect(SAT_Rect ARect)                                         { }
+        virtual void                setContentScale(sat_coord_t AScale)                                 { }
+        virtual void                setAccumulatedScale(sat_coord_t AScale)                             { }
         virtual SAT_Rect            getBaseRect()                                                       { return SAT_Rect(0); }
         virtual SAT_Rect            getInitialRect()                                                    { return SAT_Rect(0); }
         virtual SAT_Rect            getContentRect()                                                    { return SAT_Rect(0); }
+        virtual sat_coord_t         getContentScale()                                                   { return 1.0; }
+        virtual sat_coord_t         getAccumulatedScale()                                               { return 1.0; }
 
     public: // interactive
 
@@ -175,9 +182,9 @@ class SAT_BaseWidget
 
     protected: // base
     
-     // uint32_t                    MWidgetType     = 0;
-        const char*                 MWidgetTypeName = "SAT_BaseWidget";
         const char*                 MName           = "";
+        const char*                 MHint           = "";
+        const char*                 MWidgetTypeName = "SAT_BaseWidget";
 };
 
 //----------------------------------------------------------------------
@@ -198,14 +205,14 @@ SAT_BaseWidget::~SAT_BaseWidget()
 // base
 //------------------------------
 
-// uint32_t SAT_BaseWidget::getWidgetType()
-// {
-//     return MWidgetType;
-// }
-
-const char* SAT_BaseWidget::getWidgetTypeName()
+void SAT_BaseWidget::setName(const char* AName)
 {
-    return MWidgetTypeName;
+    MName = AName;
+}
+
+void SAT_BaseWidget::setHint(const char* AHint)
+{
+    MHint = AHint;
 }
 
 const char* SAT_BaseWidget::getName()
@@ -213,10 +220,16 @@ const char* SAT_BaseWidget::getName()
     return MName;
 }
 
-void SAT_BaseWidget::setName(const char* AName)
+const char* SAT_BaseWidget::getHint()
 {
-    MName = AName;
+    return MHint;
 }
+
+const char* SAT_BaseWidget::getWidgetTypeName()
+{
+    return MWidgetTypeName;
+}
+
 
 //------------------------------
 // do_
