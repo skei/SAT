@@ -130,37 +130,35 @@ class SAT_WidgetWindow
 
     private:
 
-        SAT_WindowListener*     MListener               = nullptr;  // aka editor
-        SAT_TweenManager        MTweenManager           = {};       // widget animations
-        SAT_Timer*              MWindowTimer            = nullptr;  // timer
-        SAT_BaseWidgetArray     MTimerWidgets           = {};       // array of widgets that want timer ticks
-        uint32_t                MCurrentTimerTick       = 0;        // increasing tick counter
-        sat_atomic_bool_t       MTimerBlocked           {false};    // if this is true, timer handler returns immediately
+        SAT_WindowListener*     MListener               = nullptr;          // aka editor
+        SAT_TweenManager        MTweenManager           = {};               // widget animations
+        SAT_Timer*              MWindowTimer            = nullptr;          // timer
+        SAT_BaseWidgetArray     MTimerWidgets           = {};               // array of widgets that want timer ticks
+        uint32_t                MCurrentTimerTick       = 0;                // increasing tick counter
+        sat_atomic_bool_t       MTimerBlocked           {false};            // if this is true, timer handler returns immediately
 
     private:
 
-     // SAT_WidgetUpdateQueue   MWidgetUpdateQueue      = {};       // value changed
-        SAT_WidgetRealignQueue  MWidgetRealignQueue     = {};       // needs to be realigned
-        SAT_WidgetRedrawQueue   MWidgetRedrawQueue      = {};       // needs to be redrawn
-        SAT_WidgetPaintQueue    MWidgetPaintQueue       = {};       // will be painted
+     // SAT_WidgetUpdateQueue   MWidgetUpdateQueue      = {};               // value changed
+        SAT_WidgetRealignQueue  MWidgetRealignQueue     = {};               // needs to be realigned
+        SAT_WidgetRedrawQueue   MWidgetRedrawQueue      = {};               // needs to be redrawn
+        SAT_WidgetPaintQueue    MWidgetPaintQueue       = {};               // will be painted
 
     private:
 
-        SAT_BaseWidget*         MCapturedKeyWidget      = nullptr;  // send key events directoy to this
-        SAT_BaseWidget*         MCapturedMouseWidget    = nullptr;  // send mouse events directly to this
-        SAT_BaseWidget*         MLeftClickedWidget      = nullptr;  // clicked widget w/left mouse button
-        SAT_BaseWidget*         MRightClickedWidget     = nullptr;  // clicked widget w/right mouse button
-        SAT_BaseWidget*         MDragWidget             = nullptr;  // drag'n'drop, start widget (drag from)
-        SAT_BaseWidget*         MHintWidget             = nullptr;  // widget receiving hints
-        SAT_BaseWidget*         MHoverWidget            = nullptr;  // currently hovering over
-        SAT_BaseWidget*         MModalWidget            = nullptr;  // exclusive widget, all other widgets ignored
-
+        SAT_BaseWidget*         MCapturedKeyWidget      = nullptr;          // send key events directoy to this
+        SAT_BaseWidget*         MCapturedMouseWidget    = nullptr;          // send mouse events directly to this
+        uint32_t                MCapturedMouseButton    = SAT_BUTTON_NONE;  // button that caused the capture
+        SAT_BaseWidget*         MDragWidget             = nullptr;          // drag'n'drop, start widget (drag from)
+        SAT_BaseWidget*         MHintWidget             = nullptr;          // widget receiving hints
+        SAT_BaseWidget*         MHoverWidget            = nullptr;          // currently hovering over
+        SAT_BaseWidget*         MModalWidget            = nullptr;          // exclusive widget, all other widgets ignored
         bool                    MMouseInsideWindow      = false;
 
     private:
 
-     // bool                    MNeedFullRealignment    = false;    // force full alignment (all widgets)
-        bool                    MNeedFullRepaint        = false;    // force full repaint (all widgets)
+     // bool                    MNeedFullRealignment    = false;            // force full alignment (all widgets)
+        bool                    MNeedFullRepaint        = false;            // force full repaint (all widgets)
         sat_coord_t             MWindowScale            = 1.0;
 };
 
@@ -303,6 +301,10 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
     // painter->setClipRect(SAT_Rect(0,0,screenwidth,screenheight));
     // painter->setClip(SAT_Rect(0,0,screenwidth,screenheight));
 
+    uint32_t count = 0;
+    SAT_BaseWidget* widget = nullptr;
+
+
     if (MNeedFullRepaint)
     {
         //SAT_PRINT("full repaint\n");
@@ -310,16 +312,17 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
         uint32_t num = getNumChildren();
         for (uint32_t i=0; i<num; i++)
         {
-            SAT_BaseWidget* widget = getChild(i);
+            widget = getChild(i);
             widget->on_widget_paint(AContext);
         }
+        // flush queue, so we don't re-draw them next time..
+        while (MWidgetPaintQueue.read(&widget)) { count += 1; }
+
         // SAT.STATISTICS.report_WindowPaintAll();
         MNeedFullRepaint = false;
     }
     else
     {
-        uint32_t count = 0;
-        SAT_BaseWidget* widget;
         while (MWidgetPaintQueue.read(&widget))
         {
             //SAT_PRINT("painting widget %i\n",count);
@@ -333,7 +336,6 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
     // painter->resetClip();
 
 }
-
 
 
 sat_coord_t SAT_WidgetWindow::calcScale(uint32_t ANewWidth, uint32_t ANewHeight, uint32_t AInitialWidth, uint32_t AInitialHeight)
@@ -373,7 +375,7 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
         if (!MHoverWidget)
         {
             // we have just entered the window, didn't leave anything            
-            //SAT_PRINT("entering: %s\n",hover->getWidgetTypeName());
+            SAT_PRINT("entering: %s\n",hover->getName());
             hover->on_widget_mouse_enter(MHoverWidget,AXpos,AYpos,ATime);
             MHoverWidget = hover;
         }
@@ -383,9 +385,9 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
             if (hover != MHoverWidget)
             {
                 // differemt, leave the old, enter the new
-                //SAT_PRINT("leaving: %s\n",MHoverWidget->getWidgetTypeName());
+                SAT_PRINT("leaving: %s\n",MHoverWidget->getName());
                 MHoverWidget->on_widget_mouse_leave(hover,AXpos,AYpos,ATime);
-                //SAT_PRINT("entering: %s\n",hover->getWidgetTypeName());
+                SAT_PRINT("entering: %s\n",hover->getName());
                 hover->on_widget_mouse_enter(MHoverWidget,AXpos,AYpos,ATime);
                 MHoverWidget = hover;
             }
@@ -504,23 +506,32 @@ void SAT_WidgetWindow::on_window_resize(uint32_t AWidth, uint32_t AHeight)
 
 /*
     TODO:
-    check mouse button..
-    if we left-click on a wdget (and capture the widget), then mose the mouse outside the window,
-    then right-click _while_ still holding the left-button.. this crashed.. (the assert)..
-    currently, we just look at the left button :-/
-*/    
+        if Options.drag_drop - MMDragDropWidget = this
+        (or widget must initiate it with do_widget_start_drag()
+*/
 
 void SAT_WidgetWindow::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
     //SAT_Assert(MHoverWidget);
-    if (MHoverWidget)
+    if (MCapturedMouseWidget)
     {
-        if (AButton == SAT_BUTTON_LEFT)
+        // a widget is captured, and we clicked another button
+        SAT_PRINT("clicked another button -> captured: %s\n",MCapturedMouseWidget->getName());
+        MCapturedMouseWidget->on_widget_mouse_click(AXpos,AYpos,AButton,AState,ATime);
+    }
+    else if (MHoverWidget)
+    {
+        if (MHoverWidget->Options.auto_capture)
         {
-            MLeftClickedWidget = MHoverWidget;
-            if (MHoverWidget->Options.auto_capture) MCapturedMouseWidget = MHoverWidget;
-            MHoverWidget->on_widget_mouse_click(AXpos,AYpos,AButton,AState,ATime);
+            if ((AButton == SAT_BUTTON_LEFT) || (AButton == SAT_BUTTON_MIDDLE) || (AButton == SAT_BUTTON_RIGHT))
+            {
+                SAT_PRINT("capture widget: %s\n",MHoverWidget->getName());
+                MCapturedMouseWidget = MHoverWidget;
+                MCapturedMouseButton = AButton;
+            }
         }
+        SAT_PRINT("mouse click: %s\n",MHoverWidget->getName());
+        MHoverWidget->on_widget_mouse_click(AXpos,AYpos,AButton,AState,ATime);
     }
     else
     {
@@ -530,22 +541,32 @@ void SAT_WidgetWindow::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint3
     }
 }
 
+/*
+    TODO:
+        if MMDragDropWidget, ask hover widget if it accepts dropping (data)
+        (or did we do that in mouse-move/enter? set MHoverWidgetAcceptsDrop?)
+        if yes, drop(data), tell captured widget about it?
+*/
+
 void SAT_WidgetWindow::on_window_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
-    if (AButton == SAT_BUTTON_LEFT)
+    if (MCapturedMouseWidget)
     {
-        MLeftClickedWidget = nullptr;
-        if (MCapturedMouseWidget)
+        SAT_PRINT("mouse release -> captured: %s\n",MCapturedMouseWidget->getName());
+        MCapturedMouseWidget->on_widget_mouse_release(AXpos,AYpos,AButton,AState,ATime);
+        if (MCapturedMouseButton == AButton)
         {
-            MCapturedMouseWidget->on_widget_mouse_release(AXpos,AYpos,AButton,AState,ATime);
+            SAT_PRINT("un-capture: %s\n",MCapturedMouseWidget->getName());
             MCapturedMouseWidget = nullptr;
         }
     }
 }
 
 /*
-    hover
-    on_widget_drag_start/move/drop..
+    TODO:
+        if MMDragDropWidget, check if hover widget accepts dropping (data)
+        yes : set mouse cursor accept, else set mouse cursor not-accept
+        (tell captured widget about it?)
 */
 
 void SAT_WidgetWindow::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
@@ -553,6 +574,7 @@ void SAT_WidgetWindow::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32
     updateHover(AXpos,AYpos,ATime);
     if (MCapturedMouseWidget)
     {
+        SAT_PRINT("mouse move -> captured: %s\n",MCapturedMouseWidget->getName());
         MCapturedMouseWidget->on_widget_mouse_move(AXpos,AYpos,AState,ATime);
         // if (is_dragging)
         // {
@@ -565,6 +587,7 @@ void SAT_WidgetWindow::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32
         {
             if (MHoverWidget->Options.want_hover_events)
             {
+                SAT_PRINT("mouse move -> want hover: %s\n",MHoverWidget->getName());
                 MHoverWidget->on_widget_mouse_move(AXpos,AYpos,AState,ATime);
             }
         }
@@ -602,7 +625,7 @@ void SAT_WidgetWindow::on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint3
     //SAT_Assert(MHoverWidget);
     if (MHoverWidget)
     {
-        //SAT_PRINT("leaving: %s\n",MHoverWidget->getWidgetTypeName());
+        SAT_PRINT("leaving: %s\n",MHoverWidget->getName());
         MHoverWidget->on_widget_mouse_leave(nullptr,AXpos,AYpos,ATime);
         MHoverWidget = nullptr;
     }
@@ -910,8 +933,10 @@ void SAT_WidgetWindow::do_widget_cursor(SAT_BaseWidget* AWidget, uint32_t ACurso
 
 void SAT_WidgetWindow::do_widget_capture_mouse(SAT_BaseWidget* AWidget)
 {
+    MCapturedMouseWidget = AWidget;
 }
 
 void SAT_WidgetWindow::do_widget_capture_keyboard(SAT_BaseWidget* AWidget)
 {
+    MCapturedKeyWidget = AWidget;
 }
