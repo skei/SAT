@@ -90,7 +90,14 @@ T* SAT_Stack<T,SIZE>::getTop(void)
 template <typename T, int SIZE>
 void SAT_Stack<T,SIZE>::push(T AItem)
 {
-    if (MStackTop < SIZE) MStack[MStackTop++] = AItem;
+    if (MStackTop < SIZE)
+    {
+        MStack[MStackTop++] = AItem;
+    }
+    else
+    {
+        //printf("Error! Stack overflow\n");
+    }
 }
 
 template <typename T, int SIZE>
@@ -102,7 +109,7 @@ T SAT_Stack<T,SIZE>::pop()
     }
     else
     {
-        //printf("ouch! trying to pop from empty stack!\n");
+        //printf("Error! Stack empty\n");
         return MNullItem;
     }
 }

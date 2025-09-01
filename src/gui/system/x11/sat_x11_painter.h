@@ -162,6 +162,7 @@ void SAT_X11Painter::beginPainting(uint32_t AWidth, uint32_t AHeight)
 
 void SAT_X11Painter::endPainting()
 {
+    // flush?
 }
 
 //------------------------------

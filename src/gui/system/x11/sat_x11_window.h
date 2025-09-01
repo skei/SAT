@@ -425,25 +425,27 @@ void SAT_X11Window::eventLoop()
             // break;
             return;// 1;
         }
-        // uint32_t e = event->response_type & ~0x80;
-        // if (e == XCB_CLIENT_MESSAGE)
-        // {
-        //     xcb_client_message_event_t* client_message = (xcb_client_message_event_t*)event;
-        //     xcb_atom_t type = client_message->type;
-        //     uint32_t data = client_message->data.data32[0];
-        //     // if (type == MWMProtocolsAtom) {
-        //     if (data == MWMDeleteWindowAtom)
-        //     {
-        //         //free(event); // not malloc'ed
-        //         //MQuitEventLoop = true;
-        //         break;
-        //         return 2;
-        //     }
-        //     // }
-        // }
+        /*
+            uint32_t e = event->response_type & ~0x80;
+            if (e == XCB_CLIENT_MESSAGE)
+            {
+                xcb_client_message_event_t* client_message = (xcb_client_message_event_t*)event;
+                xcb_atom_t type = client_message->type;
+                uint32_t data = client_message->data.data32[0];
+                // if (type == MWMProtocolsAtom) {
+                if (data == MWMDeleteWindowAtom)
+                {
+                    //free(event); // not malloc'ed
+                    //MQuitEventLoop = true;
+                    break;
+                    return 2;
+                }
+                // }
+            }
+        */
         event = getEvent(true);
-    // }
     } while (event);
+    // }
     // return 0;
 }
 
@@ -592,12 +594,11 @@ void SAT_X11Window::waitForMapNotify()
                     break;
                 }
             }
+            free(event);
+            if (MIsMapped) break;
         */
-        free(event); // not malloc'ed
+        free(event); // allocated by xserver...
         if (e == XCB_MAP_NOTIFY) break;
-        /*
-            if (MIsMapped) break; // while
-        */
     }
     MIsMapped = true;
     /*
