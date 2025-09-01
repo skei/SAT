@@ -1,10 +1,5 @@
 #pragma once
 
-/*
-    todo / consider
-        - context menu
-*/
-
 #include "base/sat_base.h"
 #include "gui/sat_gui_base.h"
 #include "gui/widget/base/sat_value_widget.h"

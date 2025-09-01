@@ -1,14 +1,12 @@
 #pragma once
 
 /*
-    how a widget looks, how to draw it..
-    how it appears on screen (and where)
-*/
-
-/*
     todo/consider
         - last drawn frame to avoid excess drawing..
         - layered widgets (transrency, opacity, redrawing parent widgets..)
+
+        - show/hide widget when not hovering over it, fade in/out when moving over
+          widgets on top of other widgets (f.ex scrollbars)
 */
 
 //----------------------------------------------------------------------
@@ -41,14 +39,17 @@ class SAT_VisualWidget
         void                setVisible(bool AState=true, bool ARecursive=true) override;
         void                setOpaque(bool AState=true, bool ARecursive=true) override;
         SAT_BaseWidget*     findWidgetAt(int32_t AXpos, int32_t AYpos, bool ARecursive=true) override;
-        SAT_Rect            findParentClipRect(SAT_Rect ARect) override;
+        SAT_Rect            getRecursiveClipRect(SAT_Rect ARect) override;
+        SAT_Rect            getRecursiveClipRect() override;
         SAT_BaseWidget*     findOpaqueParent(SAT_Rect ARect) override;
         bool                isRecursivelyVisible() override;
         bool                isRecursivelyOpaque() override;
 
     public:
 
+        virtual sat_coord_t getPaintScale();
         virtual void        pushClip(SAT_PaintContext* AContext);
+        virtual void        pushRecursiveClip(SAT_PaintContext* AContext);
         virtual void        popClip(SAT_PaintContext* AContext);
         virtual void        paintChildren(SAT_PaintContext* AContext);
 
@@ -161,7 +162,7 @@ SAT_BaseWidget* SAT_VisualWidget::findWidgetAt(int32_t AXpos, int32_t AYpos, boo
     intersecting the current rect with each widget that has the autoClipChilren flag set
 */
 
-SAT_Rect SAT_VisualWidget::findParentClipRect(SAT_Rect ARect)
+SAT_Rect SAT_VisualWidget::getRecursiveClipRect(SAT_Rect ARect)
 {
     //SAT_TRACE;
     SAT_Rect rect = ARect;
@@ -172,15 +173,24 @@ SAT_Rect SAT_VisualWidget::findParentClipRect(SAT_Rect ARect)
         {
             SAT_Rect parent_rect = parent->getRect();
             rect.overlap(parent_rect);
-            rect = parent->findParentClipRect(rect);
+            rect = parent->getRecursiveClipRect(rect);
         }
     }
     return rect;
 }
 
+SAT_Rect SAT_VisualWidget::getRecursiveClipRect()
+{
+    return getRecursiveClipRect(MRect);
+}
+
+
 /*
     returns topmost opaque parent
     or null if no opaque parent found (or widget doesn't have a parent)
+    consider ARect, the area of the initial widget..
+    check backards until we're sure no other widgets behind it will be visible,
+    so we can start painting from there..
 */
 
 SAT_BaseWidget* SAT_VisualWidget::findOpaqueParent(SAT_Rect ARect)
@@ -230,12 +240,31 @@ bool SAT_VisualWidget::isRecursivelyOpaque()
 //
 //------------------------------
 
+sat_coord_t SAT_VisualWidget::getPaintScale()
+{
+    SAT_Assert(MOwner);
+    sat_coord_t scale = MOwner->do_widget_owner_get_scale(this);
+    scale *= getRecursiveScale();
+    scale *= getContentScale();
+    return scale;
+}
+
 void SAT_VisualWidget::pushClip(SAT_PaintContext* AContext)
 {
     if (Options.auto_clip)
     {
         SAT_Painter* painter= AContext->painter;
         painter->pushOverlappingClipRect(MRect);
+    }
+}
+
+void SAT_VisualWidget::pushRecursiveClip(SAT_PaintContext* AContext)
+{
+    if (Options.auto_clip)
+    {
+        SAT_Painter* painter= AContext->painter;
+        SAT_Rect rect = getRecursiveClipRect();
+        painter->pushOverlappingClipRect(rect);//MRect);
     }
 }
 
@@ -252,29 +281,40 @@ void SAT_VisualWidget::popClip(SAT_PaintContext* AContext)
 /*
     draw all the child-widgets, recursively
     (but not the widet itself)
+    clipping is already set up
+    (see on_widget_paint(), and inherited ones)..
+
+    hmmm.. no point in calling isRecursivelyVisible for each child widget?
+    if current widget is visible, it will not call child-widgets
+
+    ouch.. we need it if we call straight into a hierarchy (dirty widgets),
+    and haven't checked the visibility..
+    but we only need to do it once (fur current widget, don't we?)
+    and don't call child widgets if not this one is not visible..
+    (but #2, visibility is checked in child.paintChildren..)
 */
 
 void SAT_VisualWidget::paintChildren(SAT_PaintContext* AContext)
 {
-    //SAT_Painter* painter= AContext->painter;
+    // if this widget is not visible, don't do anything..
+    //if (!State.visible) return;
     uint32_t numchildren = MChildren.size();
     if (numchildren > 0)
     {
-        //if (Options.auto_clip) painter->pushOverlappingClipRect(MRect);
         for(uint32_t i=0; i<numchildren; i++)
         {
             SAT_BaseWidget* widget = MChildren[i];
-            if (widget->isRecursivelyVisible())
-            {
+            //if (widget->isRecursivelyVisible())
+            //if (widget->State.visible)
+            //{
                 SAT_Rect widgetrect = widget->getRect();
                 widgetrect.overlap(MRect);
                 if (widgetrect.isNotEmpty())
                 {
                     widget->on_widget_paint(AContext);
                 }
-            }
+            //}
         }
-        //if (Options.auto_clip) painter->popClipRect();
     }
 }
 
@@ -284,7 +324,9 @@ void SAT_VisualWidget::paintChildren(SAT_PaintContext* AContext)
 
 void SAT_VisualWidget::on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode, uint32_t AIndex)
 {
+    if (!State.visible) return;
     pushClip(AContext);
+    //pushRecursiveClip(AContext);
     paintChildren(AContext);
     popClip(AContext);
 }

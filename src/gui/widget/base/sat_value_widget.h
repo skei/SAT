@@ -1,11 +1,6 @@
 #pragma once
 
 /*
-    widget internal value(s)
-    connection to parameter(s)
-*/
-
-/*
     todo/consider:
         - multiple values/parameters
         - modulation

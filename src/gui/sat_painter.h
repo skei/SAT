@@ -3,15 +3,6 @@
 #include "base/sat_base.h"
 #include "gui/sat_gui_base.h"
 
-// something weird is happening if we use an array...
-// crashes in popClipRect
-
-//typedef SAT_Array<SAT_Rect> SAT_ClipRectStack;
-
-// performance should anyway be better using a hardcoded buffer..
-// no resizing and reallocationg the buffer for every push/pop..
-// (but we're limited to a max sack size..)
-
 typedef SAT_Stack<SAT_Rect,SAT_PAINTER_CLIP_RECT_STACK_SIZE> SAT_ClipRectStack;
 
 //----------------------------------------------------------------------

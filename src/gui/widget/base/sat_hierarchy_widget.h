@@ -1,11 +1,5 @@
 #pragma once
 
-/*
-    widget hierarchy, parent/children
-*/
-
-//----------------------------------------------------------------------
-
 #include "base/sat_base.h"
 //#include "gui/sat_gui_base.h"
 #include "gui/sat_painter.h"

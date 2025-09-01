@@ -1,13 +1,5 @@
 #pragma once
 
-/*
-    defines what a widget IS..
-    how a (widget-) window can handle/manage widgets..
-    and how they interact
-*/
-
-//----------------------------------------------------------------------
-
 #include "base/sat_base.h"
 #include "gui/sat_gui_base.h"
 
@@ -105,7 +97,8 @@ class SAT_BaseWidget
         virtual void                setVisible(bool AState=true, bool ARecursive=true)                  { }
         virtual void                setOpaque(bool AState=true, bool ARecursive=true)                   { }
         virtual SAT_BaseWidget*     findWidgetAt(int32_t AXpos, int32_t AYpos, bool ARecursive=true)    { return nullptr; }
-        virtual SAT_Rect            findParentClipRect(SAT_Rect ARect)                                  { return SAT_Rect(0); }
+        virtual SAT_Rect            getRecursiveClipRect(SAT_Rect ARect)                                { return SAT_Rect(0); }
+        virtual SAT_Rect            getRecursiveClipRect()                                              { return SAT_Rect(0); }
         virtual SAT_BaseWidget*     findOpaqueParent(SAT_Rect ARect)                                    { return nullptr; }
         virtual bool                isRecursivelyVisible()                                              { return false; }
         virtual bool                isRecursivelyOpaque()                                               { return false; }
@@ -114,12 +107,12 @@ class SAT_BaseWidget
 
         virtual void                setBaseRect(SAT_Rect ARect)                                         { }
         virtual void                setContentScale(sat_coord_t AScale)                                 { }
-        virtual void                setAccumulatedScale(sat_coord_t AScale)                             { }
+        virtual void                setRecursiveScale(sat_coord_t AScale)                               { }
         virtual SAT_Rect            getBaseRect()                                                       { return SAT_Rect(0); }
         virtual SAT_Rect            getInitialRect()                                                    { return SAT_Rect(0); }
         virtual SAT_Rect            getContentRect()                                                    { return SAT_Rect(0); }
         virtual sat_coord_t         getContentScale()                                                   { return 1.0; }
-        virtual sat_coord_t         getAccumulatedScale()                                               { return 1.0; }
+        virtual sat_coord_t         getRecursiveScale()                                                 { return 1.0; }
 
     public: // interactive
 

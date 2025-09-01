@@ -1,10 +1,6 @@
 #pragma once
 
 /*
-    widget pos/size, relative to parent and other widgets
-*/
-
-/*
     todo/consider:
         - movable/sizable (affects layout, pos/size)
         - tweening - offset (from layout/alignment)
@@ -35,13 +31,13 @@ class SAT_LayoutWidget
 
         void            setBaseRect(SAT_Rect ARect) override;
         void            setContentScale(sat_coord_t AScale) override;
-        void            setAccumulatedScale(sat_coord_t AScale) override;
+        void            setRecursiveScale(sat_coord_t AScale) override;
 
         SAT_Rect        getBaseRect() override;
         SAT_Rect        getInitialRect() override;
         SAT_Rect        getContentRect() override;
         sat_coord_t     getContentScale() override;
-        sat_coord_t     getAccumulatedScale() override;
+        sat_coord_t     getRecursiveScale() override;
 
     public:
 
@@ -59,11 +55,19 @@ class SAT_LayoutWidget
         SAT_Rect        MInitialRect        = {};   // pos/size when created (may be percentages)
         SAT_Rect        MContentRect        = {};
 
-        sat_coord_t     MContentScale       = 1.0;
-        sat_coord_t     MAccumulatedScale   = 1.0;
-
      // SAT_Point       MLayoutOffset       = {0,0};
 
+        sat_coord_t     MContentScale       = 1.0;
+        sat_coord_t     MRecursiveScale     = 1.0;
+
+        /*
+            TODO: recursive properties:
+            bool        MRecursiveActive    = true;
+            bool        MRecursiveEnabled   = true;
+            bool        MRecursiveOpaque    = true;
+            bool        MRecursiveVisible   = true;
+            SAT_Color   MRecursiveBGColor   = SAT_Black;
+        */
 
 };
 
@@ -105,9 +109,9 @@ void SAT_LayoutWidget::setContentScale(sat_coord_t AScale)
     MContentScale = AScale;
 }
 
-void SAT_LayoutWidget::setAccumulatedScale(sat_coord_t AScale)
+void SAT_LayoutWidget::setRecursiveScale(sat_coord_t AScale)
 {
-    MAccumulatedScale = AScale;
+    MRecursiveScale = AScale;
 }
 
 SAT_Rect SAT_LayoutWidget::getBaseRect()
@@ -130,9 +134,9 @@ sat_coord_t SAT_LayoutWidget::getContentScale()
     return MContentScale;
 }
 
-sat_coord_t SAT_LayoutWidget::getAccumulatedScale()
+sat_coord_t SAT_LayoutWidget::getRecursiveScale()
 {
-    return MAccumulatedScale;
+    return MRecursiveScale;
 }
 
 //------------------------------
@@ -159,7 +163,7 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
     SAT_Assert(MOwner);
 
     sat_coord_t scale = MOwner->do_widget_owner_get_scale(this);
-    scale *= getAccumulatedScale();
+    scale *= getRecursiveScale();
     scale *= getContentScale();
 
     sat_coord_t w = MOwner->do_widget_owner_get_width(this);
@@ -254,9 +258,9 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
 
             // --- scale ---
             
-            sat_coord_t accum_scale = getAccumulatedScale();
-            accum_scale *= getContentScale();
-            child->setAccumulatedScale(accum_scale);
+            sat_coord_t child_scale = getRecursiveScale();
+            child_scale *= getContentScale();
+            child->setRecursiveScale(child_scale);
 
             /*
                 child_rect.add(child->MManuallyMoved);
@@ -377,6 +381,13 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
             // --- set child rect ---
 
             child->setRect(child_rect);
+
+            /*
+                TODO: also set other recursive flags:
+                - isOpaque
+                - isVisible
+                - isEnabled (and disabled_color)
+            */
 
             // --- recursive ---
 

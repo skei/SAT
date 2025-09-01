@@ -14,19 +14,21 @@ int main(void)
 {
     SAT_WidgetWindow* window = new SAT_WidgetWindow(640,480);
     window->setName("window");
-    window->Layout.inner_border = SAT_Rect(20,20,20,20);
+    //window->Layout.inner_border = SAT_Rect(20,20,20,20);
+    window->setContentScale(0.5);
 
-        SAT_PanelWidget* background = new SAT_PanelWidget(0);
+        SAT_PanelWidget* background = new SAT_PanelWidget(SAT_Rect(640,480));
         background->setName("background");
         window->appendChild(background);
-        background->Layout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
+        //background->Layout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
         //background->setContentScale(2.0);
 
             SAT_PanelWidget* panel = new SAT_PanelWidget(SAT_Rect(10,10,100,100));
             background->appendChild(panel);
             panel->setName("panel");
+            panel->setBackgroundColor(SAT_Green);
             //panel->Layout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
-            //panel->setContentScale(0.5);
+            panel->setContentScale(2.0);
 
                 SAT_TextWidget* text = new SAT_TextWidget(SAT_Rect(10,10,80,20));
                 panel->appendChild(text);
@@ -36,6 +38,7 @@ int main(void)
                 text->setBackgroundColor(SAT_DarkRed);
                 text->setBorderWidth(1);
                 text->setTextColor(SAT_LightYellow);
+                text->setCanSelect(true);
 
     window->show();
     window->eventLoop();

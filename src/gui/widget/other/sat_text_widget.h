@@ -35,20 +35,19 @@ class SAT_TextWidget
         virtual void setDrawText(bool ADraw=true);
         virtual void setTextColor(SAT_Color AColor);
         virtual void setTextSize(sat_coord_t ASize);
-
         virtual void drawText(SAT_PaintContext* AContext);
 
     public:
 
         void on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode=SAT_WIDGET_PAINT_NORMAL, uint32_t AIndex=0) override;
 
-    private:
+    protected:
 
-        bool        MDrawText       = true;
-        const char* MText           = "Text";
-        uint32_t    MTextAlignment  = SAT_TEXT_ALIGN_CENTER;
-        SAT_Color   MTextColor      = SAT_Black;
-        sat_coord_t MTextSize       = 10.0;
+        bool        MDrawText           = true;
+        const char* MText               = "Text";
+        uint32_t    MTextAlignment      = SAT_TEXT_ALIGN_CENTER;
+        SAT_Color   MTextColor          = SAT_Black;
+        sat_coord_t MTextSize           = 10.0;
 
 };
 
@@ -74,7 +73,6 @@ void SAT_TextWidget::setText(const char* AText)         { MText = AText; }
 void SAT_TextWidget::setTextColor(SAT_Color AColor)     { MTextColor = AColor; }
 void SAT_TextWidget::setTextSize(sat_coord_t ASize)     { MTextSize = ASize; }
 
-
 void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
 {
     SAT_Painter* painter = AContext->painter;
@@ -92,11 +90,12 @@ void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
 
 void SAT_TextWidget::on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode, uint32_t AIndex)
 {
-    fillBackground(AContext);
+    if (!State.visible) return;
     pushClip(AContext);
+    //pushRecursiveClip(AContext);
+    fillBackground(AContext);
     paintChildren(AContext);    
     drawText(AContext);
-    popClip(AContext);
     drawBorder(AContext);
+    popClip(AContext);
 }
-

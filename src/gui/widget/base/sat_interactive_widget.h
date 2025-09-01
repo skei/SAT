@@ -1,11 +1,5 @@
 #pragma once
 
-/*
-    interact with the widget
-*/
-
-//----------------------------------------------------------------------
-
 #include "base/sat_base.h"
 //#include "gui/sat_gui_base.h"
 #include "gui/widget/base/sat_layout_widget.h"

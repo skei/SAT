@@ -1,37 +1,5 @@
 #pragma once
 
-/*
-    TODO / consider..
-    should we put all 'global' gui resources in SAT_Global.GUI,
-    and have some lazy creation stuff there? (refcount?)
-
-    x11:
-        separate display connection per window
-        glx needs display and targe drawable
-
-    win32:
-        window needs (global) WNDCLASS, created from global HINSTANCE (from DllMain)
-        surface needs dc (can get it from screen using nullptr)
-        painter wands dc (from hwnd)
-        wgl needs hwnd, and dc (created from hwnd)
-
-    nanovg
-        context is 'global'
-        nanovg surface & painter needs context
-
-        (github: "At first I used a separate NanoVG context and GLFW context per window.
-        However, this leads to weird difficulties down the road. I ended up using shared context")
-
-    cairo surface
-        win32: dc
-        xcb: connection, drawable, visual
-        xrender: conection, screen, drawable, xrender pictformat
-
-    so.. everything except nanovg is per window..
-    (maybe opengl context too)
-
-*/
-
 #include "base/sat_base.h"
 
 #ifdef SAT_USE_X11

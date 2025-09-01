@@ -160,6 +160,12 @@ class SAT_WidgetWindow
      // bool                    MNeedFullRealignment    = false;            // force full alignment (all widgets)
         bool                    MNeedFullRepaint        = false;            // force full repaint (all widgets)
         sat_coord_t             MWindowScale            = 1.0;
+
+        bool                    MClearBackground        = true;
+        SAT_Color               MBackgroundColor        = SAT_Black;
+
+
+
 };
 
 //----------------------------------------------------------------------
@@ -272,13 +278,17 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
         MWidgetPaintQueue.write(widget);
     }
     // SAT.STATISTICS.report_WindwRedrawQueue(count,rect);
+
     // ----- invalidate -----
+
     if (rect.isNotEmpty())
     {
         //SAT_PRINT("invalidate\n");
         invalidate(rect.x,rect.y,rect.w,rect.h);
     }
+
     // -----
+    
     MCurrentTimerTick += 1;
     MTimerBlocked = false;
 }
@@ -304,11 +314,17 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
     uint32_t count = 0;
     SAT_BaseWidget* widget = nullptr;
 
-
     if (MNeedFullRepaint)
     {
+
+        if (MClearBackground)
+        {
+            SAT_Assert(AContext->painter);
+            AContext->painter->setFillColor(MBackgroundColor);
+            AContext->painter->fillRect(MRect);
+        }
+
         //SAT_PRINT("full repaint\n");
-        // AContext->update_rect = MRect;
         uint32_t num = getNumChildren();
         for (uint32_t i=0; i<num; i++)
         {
@@ -323,12 +339,18 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
     }
     else
     {
+
+        // can we set clipping = update_rect, insead og recursive clip?
+        // probably now.. the os could combine several updates into one bigger..
+
         while (MWidgetPaintQueue.read(&widget))
         {
             //SAT_PRINT("painting widget %i\n",count);
+            SAT_Widget* wdg = (SAT_Widget*)widget;
+            wdg->pushRecursiveClip(AContext);
+            wdg->on_widget_paint(AContext);
+            wdg->popClip(AContext);
             count += 1;
-            //widget->paintChildren(AContext);
-            widget->on_widget_paint(AContext);
         }
         // SAT.STATISTICS.report_WindowPaintQueue(count);
     }
