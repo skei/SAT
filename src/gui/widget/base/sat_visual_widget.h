@@ -241,7 +241,9 @@ void SAT_VisualWidget::paintChildren(SAT_PaintContext* AContext)
     if (numchildren > 0)
     {
         SAT_Rect clip_rect = mrect;
+
         if (Options.auto_clip) painter->pushOverlappingClipRect(clip_rect);
+
         for(uint32_t i=0; i<numchildren; i++)
         {
             SAT_BaseWidget* widget = MChildren[i];
@@ -255,7 +257,9 @@ void SAT_VisualWidget::paintChildren(SAT_PaintContext* AContext)
                 }
             }
         }
+
         if (Options.auto_clip) painter->popClipRect();
+
     }
 }
 

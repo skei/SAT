@@ -38,7 +38,7 @@
 // gui
 //----------------------------------------
 
-// #define SAT_PAINTER_CLIP_RECT_STACK_SIZE            256
+#define SAT_PAINTER_CLIP_RECT_STACK_SIZE                 256
 #define SAT_QUEUE_SIZE_PAINT                        256
 #define SAT_QUEUE_SIZE_REALIGN                      256
 #define SAT_QUEUE_SIZE_REDRAW                       256

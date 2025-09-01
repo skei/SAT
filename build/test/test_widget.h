@@ -2,12 +2,15 @@
 
 #include "base/sat.h"
 #include "gui/sat_widget_window.h"
+#include "gui/sat_widgets.h"
 
 //----------------------------------------------------------------------
 //
 //
 //
 //----------------------------------------------------------------------
+
+#if 0
 
 class myWidget
 : public SAT_Widget
@@ -60,6 +63,7 @@ void myWidget::on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t ABut
     do_widget_redraw(this);
 };
 
+#endif // 0
 
 //----------------------------------------------------------------------
 //
@@ -70,8 +74,14 @@ void myWidget::on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t ABut
 int main(void)
 {
     SAT_WidgetWindow* window = new SAT_WidgetWindow(640,480);
-    myWidget* widget = new myWidget(SAT_Rect(10,10,300,200));
-    window->appendChild(widget);
+
+    SAT_PanelWidget* panel = new SAT_PanelWidget(SAT_Rect(10,10,300,200));
+    panel->Layout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
+    window->appendChild(panel);
+
+    SAT_TextWidget* text = new SAT_TextWidget(SAT_Rect(10,10,100,25));
+    panel->appendChild(text);
+
     window->show();
     window->eventLoop();
     window->hide();

@@ -59,7 +59,7 @@ class SAT_WidgetWindow
         virtual void        removeTimerWidget(SAT_BaseWidget* AWidget);
         virtual void        handleTimer(uint32_t ATimerId, double ADelta);
         virtual void        handlePainting(SAT_PaintContext* AContext);
-        virtual sat_coord_t calcScale(SAT_Point AurrentSize, SAT_Point AInitialSize);
+        virtual sat_coord_t calcScale(uint32_t ANewWidth, uint32_t ANewHeight, uint32_t AInitialWidth, uint32_t AInitialHeight);
         virtual void        updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime);
 
     public:
@@ -175,6 +175,7 @@ SAT_WidgetWindow::SAT_WidgetWindow(uint32_t AWidth, uint32_t AHeight, intptr_t A
 , SAT_Widget(SAT_Rect(AWidth,AHeight))
 {
     MWidgetTypeName = "SAT_WidgetWindow";
+    MInitialRect = SAT_Rect(0,0,AWidth,AHeight);
     MWindowTimer = new SAT_Timer(this);
 };
 
@@ -296,6 +297,13 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
 
 void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
 {
+
+    // SAT_Painter* painter = AContext->painter;
+    // uint32_t screenwidth = getWidth();
+    // uint32_t screenheight = getHeight();
+    // painter->setClipRect(SAT_Rect(0,0,screenwidth,screenheight));
+    // painter->setClip(SAT_Rect(0,0,screenwidth,screenheight));
+
     if (MNeedFullRepaint)
     {
         //SAT_PRINT("full repaint\n");
@@ -303,8 +311,8 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
         uint32_t num = getNumChildren();
         for (uint32_t i=0; i<num; i++)
         {
-            SAT_BaseWidget* child = getChild(i);
-            child->on_widget_paint(AContext);
+            SAT_BaseWidget* widget = getChild(i);
+            widget->on_widget_paint(AContext);
         }
         // SAT.STATISTICS.report_WindowPaintAll();
         MNeedFullRepaint = false;
@@ -322,15 +330,20 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
         }
         // SAT.STATISTICS.report_WindowPaintQueue(count);
     }
+
+    // painter->resetClip();
+
 }
 
-sat_coord_t SAT_WidgetWindow::calcScale(SAT_Point ACurrentSize, SAT_Point AInitialSize)
+
+
+sat_coord_t SAT_WidgetWindow::calcScale(uint32_t ANewWidth, uint32_t ANewHeight, uint32_t AInitialWidth, uint32_t AInitialHeight)
 {
     sat_coord_t scale = 1.0;
-    if ((AInitialSize.w > 0) && (AInitialSize.h > 0))
+    if ((AInitialWidth > 0) && (AInitialHeight > 0))
     {
-        sat_coord_t xscale = (sat_coord_t)ACurrentSize.w / (sat_coord_t)AInitialSize.w;
-        sat_coord_t yscale = (sat_coord_t)ACurrentSize.h / (sat_coord_t)AInitialSize.h;
+        sat_coord_t xscale = (sat_coord_t)ANewWidth  / (sat_coord_t)AInitialWidth;
+        sat_coord_t yscale = (sat_coord_t)ANewHeight / (sat_coord_t)AInitialHeight;
         if (xscale < yscale) scale = xscale;
         else scale =  yscale;
     }
@@ -478,6 +491,8 @@ void SAT_WidgetWindow::on_window_move(int32_t AXpos, int32_t AYpos)
 
 void SAT_WidgetWindow::on_window_resize(uint32_t AWidth, uint32_t AHeight)
 {
+    MWindowScale = calcScale(AWidth,AHeight,MInitialRect.w,MInitialRect.h);
+    //SAT_PRINT("scale: %.3f\n",MWindowScale);
     SAT_Window::windowResize(AWidth,AHeight);
     MRect = SAT_Rect(AWidth,AHeight);
     realignChildren();
