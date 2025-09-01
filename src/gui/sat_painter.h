@@ -46,10 +46,13 @@ class SAT_Painter
         void                endPainting() override;
     public:
         virtual void        pushClipRect(SAT_Rect ARect);
+        virtual void        pushClipRectAndReset();
         virtual void        pushOverlappingClipRect(SAT_Rect ARect);
         virtual void        popClipRect();
+        virtual void        resetClipRectStack();
         virtual SAT_Rect    getClipRect();
         virtual void        setClipRect(SAT_Rect ARect);
+
     public:
     public:
         SAT_ClipRectStack   MClipRectStack      = {};     
@@ -70,15 +73,31 @@ SAT_Painter::SAT_Painter(SAT_PainterOwner* AOwner, SAT_PaintTarget* ATarget)
 
 SAT_Painter::~SAT_Painter()
 {
+    SAT_Assert(MClipRectStack.isEmpty());
 }
+
+/*
+    start painting..
+    - call implemented painters
+        (win32 needs the negin/endPaint thing to get the PaintDC, iirc)
+    - set clipping
+*/
 
 void SAT_Painter::beginPainting(uint32_t AWidth, uint32_t AHeight)
 {
     SAT_ImplementedPainter::beginPainting(AWidth,AHeight);
+    //MClipRectStack.reset();
+    SAT_Assert(MClipRectStack.isEmpty());
     SAT_Rect rect = {0,0,AWidth,AHeight};
     setClip(rect);
     MCurrentClipRect = SAT_Rect(0,0,AWidth,AHeight);
 }
+
+/*
+    end painting..
+    - reset clipping
+    - flush? blit to screen? finalize?
+*/
 
 void SAT_Painter::endPainting()
 {
@@ -87,13 +106,12 @@ void SAT_Painter::endPainting()
     SAT_ImplementedPainter::endPainting();
 }
 
-//   virtual void pushClip(SAT_Rect ARect) {
-//     MClipStack.push(MClipRect);
-//     MClipRect = ARect;
-//     resetClip();
-//     setClip(MClipRect.x,MClipRect.y,MClipRect.w,MClipRect.h);
-//   }
-
+/*
+    push the current clip rect on the stack (to remember it)
+    and set new clip rect
+    some backends only shrinks the clipping rect, so we reset it first..
+    (cairo comes to mind, been a while...)
+*/
 
 void SAT_Painter::pushClipRect(SAT_Rect ARect)
 {
@@ -104,12 +122,11 @@ void SAT_Painter::pushClipRect(SAT_Rect ARect)
     setClip(ARect);
 }
 
-//   virtual void pushOverlappingClip(SAT_Rect ARect) {
-//     SAT_Rect r = ARect;
-//     r.overlap(MClipRect);
-//     pushClip(r);
-//   }
-
+/*
+    find overlap betwen current c.ip react and argument
+    push the current clip rect, and clip to new (overlap)
+    (rect within rect)
+*/
 
 void SAT_Painter::pushOverlappingClipRect(SAT_Rect ARect)
 {
@@ -118,30 +135,33 @@ void SAT_Painter::pushOverlappingClipRect(SAT_Rect ARect)
     pushClipRect(r);
 }
 
-//   virtual void pushNoClip() {
-//     MClipStack.push(MClipRect);
-//     resetClip();
-//   }
+/*
+    push the current clip rect onto the stack,
+    and reset clipping
+*/
 
-//   virtual SAT_Rect popClip() {
-//     SAT_Rect popped_rect = MClipStack.pop();
-//     MClipRect = popped_rect;
-//     setClip(MClipRect.x,MClipRect.y,MClipRect.w,MClipRect.h);
-//     return MClipRect;
-//   }
+void SAT_Painter::pushClipRectAndReset()
+{
+    MClipRectStack.push(MCurrentClipRect);
+    resetClip();
+    // MCurrentClipRect = SAT_Rect(0);
+}
+
+/*
+    pop rect off the stack, and set cliping to it
+*/
 
 void SAT_Painter::popClipRect()
 {
-    SAT_Rect rect = MClipRectStack.pop();       // ugh.. crash...
+    SAT_Rect rect = MClipRectStack.pop();
     MCurrentClipRect = rect;
     setClip(rect);
-    //return rect;
 }
 
-//   virtual void resetClipStack() {
-//     MClipStack.reset();
-//   }
-
+void SAT_Painter::resetClipRectStack()
+{
+    MClipRectStack.reset();
+}
 
 SAT_Rect SAT_Painter::getClipRect()
 {
@@ -152,8 +172,3 @@ void SAT_Painter::setClipRect(SAT_Rect ARect)
 {
     MCurrentClipRect = ARect;
 }
-
-
-
-
-

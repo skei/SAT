@@ -48,6 +48,8 @@ class SAT_VisualWidget
 
     public:
 
+        virtual void        pushClip(SAT_PaintContext* AContext);
+        virtual void        popClip(SAT_PaintContext* AContext);
         virtual void        paintChildren(SAT_PaintContext* AContext);
 
     public:
@@ -228,6 +230,25 @@ bool SAT_VisualWidget::isRecursivelyOpaque()
 //
 //------------------------------
 
+void SAT_VisualWidget::pushClip(SAT_PaintContext* AContext)
+{
+    if (Options.auto_clip)
+    {
+        SAT_Painter* painter= AContext->painter;
+        painter->pushOverlappingClipRect(MRect);
+    }
+}
+
+void SAT_VisualWidget::popClip(SAT_PaintContext* AContext)
+{
+    if (Options.auto_clip)
+    {
+        SAT_Painter* painter= AContext->painter;
+        painter->popClipRect();
+
+    }
+}
+
 /*
     draw all the child-widgets, recursively
     (but not the widet itself)
@@ -235,31 +256,25 @@ bool SAT_VisualWidget::isRecursivelyOpaque()
 
 void SAT_VisualWidget::paintChildren(SAT_PaintContext* AContext)
 {
-    SAT_Rect mrect = MRect;
-    SAT_Painter* painter= AContext->painter;
+    //SAT_Painter* painter= AContext->painter;
     uint32_t numchildren = MChildren.size();
     if (numchildren > 0)
     {
-        SAT_Rect clip_rect = mrect;
-
-        if (Options.auto_clip) painter->pushOverlappingClipRect(clip_rect);
-
+        //if (Options.auto_clip) painter->pushOverlappingClipRect(MRect);
         for(uint32_t i=0; i<numchildren; i++)
         {
             SAT_BaseWidget* widget = MChildren[i];
             if (widget->isRecursivelyVisible())
             {
                 SAT_Rect widgetrect = widget->getRect();
-                widgetrect.overlap(mrect);
+                widgetrect.overlap(MRect);
                 if (widgetrect.isNotEmpty())
                 {
                     widget->on_widget_paint(AContext);
                 }
             }
         }
-
-        if (Options.auto_clip) painter->popClipRect();
-
+        //if (Options.auto_clip) painter->popClipRect();
     }
 }
 
@@ -267,13 +282,11 @@ void SAT_VisualWidget::paintChildren(SAT_PaintContext* AContext)
 //
 //------------------------------
 
-//------------------------------
-//
-//------------------------------
-
 void SAT_VisualWidget::on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode, uint32_t AIndex)
 {
+    pushClip(AContext);
     paintChildren(AContext);
+    popClip(AContext);
 }
 
 void SAT_VisualWidget::on_widget_pre_paint(SAT_PaintContext* AContext, uint32_t AMode, uint32_t AIndex)

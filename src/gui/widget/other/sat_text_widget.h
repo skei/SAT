@@ -93,8 +93,10 @@ void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
 void SAT_TextWidget::on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode, uint32_t AIndex)
 {
     fillBackground(AContext);
+    pushClip(AContext);
     paintChildren(AContext);    
     drawText(AContext);
+    popClip(AContext);
     drawBorder(AContext);
 }
 
