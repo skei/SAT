@@ -30,26 +30,3 @@ temporary notes..
     so.. everything except nanovg is per window..
     (maybe opengl context too)
 
-----------------------------------------------------------------------
-drawing
-----------------------------------------------------------------------
-
-window.do_widget_redraw()
-    check backwards in the widet hierarchy (upwards, parent), until we are sure
-    no other widgest will be visible through the rect
-
-all painting should consider the update_rect AND the clip-rect..
-no point wasting time drawing things that will not bs visible
-
-update_rect is the rect received from os/system in EXPOSE/WM_PAINT,
-the part of the window needing repainting..
-which we will blit after finished drawing..
-
-clip_rect is updeated recursively as we go in and out o widget hierarchies during drawing..
-widgets can call painter->getClipRect to find current clip-rect,
-and just don't draw things outside of this, or adjust their drawing coords..
-it will be clipped away, so don't waste time painting it..
-
------
-
-* disabled_color, disabled_alpha/blend

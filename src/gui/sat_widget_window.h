@@ -393,7 +393,7 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
         if (!MHoverWidget)
         {
             // we have just entered the window, didn't leave anything            
-            SAT_PRINT("entering: %s\n",hover->getName());
+            SAT_PRINT("entering: %s %s\n",hover->getWidgetTypeName(), hover->getName());
             hover->State.hovering = true;
             hover->on_widget_mouse_enter(MHoverWidget,AXpos,AYpos,ATime);
             MHoverWidget = hover;
@@ -404,10 +404,10 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
             if (hover != MHoverWidget)
             {
                 // differemt, leave the old, enter the new
-                SAT_PRINT("leaving: %s\n",MHoverWidget->getName());
+                SAT_PRINT("leaving: %s %s\n",MHoverWidget->getWidgetTypeName(),MHoverWidget->getName());
                 MHoverWidget->State.hovering = false;
                 MHoverWidget->on_widget_mouse_leave(hover,AXpos,AYpos,ATime);
-                SAT_PRINT("entering: %s\n",hover->getName());
+                SAT_PRINT("entering: %s %s\n",hover->getWidgetTypeName(), hover->getName());
                 hover->State.hovering = true;
                 hover->on_widget_mouse_enter(MHoverWidget,AXpos,AYpos,ATime);
                 MHoverWidget = hover;
@@ -658,7 +658,7 @@ void SAT_WidgetWindow::on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint3
     //SAT_Assert(MHoverWidget);
     if (MHoverWidget)
     {
-        SAT_PRINT("leaving: %s\n",MHoverWidget->getName());
+        SAT_PRINT("leaving: %s %s\n",MHoverWidget->getWidgetTypeName(), MHoverWidget->getName());
         MHoverWidget->State.hovering = false;
         MHoverWidget->on_widget_mouse_leave(nullptr,AXpos,AYpos,ATime);
         MHoverWidget = nullptr;

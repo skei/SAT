@@ -56,6 +56,7 @@ class SAT_TextWidget
 SAT_TextWidget::SAT_TextWidget(SAT_Rect ARect)
 : SAT_PanelWidget(ARect)
 {
+    MWidgetTypeName = "SAT_TextWidget";
     //MFillBackground = false;
     //MDrawBorder = false;
 }

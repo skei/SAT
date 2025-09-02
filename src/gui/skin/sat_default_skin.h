@@ -29,24 +29,24 @@ class SAT_DefaultSkin
 SAT_DefaultSkin::SAT_DefaultSkin()
 : SAT_Skin()
 {
-    setBackgroundColor( SAT_Color(0.50,0.50,0.50) );
-    setBackgroundColor( SAT_Color(0.45,0.45,0.45), SAT_SKIN_HOVER );
-    setBackgroundColor( SAT_Color(0.30,0.30,0.70), SAT_SKIN_SELECTED );
-    setBackgroundColor( SAT_Color(0.20,0.20,0.80), SAT_SKIN_SELECTED | SAT_SKIN_HOVER, true );
+    setBackgroundColors( SAT_Color(0.50,0.50,0.50) );
+    setBackgroundColors( SAT_Color(0.45,0.45,0.45), SAT_SKIN_HOVER );
+    setBackgroundColors( SAT_Color(0.30,0.30,0.70), SAT_SKIN_SELECTED );
+    setBackgroundColors( SAT_Color(0.20,0.20,0.80), SAT_SKIN_SELECTED | SAT_SKIN_HOVER, true );
 
-    setForegroundColor( SAT_Black );
+    setForegroundColors( SAT_Black );
 
-    setTextColor( SAT_Black );
-    setTextColor( SAT_White,        SAT_SKIN_SELECTED );
-    setTextColor( SAT_BrightYellow, SAT_SKIN_HOVER );
-    setTextColor( SAT_BrightRed,    SAT_SKIN_SELECTED | SAT_SKIN_HOVER, true );
+    setTextColors( SAT_Black );
+    setTextColors( SAT_White,        SAT_SKIN_SELECTED );
+    setTextColors( SAT_BrightYellow, SAT_SKIN_HOVER );
+    setTextColors( SAT_BrightRed,    SAT_SKIN_SELECTED | SAT_SKIN_HOVER, true );
 
-    setTextSize( 10.0 );
+    setTextSizes( 10.0 );
 
-    setBorderColor( SAT_Black );
-    //setBorderColor( SAT_White, SAT_SKIN_HOVER );
+    setBorderColors( SAT_Black );
+    //setBorderColors( SAT_White, SAT_SKIN_HOVER );
 
-    setBorderWidth( 1.0 );
+    setBorderWidths( 1.0 );
 
 }
 

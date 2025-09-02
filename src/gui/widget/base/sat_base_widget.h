@@ -17,68 +17,63 @@ typedef SAT_Array<SAT_BaseWidget*> SAT_BaseWidgetArray;
 
 struct SAT_WidgetLayout
 {
-    uint32_t    anchor          = SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT;    // snap widget pos to parent
-    uint32_t    stretch         = SAT_WIDGET_LAYOUT_STRETCH_NONE;       // stretch widget sides (after snapping)
-    uint32_t    crop            = SAT_WIDGET_LAYOUT_CROP_NONE;          // crop widget rect out of 'available' layout rect (for following widgets)
-    uint32_t    relative        = SAT_WIDGET_LAYOUT_RELATIVE_NONE;      // pos/size relative to parent, layout (percentages)
-    uint32_t    stack           = SAT_WIDGET_LAYOUT_STACK_NONE;         // horiz/vert stacked (icon view)
-    SAT_Rect    inner_border    = {0,0,0,0};                            // border around child widgets
-    SAT_Rect    outer_border    = {0,0,0,0};                            // border around widget itself (in parent widget)
-    SAT_Point   spacing         = {0,0};                                // space between widgets
-    SAT_Point   minSize         = {-1,-1};                              // minimum widget size (-1 for none)
-    SAT_Point   maxSize         = {-1,-1};                              // maximum widget size (-1 for none)
+    uint32_t        anchor                  = SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT;    // snap widget pos to parent
+    uint32_t        stretch                 = SAT_WIDGET_LAYOUT_STRETCH_NONE;       // stretch widget sides (after snapping)
+    uint32_t        crop                    = SAT_WIDGET_LAYOUT_CROP_NONE;          // crop widget rect out of 'available' layout rect (for following widgets)
+    uint32_t        relative                = SAT_WIDGET_LAYOUT_RELATIVE_NONE;      // pos/size relative to parent, layout (percentages)
+    uint32_t        stack                   = SAT_WIDGET_LAYOUT_STACK_NONE;         // horiz/vert stacked (icon view)
+    SAT_Rect        inner_border            = {0,0,0,0};                            // border around child widgets
+    SAT_Rect        outer_border            = {0,0,0,0};                            // border around widget itself (in parent widget)
+    SAT_Point       spacing                 = {0,0};                                // space between widgets
+    SAT_Point       minSize                 = {-1,-1};                              // minimum widget size (-1 for none)
+    SAT_Point       maxSize                 = {-1,-1};                              // maximum widget size (-1 for none)
 };
 
 struct SAT_WidgetOptions
 {
-    bool auto_capture           = true;     // auto capture mouse when clicking
-    bool auto_clip              = true;     // clip child widgets
-    bool auto_cursor_shape      = true;     // set cursor shape when hovering over widget
-    bool auto_cursor_lock       = true;     // lock cursor in place (when dragging)
-    bool auto_cursor_hide       = true;     // auto hide cursor when dragging
-    bool auto_hint              = false;    // auto send hint when hovering
-    bool auto_size              = false;    // scale/zoom widget (content) relative to rect/size (f.ex. font size)
-    bool want_hover_events      = false;    // want hover, move, etc mouse events even when not captured
-    bool realign_if_invisible   = false;    // realign (child) widgets, even if not visible (menus, etc)
-    bool auto_redraw_hover      = false;    // realign (child) widgets, even if not visible (menus, etc)
+    bool            auto_capture            = true;                                 // auto capture mouse when clicking
+    bool            auto_clip               = true;                                 // clip child widgets
+    bool            auto_cursor_shape       = true;                                 // set cursor shape when hovering over widget
+    bool            auto_cursor_lock        = true;                                 // lock cursor in place (when dragging)
+    bool            auto_cursor_hide        = true;                                 // auto hide cursor when dragging
+    bool            auto_hint               = false;                                // auto send hint when hovering
+    bool            auto_size               = false;                                // scale/zoom widget (content) relative to rect/size (f.ex. font size)
+    bool            want_hover_events       = false;                                // want hover, move, etc mouse events even when not captured
+    bool            realign_if_invisible    = false;                                // realign (child) widgets, even if not visible (menus, etc)
+    bool            auto_redraw_hover       = false;                                // realign (child) widgets, even if not visible (menus, etc)
 };
 
 struct SAT_WidgetState
 {
-    bool active         = true;     // handles events
-    bool enabled        = true;     // if false, draw 'disabled'state (greyed out)
-    bool opaque         = true;     // set to true if widget fills it's entire rect
-    bool visible        = true;     // drawing/alignment
-    bool hovering       = false;
-    bool interacting    = false;
+    bool            active                  = true;                                 // handles events
+    bool            enabled                 = true;                                 // if false, draw 'disabled'state (greyed out)
+    bool            opaque                  = true;                                 // set to true if widget fills it's entire rect
+    bool            visible                 = true;                                 // drawing/alignment
+    bool            hovering                = false;                                // mouse cursor is hovering over widget
+    bool            interacting             = false;                                // interacting with widget
 };
-
-/*
-    set up during alignment..
-    recursively..
-*/
 
 struct SAT_WidgetRecursive
 {
-    SAT_Rect        rect            = {};
-    SAT_Rect        clip_rect       = {};
-    SAT_Rect        content_rect    = {};
-    sat_coord_t     scale           = 1.0;
-    SAT_BaseWidget* opaque_parent   = nullptr;
- // bool            active          = true;
- // bool            enabled         = true;
- // bool            opaque          = true;
- // bool            visible         = true;
- // SAT_Skin        skin            = {};
- // SAT_Color       background      = SAT_Grey;
+    SAT_Rect        rect                    = {};
+    SAT_Rect        clip_rect               = {};
+    SAT_Rect        content_rect            = {};
+    sat_coord_t     scale                   = 1.0;
+    SAT_BaseWidget* opaque_parent           = nullptr;
+ // bool            active                  = true;
+ // bool            enabled                 = true;
+ // bool            opaque                  = true;
+ // bool            visible                 = true;
+ // SAT_Skin        skin                    = {};
+ // SAT_Color       background              = SAT_Grey;
 };
 
 struct SAT_WidgetUpdateState
 {
-  //uint32_t    last_updated    = SAT_UINT32_MAX;
-    uint32_t    last_realigned  = SAT_UINT32_MAX;
-  //uint32_t    last_redrawn    = SAT_UINT32_MAX;
-    uint32_t    last_painted    = SAT_UINT32_MAX;
+    uint32_t        last_painted            = SAT_UINT32_MAX;
+ // uint32_t        last_redrawn            = SAT_UINT32_MAX;
+ // uint32_t        last_realigned          = SAT_UINT32_MAX;
+ // uint32_t        last_updated            = SAT_UINT32_MAX;
 };
 
 //----------------------------------------------------------------------
