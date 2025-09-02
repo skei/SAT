@@ -35,12 +35,7 @@ class SAT_HierarchyWidget
         uint32_t                getNumChildren() override;
         SAT_BaseWidget*         getChild(uint32_t AIndex) override;
 
-        SAT_BaseWidget*         findWidget(const char* AName, bool ARecursive=true) override;
-
-    public: // on_
-
-        void                    on_widget_show(SAT_WidgetOwner* AOwner) override;
-        void                    on_widget_hide(SAT_WidgetOwner* AOwner) override;
+        SAT_BaseWidget*         findChild(const char* AName) override;
 
     protected: // hierarchy
 
@@ -145,7 +140,7 @@ SAT_BaseWidget* SAT_HierarchyWidget::getChild(uint32_t AIndex)
 
 //----------
 
-SAT_BaseWidget* SAT_HierarchyWidget::findWidget(const char* AName, bool ARecursive)
+SAT_BaseWidget* SAT_HierarchyWidget::findChild(const char* AName)
 {
     const char* name = getName();
     if (strcmp(AName,name) == 0)
@@ -162,38 +157,9 @@ SAT_BaseWidget* SAT_HierarchyWidget::findWidget(const char* AName, bool ARecursi
         }
         else
         {
-            if (ARecursive)
-            {
-                SAT_BaseWidget* subchild = child->findWidget(AName,ARecursive);
-                if (subchild) return subchild;
-            }
+            SAT_BaseWidget* subchild = child->findChild(AName);
+            if (subchild) return subchild;
         }
     }
     return nullptr;
-}
-
-//------------------------------
-// on_
-//------------------------------
-
-void SAT_HierarchyWidget::on_widget_show(SAT_WidgetOwner* AOwner)
-{
-    setOwner(AOwner);
-    uint32_t num = getNumChildren();
-    for (uint32_t i=0; i<num; i++)
-    {
-        SAT_BaseWidget* widget = getChild(i);
-        widget->on_widget_show(AOwner);
-    }
-}
-
-void SAT_HierarchyWidget::on_widget_hide(SAT_WidgetOwner* AOwner)
-{
-    setOwner(nullptr);
-    uint32_t num = getNumChildren();
-    for (uint32_t i=0; i<num; i++)
-    {
-        SAT_BaseWidget* widget = getChild(i);
-        widget->on_widget_hide(AOwner);
-    }
 }

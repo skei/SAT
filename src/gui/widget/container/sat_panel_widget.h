@@ -35,33 +35,25 @@ class SAT_PanelWidget
     public:
 
         virtual void setFillBackground(bool AFill=true);
-        virtual void setBackgroundColor(SAT_Color AColor);
         virtual void setDrawBorder(bool ADraw=true);
-        virtual void setBorderColor(SAT_Color AColor);
-        virtual void setBorderWidth(sat_coord_t AWidth);
+        virtual void setCanSelect(bool ACanSelect=true);
 
         virtual void fillBackground(SAT_PaintContext* AContext);
         virtual void drawBorder(SAT_PaintContext* AContext);
 
-        virtual void setCanSelect(bool ACanSelect=true);
-        virtual void setSelectedColor(SAT_Color AColor);
 
     public:
 
-        void on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode=SAT_WIDGET_PAINT_NORMAL, uint32_t AIndex=0) override;
+        void on_widget_paint(SAT_PaintContext* AContext) override;
         void on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
 
     protected:
 
         bool        MFillBackground     = true;
-        SAT_Color   MBackgroundColor    = SAT_DarkGrey;
         bool        MDrawBorder         = true;
-        SAT_Color   MBorderColor        = SAT_LighterGrey;
-        sat_coord_t MBorderWidth        = 1.0;
 
         bool        MCanSelect          = false;
         bool        MIsSelected         = false;
-        SAT_Color   MSelectedColor      = SAT_Grey;
 
 };
 
@@ -84,13 +76,8 @@ SAT_PanelWidget::~SAT_PanelWidget()
 //------------------------------
 
 void SAT_PanelWidget::setFillBackground(bool AFill)         { MFillBackground = AFill; }
-void SAT_PanelWidget::setBackgroundColor(SAT_Color AColor)  { MBackgroundColor = AColor; }
 void SAT_PanelWidget::setDrawBorder(bool ADraw)             { MDrawBorder = ADraw; }
-void SAT_PanelWidget::setBorderColor(SAT_Color AColor)      { MBorderColor = AColor; }
-void SAT_PanelWidget::setBorderWidth(sat_coord_t AWidth)    { MBorderWidth = AWidth; }
-
 void SAT_PanelWidget::setCanSelect(bool ACanSelect)         { MCanSelect = ACanSelect; }
-void SAT_PanelWidget::setSelectedColor(SAT_Color AColor)    { MSelectedColor = AColor; }
 
 //------------------------------
 //
@@ -101,9 +88,11 @@ void SAT_PanelWidget::fillBackground(SAT_PaintContext* AContext)
     SAT_Painter* painter = AContext->painter;
     if (MFillBackground)
     {
-        if (MIsSelected) painter->setFillColor(MSelectedColor);
-        else painter->setFillColor(MBackgroundColor);
-        painter->fillRect(MRect);
+        uint32_t state = MIsSelected ? SAT_SKIN_SELECTED : SAT_SKIN_NORMAL;
+        SAT_Color color = MSkin->getBackgroundColor(state);
+        painter->setFillColor(color);
+        SAT_Rect rect = getRect();
+        painter->fillRect(rect);
     }
 }
 
@@ -112,9 +101,13 @@ void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
     SAT_Painter* painter = AContext->painter;
     if (MDrawBorder)
     {
-        painter->setDrawColor(MBorderColor);
-        painter->setLineWidth(MBorderWidth);
-        painter->drawRect(MRect);
+        uint32_t state = MIsSelected ? SAT_SKIN_SELECTED : SAT_SKIN_NORMAL;
+        SAT_Color color = MSkin->getBorderColor(state);
+        sat_coord_t width = MSkin->getBorderWidth(state);
+        painter->setDrawColor(color);
+        painter->setLineWidth(width);
+        SAT_Rect rect = Recursive.rect;
+        painter->drawRect(rect);
         painter->setLineWidth(0);
     }
 }
@@ -123,7 +116,7 @@ void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
 //
 //------------------------------
 
-void SAT_PanelWidget::on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode, uint32_t AIndex)
+void SAT_PanelWidget::on_widget_paint(SAT_PaintContext* AContext)
 {
     if (!State.visible) return;
     pushClip(AContext);

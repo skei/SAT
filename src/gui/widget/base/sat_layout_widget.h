@@ -29,45 +29,13 @@ class SAT_LayoutWidget
 
     public:
 
-        void            setBaseRect(SAT_Rect ARect) override;
-        void            setContentScale(sat_coord_t AScale) override;
-        void            setRecursiveScale(sat_coord_t AScale) override;
-
-        SAT_Rect        getBaseRect() override;
-        SAT_Rect        getInitialRect() override;
-        SAT_Rect        getContentRect() override;
-        sat_coord_t     getContentScale() override;
-        sat_coord_t     getRecursiveScale() override;
+        void            realignChildren() override;
 
     public:
 
-        virtual void    realignChildren(uint32_t AMode=SAT_WIDGET_REALIGN_CHILDREN, uint32_t AIndex=0, bool ARecursive=true);
-
-    public:
-
-        void            on_widget_realign(uint32_t AMode=SAT_WIDGET_REALIGN_CHILDREN, uint32_t AIndex=0) override;
-        SAT_Rect        on_widget_pre_align(SAT_Rect ARect, uint32_t AMode=SAT_WIDGET_REALIGN_CHILDREN, uint32_t AIndex=0) override;
-        SAT_Rect        on_widget_post_align(SAT_Rect ARect, uint32_t AMode=SAT_WIDGET_REALIGN_CHILDREN, uint32_t AIndex=0) override;
-
-    protected:
-
-        SAT_Rect        MBaseRect           = {};   // starting point for alignment
-        SAT_Rect        MInitialRect        = {};   // pos/size when created (may be percentages)
-        SAT_Rect        MContentRect        = {};
-
-     // SAT_Point       MLayoutOffset       = {0,0};
-
-        sat_coord_t     MContentScale       = 1.0;
-        sat_coord_t     MRecursiveScale     = 1.0;
-
-        /*
-            TODO: recursive properties:
-            bool        MRecursiveActive    = true;
-            bool        MRecursiveEnabled   = true;
-            bool        MRecursiveOpaque    = true;
-            bool        MRecursiveVisible   = true;
-            SAT_Color   MRecursiveBGColor   = SAT_Black;
-        */
+        void            on_widget_realign() override;
+        SAT_Rect        on_widget_pre_align(SAT_Rect ARect) override;
+        SAT_Rect        on_widget_post_align(SAT_Rect ARect) override;
 
 };
 
@@ -81,62 +49,10 @@ SAT_LayoutWidget::SAT_LayoutWidget(SAT_Rect ARect)
 : SAT_VisualWidget(ARect)
 {
     MWidgetTypeName = "SAT_LayoutWidget";
-    MBaseRect       = ARect;
-    MInitialRect    = ARect;
 }
 
 SAT_LayoutWidget::~SAT_LayoutWidget()
 {
-}
-
-//------------------------------
-//
-//------------------------------
-
-/*
-    base rect is the 'starting point' during (re-) alignment
-    coords in 'create-space', reliative to initial size of window
-    when creating it.. (unscaled)..
-*/
-
-void SAT_LayoutWidget::setBaseRect(SAT_Rect ARect)
-{
-    MBaseRect = ARect;
-}
-
-void SAT_LayoutWidget::setContentScale(sat_coord_t AScale)
-{
-    MContentScale = AScale;
-}
-
-void SAT_LayoutWidget::setRecursiveScale(sat_coord_t AScale)
-{
-    MRecursiveScale = AScale;
-}
-
-SAT_Rect SAT_LayoutWidget::getBaseRect()
-{
-    return MBaseRect;
-}
-
-SAT_Rect SAT_LayoutWidget::getInitialRect()
-{
-    return MInitialRect;
-}
-
-SAT_Rect SAT_LayoutWidget::getContentRect()
-{
-    return MContentRect;
-}
-
-sat_coord_t SAT_LayoutWidget::getContentScale()
-{
-    return MContentScale;
-}
-
-sat_coord_t SAT_LayoutWidget::getRecursiveScale()
-{
-    return MRecursiveScale;
 }
 
 //------------------------------
@@ -157,20 +73,20 @@ sat_coord_t SAT_LayoutWidget::getRecursiveScale()
         SAT_WidgetWindow.handleTimer        // via SAT_WidgetWindow.on_timer_listener_update() (in timer thread!) -> x11 gui thread -> handleTimer
 */
 
-void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARecursive)
+void SAT_LayoutWidget::realignChildren()
 {
     // on_window_show -> on_widget_show should have set this..
     SAT_Assert(MOwner);
 
     sat_coord_t scale = MOwner->do_widget_owner_get_scale(this);
-    scale *= getRecursiveScale();
-    scale *= getContentScale();
+    sat_coord_t recursive_scale = Recursive.scale * getScale();
+    scale *= recursive_scale;
 
     sat_coord_t w = MOwner->do_widget_owner_get_width(this);
     sat_coord_t h = MOwner->do_widget_owner_get_height(this);
     SAT_Rect root_rect = SAT_Rect(w,h);
 
-    SAT_Rect rect = getRect();
+    SAT_Rect rect = Recursive.rect;
 
     SAT_Rect inner_border = Layout.inner_border;
     inner_border.scale(scale);
@@ -178,15 +94,13 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
     SAT_Point spacing = Layout.spacing;
     spacing.scale(scale);
 
-    //SAT_Rect rect = getRect();
-
     SAT_Rect parent_rect = rect;
     parent_rect.shrink(inner_border);
 
     SAT_Rect layout_rect = rect;
     layout_rect.shrink(inner_border);
 
-    MContentRect = SAT_Rect( rect.x,rect.y, 0,0 );
+    Recursive.content_rect = SAT_Rect( rect.x,rect.y, 0,0 );
 
     double layout_xcenter   = layout_rect.x + (layout_rect.w * 0.5);
     double layout_ycenter   = layout_rect.y + (layout_rect.h * 0.5);
@@ -199,7 +113,7 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
 
     for (uint32_t i=0; i<MChildren.size(); i++)
     {
-        SAT_BaseWidget* child = MChildren[i];
+        SAT_LayoutWidget* child = (SAT_LayoutWidget*)MChildren[i];
         SAT_Assert(child);
 
         SAT_Rect child_rect;
@@ -215,31 +129,31 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
                 if (child->Layout.relative == SAT_WIDGET_LAYOUT_RELATIVE_ROOT)
                 {
                     child_rect = SAT_Rect(root_rect.w,root_rect.h,root_rect.w,root_rect.h);
-                    child_rect.scale(child->getInitialRect());
+                    child_rect.scale(child->MInitialRect);
                     child_rect.scale(0.01);
                 }
                 else if (child->Layout.relative == SAT_WIDGET_LAYOUT_RELATIVE_PARENT)
                 {
                     child_rect = SAT_Rect(parent_rect.w,parent_rect.h,parent_rect.w,parent_rect.h);
-                    child_rect.scale(child->getInitialRect());
+                    child_rect.scale(child->MInitialRect);
                     child_rect.scale(0.01);
                 }
                 else if (child->Layout.relative == SAT_WIDGET_LAYOUT_RELATIVE_LAYOUT)
                 {
                     child_rect = SAT_Rect(layout_rect.w,layout_rect.h,layout_rect.w,layout_rect.h);
-                    child_rect.scale(child->getInitialRect());
+                    child_rect.scale(child->MInitialRect);
                     child_rect.scale(0.01);
                 }
                 else // relative to current/self ??
                 {
                     child_rect = SAT_Rect(rect.w,rect.h,rect.w,rect.h);
-                    child_rect.scale(child->getInitialRect());
+                    child_rect.scale(child->MInitialRect);
                     child_rect.scale(0.01);
                 }
             }
             else
             {
-                child_rect = child->getBaseRect();
+                child_rect = child->MBaseRect;
                 child_rect.scale(scale);
             }
 
@@ -255,12 +169,6 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
             // --- pre-align ---
 
             child_rect = child->on_widget_pre_align(child_rect);
-
-            // --- scale ---
-            
-            sat_coord_t child_scale = getRecursiveScale();
-            child_scale *= getContentScale();
-            child->setRecursiveScale(child_scale);
 
             /*
                 child_rect.add(child->MManuallyMoved);
@@ -366,7 +274,7 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
 
             // --- content rect ---
 
-            MContentRect.combine(child_rect);
+            Recursive.content_rect.combine(child_rect);
 
             // --- outer border ---
 
@@ -378,9 +286,16 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
 
             child_rect = child->on_widget_post_align(child_rect);
 
-            // --- set child rect ---
+            // --- set child properties ---
 
-            child->setRect(child_rect);
+            child->Recursive.rect       = child_rect;
+            child->Recursive.scale      = recursive_scale;
+
+            child->Recursive.clip_rect  = child_rect;
+            child->Recursive.clip_rect.overlap(Recursive.rect);
+
+            if (child->State.opaque) child->Recursive.opaque_parent = child;
+            else child->Recursive.opaque_parent = Recursive.opaque_parent;
 
             /*
                 TODO: also set other recursive flags:
@@ -389,34 +304,41 @@ void SAT_LayoutWidget::realignChildren(uint32_t AMode, uint32_t AIndex, bool ARe
                 - isEnabled (and disabled_color)
             */
 
+            if (!child->MSkin) child->MSkin = MSkin;
+
             // --- recursive ---
 
-            if (ARecursive) child->on_widget_realign(AMode,AIndex);
+            child->on_widget_realign();
 
             /*
                 child->realignChildren(ARecursive);
                 if (child_layout & SAT_WIDGET_LAYOUT_CONTENT_SIZE)
                 {
                     SAT_Rect child_content = child->getContentRect();
-                    child->setRect(child_content);
+                    child->Recursive.rect = child_content;
                 }
             */
 
         } // need_realign
+        else
+        {
+            //child->setChildrenActive(false);
+            child->setChildrenVisible(false);
+        }
 
     } // for
 
-    MContentRect.w += inner_border.w;
-    MContentRect.h += inner_border.h;
+    Recursive.content_rect.w += inner_border.w;
+    Recursive.content_rect.h += inner_border.h;
 }
 
 //------------------------------
 //
 //------------------------------
 
-void SAT_LayoutWidget::on_widget_realign(uint32_t AMode, uint32_t AIndex)
+void SAT_LayoutWidget::on_widget_realign()
 {
-    realignChildren(AMode,AIndex,true);
+    realignChildren();
 }
 
 /*
@@ -424,7 +346,7 @@ void SAT_LayoutWidget::on_widget_realign(uint32_t AMode, uint32_t AIndex)
     here we can remember the starting rect, prepare things..
 */
 
-SAT_Rect SAT_LayoutWidget::on_widget_pre_align(SAT_Rect ARect, uint32_t AMode, uint32_t AIndex)
+SAT_Rect SAT_LayoutWidget::on_widget_pre_align(SAT_Rect ARect)
 {
     return ARect;
 }
@@ -434,7 +356,7 @@ SAT_Rect SAT_LayoutWidget::on_widget_pre_align(SAT_Rect ARect, uint32_t AMode, u
     cwe can do some final adjustments, or undo things..
 */
 
-SAT_Rect SAT_LayoutWidget::on_widget_post_align(SAT_Rect ARect, uint32_t AMode, uint32_t AIndex)
+SAT_Rect SAT_LayoutWidget::on_widget_post_align(SAT_Rect ARect)
 {
     return ARect;
 }

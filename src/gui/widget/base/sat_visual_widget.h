@@ -32,36 +32,52 @@ class SAT_VisualWidget
 
     public:
 
-        SAT_Rect            getRect() override;
-        bool                isVisible() override;
+        void                setOpaque(bool AState=true) override;
+        void                setVisible(bool AState=true) override;
+        void                setChildrenVisible(bool AState=true) override;
+        void                setScale(sat_coord_t AScale) override;
+        void                setSkin(SAT_Skin* ASkin) override;
+        void                setChildrenSkin(SAT_Skin* ASkin) override;
+
+     // void                setRect(SAT_Rect ARect) override;
+     // void                setBaseRect(SAT_Rect ARect) override;
+
         bool                isOpaque() override;
-        void                setRect(SAT_Rect ARect) override;
-        void                setVisible(bool AState=true, bool ARecursive=true) override;
-        void                setOpaque(bool AState=true, bool ARecursive=true) override;
-        SAT_BaseWidget*     findWidgetAt(int32_t AXpos, int32_t AYpos, bool ARecursive=true) override;
-        SAT_Rect            getRecursiveClipRect(SAT_Rect ARect) override;
-        SAT_Rect            getRecursiveClipRect() override;
-        SAT_BaseWidget*     findOpaqueParent(SAT_Rect ARect) override;
-        bool                isRecursivelyVisible() override;
-        bool                isRecursivelyOpaque() override;
+        bool                isVisible() override;
+        sat_coord_t         getScale() override;
+        SAT_Skin*           getSkin() override;
+
+        SAT_Rect            getRect() override;
+        SAT_Rect            getClipRect() override;
+        SAT_Rect            getContentRect() override;
+        SAT_BaseWidget*     getOpaqueParent() override;
+
+        SAT_BaseWidget*     findChildAt(int32_t AXpos, int32_t AYpos) override;
 
     public:
 
-        virtual sat_coord_t getPaintScale();
-        virtual void        pushClip(SAT_PaintContext* AContext);
-        virtual void        pushRecursiveClip(SAT_PaintContext* AContext);
-        virtual void        popClip(SAT_PaintContext* AContext);
-        virtual void        paintChildren(SAT_PaintContext* AContext);
+        void                pushClip(SAT_PaintContext* AContext) override;
+        void                pushRecursiveClip(SAT_PaintContext* AContext) override;
+        void                popClip(SAT_PaintContext* AContext) override;
+
+        sat_coord_t         getPaintScale() override;
+        void                paintChildren(SAT_PaintContext* AContext) override;
 
     public:
 
-        void                on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode=SAT_WIDGET_PAINT_NORMAL, uint32_t AIndex=0) override;
-        void                on_widget_pre_paint(SAT_PaintContext* AContext, uint32_t AMode=SAT_WIDGET_PAINT_NORMAL, uint32_t AIndex=0) override;
-        void                on_widget_post_paint(SAT_PaintContext* AContext, uint32_t AMode=SAT_WIDGET_PAINT_NORMAL, uint32_t AIndex=0) override;
+        void                on_widget_show(SAT_WidgetOwner* AOwner) override;
+        void                on_widget_hide(SAT_WidgetOwner* AOwner) override;
+        void                on_widget_paint(SAT_PaintContext* AContext) override;
+        void                on_widget_pre_paint(SAT_PaintContext* AContext) override;
+        void                on_widget_post_paint(SAT_PaintContext* AContext) override;
 
     protected:
 
-        SAT_Rect            MRect   = {};
+        SAT_Rect            MBaseRect       = {};
+        SAT_Rect            MInitialRect    = {};   // pos/size when created (may be percentages)
+        sat_coord_t         MScale          = 1.0;
+        SAT_Skin*           MSkin           = nullptr;
+
 };
 
 //----------------------------------------------------------------------
@@ -73,8 +89,13 @@ class SAT_VisualWidget
 SAT_VisualWidget::SAT_VisualWidget(SAT_Rect ARect)
 : SAT_HierarchyWidget()
 {
-    MWidgetTypeName = "SAT_VisualWidget";
-    MRect           = ARect;
+    MWidgetTypeName         = "SAT_VisualWidget";
+    MBaseRect               = ARect;
+    MInitialRect            = ARect;
+    Recursive.rect          = ARect;
+    Recursive.clip_rect     = ARect;
+    Recursive.content_rect  = ARect;
+    Recursive.opaque_parent = this;
 }
 
 SAT_VisualWidget::~SAT_VisualWidget()
@@ -85,58 +106,118 @@ SAT_VisualWidget::~SAT_VisualWidget()
 //
 //------------------------------
 
-SAT_Rect SAT_VisualWidget::getRect()
+void SAT_VisualWidget::setOpaque(bool AState)
 {
-    return MRect;
+    State.opaque = AState;
+}
+
+void SAT_VisualWidget::setVisible(bool AState)
+{
+    State.visible = AState;
+    setChildrenVisible(AState);
+}
+
+void SAT_VisualWidget::setChildrenVisible(bool AState)
+{
+    for (uint32_t i=0; i<getNumChildren(); i++)
+    {
+        SAT_BaseWidget* child = getChild(i);
+        child->State.visible = false;
+        child->setChildrenVisible(AState);
+    }
+}
+
+void SAT_VisualWidget::setScale(sat_coord_t AScale)
+{
+    MScale = AScale;
+}
+
+void SAT_VisualWidget::setSkin(SAT_Skin* ASkin)
+{
+    MSkin = ASkin;
+}
+
+void SAT_VisualWidget::setChildrenSkin(SAT_Skin* ASkin)
+{
+    for (uint32_t i=0; i<getNumChildren(); i++)
+    {
+        SAT_BaseWidget* child = getChild(i);
+        child->setSkin(ASkin);
+        child->setChildrenSkin(ASkin);
+    }
+}
+
+/*
+    ARect = screen-space
+    todo: convert back to widget-space & set base_rect
+*/
+
+// void SAT_VisualWidget::setRect(SAT_Rect ARect)
+// {
+// }
+
+/*
+    ARect = widget-space..
+    unaffected by alignment/layout
+*/
+
+// void SAT_VisualWidget::setBaseRect(SAT_Rect ARect)
+// {
+// }
+
+//----------
+
+bool SAT_VisualWidget::isOpaque()
+{
+    return State.opaque;
 }
 
 bool SAT_VisualWidget::isVisible()
 {
     return State.visible;
 }
-bool SAT_VisualWidget::isOpaque()
+
+sat_coord_t SAT_VisualWidget::getScale()
 {
-    return State.opaque;
+    return MScale;
 }
+
+SAT_Skin* SAT_VisualWidget::getSkin()
+{
+    return MSkin;
+}
+
+
 
 //----------
 
-void SAT_VisualWidget::setRect(SAT_Rect ARect)
+SAT_Rect SAT_VisualWidget::getRect()
 {
-    MRect = ARect;
+    return Recursive.rect;
 }
 
-void SAT_VisualWidget::setVisible(bool AState, bool ARecursive)
+SAT_Rect SAT_VisualWidget::getClipRect()
 {
-    State.visible = AState;
-    if (ARecursive)
-    {
-        for (uint32_t i=0; i<getNumChildren(); i++)
-        {
-            SAT_BaseWidget* widget = getChild(i);
-            widget->setVisible(AState,ARecursive);
-        }
-    }
+    return Recursive.clip_rect;
 }
 
-void SAT_VisualWidget::setOpaque(bool AState, bool ARecursive)
+SAT_Rect SAT_VisualWidget::getContentRect()
 {
-    State.opaque = AState;
-    if (ARecursive)
-    {
-        for (uint32_t i=0; i<getNumChildren(); i++)
-        {
-            SAT_BaseWidget* widget = getChild(i);
-            widget->setOpaque(AState,ARecursive);
-        }
-    }
+    return Recursive.content_rect;
 }
+
+SAT_BaseWidget* SAT_VisualWidget::getOpaqueParent()
+{
+    return Recursive.opaque_parent;
+}
+
+//----------
 
 /*
     returns null if no child widgets at x,y
 */
 
-SAT_BaseWidget* SAT_VisualWidget::findWidgetAt(int32_t AXpos, int32_t AYpos, bool ARecursive)
+SAT_BaseWidget* SAT_VisualWidget::findChildAt(int32_t AXpos, int32_t AYpos)
 {
     uint32_t num = getNumChildren();
     if (num > 0)
@@ -144,12 +225,12 @@ SAT_BaseWidget* SAT_VisualWidget::findWidgetAt(int32_t AXpos, int32_t AYpos, boo
         for (int32_t i=num-1; i>=0; i--)
         {
             SAT_BaseWidget* widget = getChild(i);
-            SAT_Rect widget_rect = widget->getRect();
+            SAT_Rect widget_rect = widget->Recursive.rect;
             if (widget->State.active)
             {
                 if (widget_rect.contains(AXpos,AYpos))
                 {
-                    if (ARecursive) return widget->findWidgetAt(AXpos,AYpos);
+                    return widget->findChildAt(AXpos,AYpos);
                 }
             }
         }
@@ -157,104 +238,16 @@ SAT_BaseWidget* SAT_VisualWidget::findWidgetAt(int32_t AXpos, int32_t AYpos, boo
     return this;
 }
 
-/*
-    find clipping rectangle by traversing the hierarchy upwards,
-    intersecting the current rect with each widget that has the autoClipChilren flag set
-*/
-
-SAT_Rect SAT_VisualWidget::getRecursiveClipRect(SAT_Rect ARect)
-{
-    //SAT_TRACE;
-    SAT_Rect rect = ARect;
-    SAT_BaseWidget* parent = getParent();
-    if (parent)
-    {
-        if (parent->Options.auto_clip)
-        {
-            SAT_Rect parent_rect = parent->getRect();
-            rect.overlap(parent_rect);
-            rect = parent->getRecursiveClipRect(rect);
-        }
-    }
-    return rect;
-}
-
-SAT_Rect SAT_VisualWidget::getRecursiveClipRect()
-{
-    return getRecursiveClipRect(MRect);
-}
-
-
-/*
-    returns topmost opaque parent
-    or null if no opaque parent found (or widget doesn't have a parent)
-    consider ARect, the area of the initial widget..
-    check backards until we're sure no other widgets behind it will be visible,
-    so we can start painting from there..
-*/
-
-SAT_BaseWidget* SAT_VisualWidget::findOpaqueParent(SAT_Rect ARect)
-{
-    // SAT_TRACE;
-    // if (State.opaque == true) return this;
-    // else
-    // {
-        SAT_BaseWidget* parent = getParent();
-        if (parent)
-        {
-            if (parent->State.opaque == true) return parent;
-            else return parent->findOpaqueParent(ARect);
-        }
-        else return nullptr;
-    // }
-}
-
-/*
-    same as active, etc..
-    if any widget is set to invisible, all its child widgets are
-    also invisible (not drawn, or considered when realigning, etc)
-*/
-
-bool SAT_VisualWidget::isRecursivelyVisible()
-{
-    if (!State.visible) return false;
-    SAT_BaseWidget* parent = getParent();
-    if (!parent) return true;
-    return parent->isRecursivelyVisible();
-}
-
-/*
-    find 'topmost' widget that conpletely fills the provided rect/area
-    (fully obscures everything below it)
-*/
-
-bool SAT_VisualWidget::isRecursivelyOpaque()
-{
-    if (!State.opaque) return false;
-    SAT_BaseWidget* parent = getParent();
-    if (!parent) return true;
-    return parent->isRecursivelyOpaque();
-}
-
 //------------------------------
 //
 //------------------------------
-
-sat_coord_t SAT_VisualWidget::getPaintScale()
-{
-    SAT_Assert(MOwner);
-    sat_coord_t scale = MOwner->do_widget_owner_get_scale(this);
-    scale *= getRecursiveScale();
-    scale *= getContentScale();
-    return scale;
-}
 
 void SAT_VisualWidget::pushClip(SAT_PaintContext* AContext)
 {
     if (Options.auto_clip)
     {
         SAT_Painter* painter= AContext->painter;
-        painter->pushOverlappingClipRect(MRect);
+        painter->pushOverlappingClipRect(Recursive.rect);
     }
 }
 
@@ -263,8 +256,9 @@ void SAT_VisualWidget::pushRecursiveClip(SAT_PaintContext* AContext)
     if (Options.auto_clip)
     {
         SAT_Painter* painter= AContext->painter;
-        SAT_Rect rect = getRecursiveClipRect();
-        painter->pushOverlappingClipRect(rect);//MRect);
+        //SAT_Rect rect = getRecursiveClipRect();
+        SAT_Rect rect = Recursive.clip_rect;
+        painter->pushOverlappingClipRect(rect);
     }
 }
 
@@ -276,6 +270,17 @@ void SAT_VisualWidget::popClip(SAT_PaintContext* AContext)
         painter->popClipRect();
 
     }
+}
+
+//----------
+
+sat_coord_t SAT_VisualWidget::getPaintScale()
+{
+    SAT_Assert(MOwner);
+    sat_coord_t scale = MOwner->do_widget_owner_get_scale(this);
+    scale *= Recursive.scale;
+    scale *= getScale();
+    return scale;
 }
 
 /*
@@ -307,8 +312,8 @@ void SAT_VisualWidget::paintChildren(SAT_PaintContext* AContext)
             //if (widget->isRecursivelyVisible())
             //if (widget->State.visible)
             //{
-                SAT_Rect widgetrect = widget->getRect();
-                widgetrect.overlap(MRect);
+                SAT_Rect widgetrect = widget->Recursive.rect;
+                widgetrect.overlap(Recursive.rect);
                 if (widgetrect.isNotEmpty())
                 {
                     widget->on_widget_paint(AContext);
@@ -322,7 +327,30 @@ void SAT_VisualWidget::paintChildren(SAT_PaintContext* AContext)
 //
 //------------------------------
 
-void SAT_VisualWidget::on_widget_paint(SAT_PaintContext* AContext, uint32_t AMode, uint32_t AIndex)
+void SAT_VisualWidget::on_widget_show(SAT_WidgetOwner* AOwner)
+{
+    setOwner(AOwner);
+    uint32_t num = getNumChildren();
+    for (uint32_t i=0; i<num; i++)
+    {
+        SAT_BaseWidget* widget = getChild(i);
+        widget->on_widget_show(AOwner);
+    }
+}
+
+void SAT_VisualWidget::on_widget_hide(SAT_WidgetOwner* AOwner)
+{
+    setOwner(nullptr);
+    uint32_t num = getNumChildren();
+    for (uint32_t i=0; i<num; i++)
+    {
+        SAT_BaseWidget* widget = getChild(i);
+        widget->on_widget_hide(AOwner);
+    }
+}
+
+
+void SAT_VisualWidget::on_widget_paint(SAT_PaintContext* AContext)
 {
     if (!State.visible) return;
     pushClip(AContext);
@@ -331,11 +359,11 @@ void SAT_VisualWidget::on_widget_paint(SAT_PaintContext* AContext, uint32_t AMod
     popClip(AContext);
 }
 
-void SAT_VisualWidget::on_widget_pre_paint(SAT_PaintContext* AContext, uint32_t AMode, uint32_t AIndex)
+void SAT_VisualWidget::on_widget_pre_paint(SAT_PaintContext* AContext)
 {
 }
 
-void SAT_VisualWidget::on_widget_post_paint(SAT_PaintContext* AContext, uint32_t AMode, uint32_t AIndex)
+void SAT_VisualWidget::on_widget_post_paint(SAT_PaintContext* AContext)
 {
 }
 

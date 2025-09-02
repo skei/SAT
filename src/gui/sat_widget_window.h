@@ -18,6 +18,7 @@
 #include "gui/sat_tween_manager.h"
 #include "gui/sat_widget.h"
 #include "gui/sat_window.h"
+#include "gui/skin/sat_default_skin.h"
 
 /*
     NOTE: all SPSC queues!
@@ -117,9 +118,9 @@ class SAT_WidgetWindow
 
     public:
 
-        void                do_widget_update(SAT_BaseWidget* AWidget, uint32_t AMode=SAT_WIDGET_UPDATE_VALUE, uint32_t AIndex=0) override;
-        void                do_widget_realign(SAT_BaseWidget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT, uint32_t AIndex=0) override;
-        void                do_widget_redraw(SAT_BaseWidget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF, uint32_t AIndex=0) override;
+        void                do_widget_update(SAT_BaseWidget* AWidget, uint32_t AIndex=0) override;
+        void                do_widget_realign(SAT_BaseWidget* AWidget) override;
+        void                do_widget_redraw(SAT_BaseWidget* AWidget) override;
         void                do_widget_tween(SAT_BaseWidget* AWidget, SAT_TweenChain* AChain) override;
         void                do_widget_notify(SAT_BaseWidget* AWidget, uint32_t AType, int32_t AValue) override;
         void                do_widget_hint(SAT_BaseWidget* AWidget, uint32_t AType, const char* AHint) override;
@@ -160,9 +161,10 @@ class SAT_WidgetWindow
      // bool                    MNeedFullRealignment    = false;            // force full alignment (all widgets)
         bool                    MNeedFullRepaint        = false;            // force full repaint (all widgets)
         sat_coord_t             MWindowScale            = 1.0;
+        SAT_DefaultSkin         MDefaultSkin            = {};
 
-        bool                    MClearBackground        = true;
-        SAT_Color               MBackgroundColor        = SAT_Black;
+        // bool                    MClearBackground        = true;
+        // SAT_Color               MBackgroundColor        = SAT_Black;
 
 
 
@@ -178,8 +180,10 @@ SAT_WidgetWindow::SAT_WidgetWindow(uint32_t AWidth, uint32_t AHeight, intptr_t A
 : SAT_Window(AWidth, AHeight, AParent)
 , SAT_Widget(SAT_Rect(AWidth,AHeight))
 {
-    MWidgetTypeName = "SAT_WidgetWindow";
-    MWindowTimer = new SAT_Timer(this);
+    MWidgetTypeName         = "SAT_WidgetWindow";
+    Recursive.opaque_parent = this;
+    MSkin                   = &MDefaultSkin;
+    MWindowTimer            = new SAT_Timer(this);
 };
 
 SAT_WidgetWindow::~SAT_WidgetWindow()
@@ -263,7 +267,7 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
         count += 1;
         // widget->realignChildren();
         // MWidgetRedrawQueue.write(widget); // called during realignment..
-        widget->on_widget_realign(SAT_WIDGET_REALIGN_CHILDREN,0);
+        widget->on_widget_realign();
     }
     // SAT.STATISTICS.report_WindwRealignQueue(count);
 
@@ -274,7 +278,7 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
     while (MWidgetRedrawQueue.read(&widget))
     {
         count += 1;
-        rect.combine(widget->getRect());
+        rect.combine(widget->Recursive.rect);
         MWidgetPaintQueue.write(widget);
     }
     // SAT.STATISTICS.report_WindwRedrawQueue(count,rect);
@@ -317,12 +321,12 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
     if (MNeedFullRepaint)
     {
 
-        if (MClearBackground)
-        {
-            SAT_Assert(AContext->painter);
-            AContext->painter->setFillColor(MBackgroundColor);
-            AContext->painter->fillRect(MRect);
-        }
+        // if (MClearBackground)
+        // {
+        //     SAT_Assert(AContext->painter);
+        //     AContext->painter->setFillColor(MBackgroundColor);
+        //     AContext->painter->fillRect(Recursive.rect);
+        // }
 
         //SAT_PRINT("full repaint\n");
         uint32_t num = getNumChildren();
@@ -346,10 +350,9 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
         while (MWidgetPaintQueue.read(&widget))
         {
             //SAT_PRINT("painting widget %i\n",count);
-            SAT_Widget* wdg = (SAT_Widget*)widget;
-            wdg->pushRecursiveClip(AContext);
-            wdg->on_widget_paint(AContext);
-            wdg->popClip(AContext);
+            widget->pushRecursiveClip(AContext);
+            widget->on_widget_paint(AContext);
+            widget->popClip(AContext);
             count += 1;
         }
         // SAT.STATISTICS.report_WindowPaintQueue(count);
@@ -390,8 +393,8 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
 
     if (MMouseInsideWindow)
     {
-        if (MModalWidget) hover = MModalWidget->findWidgetAt(AXpos,AYpos);
-        else hover = findWidgetAt(AXpos,AYpos);
+        if (MModalWidget) hover = MModalWidget->findChildAt(AXpos,AYpos);
+        else hover = findChildAt(AXpos,AYpos);
         // hover        = new hover
         // MHoverWidget = previous hover (if null = just entered window)
         if (!MHoverWidget)
@@ -491,8 +494,8 @@ void SAT_WidgetWindow::on_window_show()
         SAT_BaseWidget* child = getChild(i);
         child->on_widget_show(this);
     }
-    realignChildren();
     MNeedFullRepaint = true;
+    realignChildren();
     MWindowTimer->start(SAT_WINDOW_TIMER_MS);
 }
 
@@ -517,7 +520,7 @@ void SAT_WidgetWindow::on_window_resize(uint32_t AWidth, uint32_t AHeight)
     MWindowScale = calcScale(AWidth,AHeight,MInitialRect.w,MInitialRect.h);
     //SAT_PRINT("scale: %.3f\n",MWindowScale);
     SAT_Window::windowResize(AWidth,AHeight);
-    MRect = SAT_Rect(AWidth,AHeight);
+    Recursive.rect = SAT_Rect(AWidth,AHeight);
     realignChildren();
     MNeedFullRepaint = true;
 }
@@ -752,12 +755,12 @@ bool SAT_WidgetWindow::do_widget_owner_unregister_timer(SAT_BaseWidget* AWidget)
     if it is connected to a parameter, we notify the editor (window_listener)
 */
 
-void SAT_WidgetWindow::do_widget_update(SAT_BaseWidget* AWidget, uint32_t AMode, uint32_t AIndex)
+void SAT_WidgetWindow::do_widget_update(SAT_BaseWidget* AWidget, uint32_t AIndex)
 {
     void* parameter = AWidget->getParameter();
     if (MListener && parameter)
     {
-        MListener->do_widget_update(AWidget);
+        MListener->do_widget_update(AWidget,AIndex);
     }
 }
 
@@ -816,7 +819,7 @@ void SAT_WidgetWindow::do_widget_update(SAT_BaseWidget* AWidget, uint32_t AMode,
     }
 */
 
-void SAT_WidgetWindow::do_widget_realign(SAT_BaseWidget* AWidget, uint32_t AMode, uint32_t AIndex)
+void SAT_WidgetWindow::do_widget_realign(SAT_BaseWidget* AWidget)
 {
     MWidgetRealignQueue.write(AWidget);
 }
@@ -891,13 +894,13 @@ void SAT_WidgetWindow::do_widget_realign(SAT_BaseWidget* AWidget, uint32_t AMode
         // TODO: draw 'always overlay' widgets? (not SAT_OverlayWidget,
         // which is meant for menus, etc, and is normally inactive)..
         #else // SAT_WINDOW_QUEUE_WIDGETS
-            SAT_Rect rect = AWidget->getRect();
+            SAT_Rect rect = AWidget->Recursive.rect;
             invalidate(rect.x,rect.y,rect.w,rect.h);
         #endif
     }
 */
 
-void SAT_WidgetWindow::do_widget_redraw(SAT_BaseWidget* AWidget, uint32_t AMode, uint32_t AIndex)
+void SAT_WidgetWindow::do_widget_redraw(SAT_BaseWidget* AWidget)
 {
     MWidgetRedrawQueue.write(AWidget);
 }

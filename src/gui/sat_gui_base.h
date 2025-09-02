@@ -235,7 +235,7 @@ class SAT_WidgetOwner
 class SAT_WindowListener
 {
     public:
-        virtual void do_widget_update(SAT_BaseWidget* AWidget);
+        virtual void do_widget_update(SAT_BaseWidget* AWidget, uint32_t AIndex=0);
 };
 
 class SAT_BaseWindow
