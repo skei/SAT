@@ -58,8 +58,8 @@ class SAT_WidgetWindow
         virtual void        setHintWidget(SAT_BaseWidget* AWidget);
         virtual void        appendTimerWidget(SAT_BaseWidget* AWidget);
         virtual void        removeTimerWidget(SAT_BaseWidget* AWidget);
-        virtual void        handleTimer(uint32_t ATimerId, double ADelta);
-        virtual void        handlePainting(SAT_PaintContext* AContext);
+        virtual void        handleTimer(uint32_t ATimerId, double ADelta, bool AInTimerThread=false);
+        virtual void        paintQueuedWidgets(SAT_PaintContext* AContext);
         virtual sat_coord_t calcScale(uint32_t ANewWidth, uint32_t ANewHeight, uint32_t AInitialWidth, uint32_t AInitialHeight);
         virtual void        updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime);
 
@@ -137,6 +137,7 @@ class SAT_WidgetWindow
         SAT_BaseWidgetArray     MTimerWidgets           = {};               // array of widgets that want timer ticks
         uint32_t                MCurrentTimerTick       = 0;                // increasing tick counter
         sat_atomic_bool_t       MTimerBlocked           {false};            // if this is true, timer handler returns immediately
+        sat_atomic_bool_t       MWindowIsClosing        {false};            // if this is true, timer handler returns immediately
 
     private:
 
@@ -162,9 +163,8 @@ class SAT_WidgetWindow
         bool                    MNeedFullRepaint        = false;            // force full repaint (all widgets)
         sat_coord_t             MWindowScale            = 1.0;
         SAT_DefaultSkin         MDefaultSkin            = {};
-
-        // bool                    MClearBackground        = true;
-        // SAT_Color               MBackgroundColor        = SAT_Black;
+     // bool                    MClearBackground        = true;
+     // SAT_Color               MBackgroundColor        = SAT_Black;
 
 
 
@@ -231,21 +231,18 @@ void SAT_WidgetWindow::removeTimerWidget(SAT_BaseWidget* AWidget)
 }
 
 /*
-    if SAT_WINDOW_REDIRECT_TIMER_TO_GUI_THREAD is defined, this is called
-    on the gui thread (x11 event handler), otherwise it's called directly
-    from the timer callback (timer thread)..
-
     TODO: widget redrawing originating from audio automation & modulation
     (MWidgetUpdateQueue?)
+
+    AInTimerThread is true if we're called from a timer, or false if we
+    have redirected it to the gui thread..
 */
 
-void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
+void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta, bool AInTimerThread)
 {
-    // MTimerDelta += ADelta;
-    // if (MIsClosing)  return;
-    // if (MIsPainting) return;
-
-    MTimerBlocked = true;
+    // we don't want any new timer tickes until we finished processing this one..
+    // (we set this in the timer handler itself, set to false at the end of this func)
+    //MTimerBlocked = true;
 
     // ----- widget timers -----
 
@@ -298,15 +295,10 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta)
 }
 
 /*
-    TODO:
-        handle 'layers' of widgets, from background to foreground..
-        any widgets 'on top' of the widget to be painted, also have to be painted,
-        on top (afterwards)..
-
     MNeedFullRepaint set in on_window_show and on_window_resize
 */
 
-void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
+void SAT_WidgetWindow::paintQueuedWidgets(SAT_PaintContext* AContext)
 {
 
     // SAT_Painter* painter = AContext->painter;
@@ -315,7 +307,8 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
     // painter->setClipRect(SAT_Rect(0,0,screenwidth,screenheight));
     // painter->setClip(SAT_Rect(0,0,screenwidth,screenheight));
 
-    uint32_t count = 0;
+    uint32_t paint_count = 0;
+    uint32_t paint_skipped = 0;
     SAT_BaseWidget* widget = nullptr;
 
     if (MNeedFullRepaint)
@@ -334,34 +327,39 @@ void SAT_WidgetWindow::handlePainting(SAT_PaintContext* AContext)
         {
             widget = getChild(i);
             widget->on_widget_paint(AContext);
+            widget->UpdateState.last_painted = AContext->current_frame;
         }
         // flush queue, so we don't re-draw them next time..
-        while (MWidgetPaintQueue.read(&widget)) { count += 1; }
+        while (MWidgetPaintQueue.read(&widget)) { paint_count += 1; }
 
         // SAT.STATISTICS.report_WindowPaintAll();
         MNeedFullRepaint = false;
     }
     else
     {
-
-        // can we set clipping = update_rect, insead og recursive clip?
-        // probably now.. the os could combine several updates into one bigger..
-
         while (MWidgetPaintQueue.read(&widget))
         {
-            //SAT_PRINT("painting widget %i\n",count);
-            widget->pushRecursiveClip(AContext);
-            widget->on_widget_paint(AContext);
-            widget->popClip(AContext);
-            count += 1;
+            if (widget->UpdateState.last_painted != AContext->current_frame)
+            {
+
+                //SAT_PRINT("painting widget %i\n",paint_count);
+                widget->pushRecursiveClip(AContext);
+                widget->on_widget_paint(AContext);
+                widget->popClip(AContext);
+                paint_count += 1;
+                widget->UpdateState.last_painted = AContext->current_frame;
+            }
+            else
+            {
+                paint_skipped += 1;
+            }
         }
-        // SAT.STATISTICS.report_WindowPaintQueue(count);
+        // SAT.STATISTICS.report_WindowPaintQueue(paint_count,paint_skipped);
     }
 
     // painter->resetClip();
 
 }
-
 
 sat_coord_t SAT_WidgetWindow::calcScale(uint32_t ANewWidth, uint32_t ANewHeight, uint32_t AInitialWidth, uint32_t AInitialHeight)
 {
@@ -375,11 +373,6 @@ sat_coord_t SAT_WidgetWindow::calcScale(uint32_t ANewWidth, uint32_t ANewHeight,
     }
     return scale;
 }
-
-/*
-    TODO:
-    should we send enter/leave events if mouse is captured?
-*/
 
 void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
 {
@@ -401,6 +394,7 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
         {
             // we have just entered the window, didn't leave anything            
             SAT_PRINT("entering: %s\n",hover->getName());
+            hover->State.hovering = true;
             hover->on_widget_mouse_enter(MHoverWidget,AXpos,AYpos,ATime);
             MHoverWidget = hover;
         }
@@ -411,8 +405,10 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
             {
                 // differemt, leave the old, enter the new
                 SAT_PRINT("leaving: %s\n",MHoverWidget->getName());
+                MHoverWidget->State.hovering = false;
                 MHoverWidget->on_widget_mouse_leave(hover,AXpos,AYpos,ATime);
                 SAT_PRINT("entering: %s\n",hover->getName());
+                hover->State.hovering = true;
                 hover->on_widget_mouse_enter(MHoverWidget,AXpos,AYpos,ATime);
                 MHoverWidget = hover;
             }
@@ -454,10 +450,7 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
 //
 //------------------------------
 
-/*
-    [TIMER-THREAD]
-*/
-
+// [TIMER THREAD]
 void SAT_WidgetWindow::on_timer_listener_update(SAT_Timer* ATimer, double ADelta)
 {
     if (MTimerBlocked)
@@ -466,19 +459,31 @@ void SAT_WidgetWindow::on_timer_listener_update(SAT_Timer* ATimer, double ADelta
         // SAT.STATISTICS.report_WindowTimerBlocked(time);
         return;
     }
+    if (MWindowIsClosing)
+    {
+        // double time = SAT_GetTime();
+        // SAT.STATISTICS.report_WindowTimerWhen WindowIsClosing(time);
+        return;
+    }
+
+    // set to false at the end of handleTimer()
+    MTimerBlocked = true;
+
     #ifdef SAT_WINDOW_REDIRECT_TIMER_TO_GUI_THREAD
         sendClientMessage(SAT_WINDOW_USER_MESSAGE_TIMER,0);
+        // see on_window_timer(), which will call handleTimer()...
     #else
+        // don't do this!
         // this is dagerous! handleTimer reads from the
         // MTimerWidgets array, calls MTweenManager, writes to MRedrawQueue..
-        handleTimer(ATimerId,ADelta);
+        handleTimer(ATimerId,ADelta,true);
     #endif
 };
 
 void SAT_WidgetWindow::on_window_paint(SAT_PaintContext* AContext, bool ABuffered)
 {
     // SAT_Window::on_window_paint(AContext,ABuffered);
-    handlePainting(AContext);
+    paintQueuedWidgets(AContext);
 }
 
 //------------------------------
@@ -496,11 +501,14 @@ void SAT_WidgetWindow::on_window_show()
     }
     MNeedFullRepaint = true;
     realignChildren();
+    MWindowIsClosing = false;
+    MTimerBlocked = false;
     MWindowTimer->start(SAT_WINDOW_TIMER_MS);
 }
 
 void SAT_WidgetWindow::on_window_hide()
 {
+    MWindowIsClosing = true;
     setOwner(nullptr);
     if (MWindowTimer->isRunning()) MWindowTimer->stop();
     uint32_t num = getNumChildren();
@@ -651,6 +659,7 @@ void SAT_WidgetWindow::on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint3
     if (MHoverWidget)
     {
         SAT_PRINT("leaving: %s\n",MHoverWidget->getName());
+        MHoverWidget->State.hovering = false;
         MHoverWidget->on_widget_mouse_leave(nullptr,AXpos,AYpos,ATime);
         MHoverWidget = nullptr;
     }
@@ -665,13 +674,10 @@ void SAT_WidgetWindow::on_window_client_message(uint32_t AData)
     SAT_PRINT("AData = %i\n",AData);
 }
 
-/*
-    [GUI THREAD]
-*/
-
+// [GUI THREAD]
 void SAT_WidgetWindow::on_window_timer(uint32_t ATimerId, double ADelta)
 {
-    handleTimer(ATimerId,ADelta);
+    handleTimer(ATimerId,ADelta,false);
 }
 
 //------------------------------
@@ -680,7 +686,6 @@ void SAT_WidgetWindow::on_window_timer(uint32_t ATimerId, double ADelta)
 
 SAT_Painter* SAT_WidgetWindow::do_widget_owner_get_painter(SAT_BaseWidget* AWidget)
 {
-    //return MPainter;
     return getPainter();
 }
 
@@ -699,22 +704,11 @@ sat_coord_t SAT_WidgetWindow::do_widget_owner_get_scale(SAT_BaseWidget* AWidget)
     return MWindowScale;
 }
 
-/*
-    if window is open (after show() has been called),
-    the MTimerWidgets array might be read in timer-thread!!!
-    either register the timers _before_ the window is opened,
-    or guard with lock/mutex!
-*/
-
 bool SAT_WidgetWindow::do_widget_owner_register_timer(SAT_BaseWidget* AWidget)
 {
     MTimerWidgets.append(AWidget);
     return true;
 }
-
-/*
-    see register_timer()
-*/
 
 bool SAT_WidgetWindow::do_widget_owner_unregister_timer(SAT_BaseWidget* AWidget)
 {
@@ -750,11 +744,6 @@ bool SAT_WidgetWindow::do_widget_owner_unregister_timer(SAT_BaseWidget* AWidget)
 // do_widget
 //------------------------------
 
-/*
-    widget value has changed..
-    if it is connected to a parameter, we notify the editor (window_listener)
-*/
-
 void SAT_WidgetWindow::do_widget_update(SAT_BaseWidget* AWidget, uint32_t AIndex)
 {
     void* parameter = AWidget->getParameter();
@@ -764,149 +753,33 @@ void SAT_WidgetWindow::do_widget_update(SAT_BaseWidget* AWidget, uint32_t AIndex
     }
 }
 
-/*
-    void on_WidgetListener_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_SELF) override
-    {
-        #ifdef SAT_WINDOW_QUEUE_WIDGETS
-            switch (AMode)
-            {
-                case SAT_WIDGET_REALIGN_SELF:
-                {
-                    MQueues.queueRealign(AWidget);
-                    //MQueues.queueRedraw(AWidget);
-                    break;
-                }
-                case SAT_WIDGET_REALIGN_PARENT:
-                {
-                    SAT_Widget* parent = AWidget->getParent();
-                    if (parent)
-                    {
-                        MQueues.queueRealign(parent);
-                        //MQueues.queueRedraw(parent);
-                    }
-                    break;
-                }
-                case SAT_WIDGET_REALIGN_ROOT:
-                {
-                    break;
-                }
-            }
-        #else // ! SAT_WINDOW_QUEUE_WIDGETS
-            switch (AMode)
-            {
-                case SAT_WIDGET_REALIGN_SELF:
-                {
-                    AWidget->realignChildren();
-                    AWidget->do_Widget_redraw(AWidget);
-                    break;
-                }
-                case SAT_WIDGET_REALIGN_PARENT:
-                {
-                    SAT_Widget* parent = AWidget->getParent();
-                    if (parent)
-                    {
-                        parent->realignChildren();
-                        parent->do_Widget_redraw(parent);
-                    }
-                    break;
-                }
-                case SAT_WIDGET_REALIGN_ROOT:
-                {
-                    break;
-                }
-            }
-        #endif // SAT_WINDOW_QUEUE_WIDGETS
-    }
-*/
-
 void SAT_WidgetWindow::do_widget_realign(SAT_BaseWidget* AWidget)
 {
-    MWidgetRealignQueue.write(AWidget);
+    // #ifdef SAT_NO_WINDOW_BUFFERING
+    //     AWidget->realignChildren();
+    //     AWidget->do_Widget_redraw(AWidget);
+    // #else
+        MWidgetRealignQueue.write(AWidget);
+    // #endif
 }
-
-/*
-    for buffered windows, which doesn't redraw everything from the root down:
-
-    we might want to have some way to specify certain widgets that might be
-    drawn on top of all the others (see sa_demo, the animated splines)..
-    currently, the widget system is designed so that child widgets is clipped to,
-    and always inside it's parent widgets..
-    when a widget is being redrawn, we iterate upwards in the hierarchy,
-    to find the topmost widget/parent set  as opaque (entirely fills its rect),
-    ultimately reaching the root widget..
-    (if all widgets are kept as opaque (the default), the entire window will be redrawn)
-
-    if there is a widget other than the parent overlaying the widget, it is ignored..
-    animated widgets will then be redrawn next frame (when itself sends a redraw message)..
-    resulting in flickering..
-
-    and possibly:
-    because of clipping being ints, and painting being doubles (fractional pixels),
-    clipping can flicker, half-pixels being redrawn, etc..
-    needs testing and checking!
-
-    MRaisedWidget, MFrontWidget, MUpperWidget?
-*/
-
-/*
-
-    void on_WidgetListener_redraw(SAT_Widget* AWidget, uint32_t AIndex=0, uint32_t AMode=SAT_WIDGET_REDRAW_SELF)
-    {
-        #ifdef SAT_WINDOW_QUEUE_WIDGETS
-            #ifdef SAT_WINDOW_BUFFERED
-                switch (AMode)
-                {
-                    case SAT_WIDGET_REDRAW_SELF:
-                    {
-                        if (AWidget->State.opaque) MQueues.queueRedraw(AWidget);
-                        else
-                        {
-                            SAT_Widget* opaque_parent = AWidget->findOpaqueParent();
-                            if (opaque_parent) MQueues.queueRedraw(opaque_parent);
-                            else MQueues.queueRedraw(AWidget);
-                        }
-                        break;
-                    }
-                    case SAT_WIDGET_REDRAW_PARENT:
-                    {
-                        SAT_Widget* widget = AWidget->getParent();
-                        if (widget)
-                        {
-                            if (widget->State.opaque) MQueues.queueRedraw(widget);
-                            else
-                            {
-                                SAT_Widget* opaque_parent = widget->findOpaqueParent();
-                                if (opaque_parent) MQueues.queueRedraw(opaque_parent);
-                                else MQueues.queueRedraw(widget);
-                            }
-                        }
-                        break;
-                    }
-                    case SAT_WIDGET_REDRAW_ROOT:
-                    {
-                        MQueues.queueRedraw(MRootWidget);
-                        break;
-                    }
-                } // switch AMode
-            #else // SAT_WINDOW_BUFFERED
-                MQueues.queueRedraw(MRootWidget);
-            #endif // SAT_WINDOW_BUFFERED
-        // TODO: draw 'always overlay' widgets? (not SAT_OverlayWidget,
-        // which is meant for menus, etc, and is normally inactive)..
-        #else // SAT_WINDOW_QUEUE_WIDGETS
-            SAT_Rect rect = AWidget->Recursive.rect;
-            invalidate(rect.x,rect.y,rect.w,rect.h);
-        #endif
-    }
-*/
 
 void SAT_WidgetWindow::do_widget_redraw(SAT_BaseWidget* AWidget)
 {
-    MWidgetRedrawQueue.write(AWidget);
+    // #ifdef SAT_NO_WINDOW_BUFFERING
+    //     // if not buffered, we draw directly..
+    //     SAT_Rect rect = AWidget->getRect();
+    //     invalidate(rect.x,rect.y,rect.w,rect.h);
+    // #else
+        // MWidgetRedrawQueue.write(AWidget);
+        SAT_BaseWidget* opaque_parent = AWidget->Recursive.opaque_parent;
+        SAT_Assert(opaque_parent);
+        MWidgetRedrawQueue.write(opaque_parent);
+    // #endif
 }
 
 void SAT_WidgetWindow::do_widget_tween(SAT_BaseWidget* AWidget, SAT_TweenChain* AChain)
 {
+    // Note: this is read in the timerHandler!
     MTweenManager.appendChain(AChain);
 }
 
@@ -924,9 +797,9 @@ void SAT_WidgetWindow::do_widget_modal(SAT_BaseWidget* AWidget)
     MModalWidget = AWidget;
 }
 
-/*
-    void on_WidgetListener_set_cursor(SAT_Widget* AWidget, int32_t ACursor)
-    {
+void SAT_WidgetWindow::do_widget_cursor(SAT_BaseWidget* AWidget, uint32_t ACursor)
+{
+    /*
         switch(ACursor)
         {
             case SAT_CURSOR_LOCK:
@@ -949,11 +822,7 @@ void SAT_WidgetWindow::do_widget_modal(SAT_BaseWidget* AWidget)
                     MMouseCurrentCursor = ACursor;
                 }
         }
-    }
-*/
-
-void SAT_WidgetWindow::do_widget_cursor(SAT_BaseWidget* AWidget, uint32_t ACursor)
-{
+    */
 }
 
 void SAT_WidgetWindow::do_widget_capture_mouse(SAT_BaseWidget* AWidget)

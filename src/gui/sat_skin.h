@@ -34,12 +34,16 @@ class SAT_Skin
         virtual SAT_Color   getBorderColor(uint32_t AState);
         virtual sat_coord_t getBorderWidth(uint32_t AState);
        
-        virtual void        setBackgroundColor(uint32_t AState, SAT_Color AColor);
-        virtual void        setForegroundColor(uint32_t AState, SAT_Color AColor);
-        virtual void        setTextColor(uint32_t AState, SAT_Color AColor);
-        virtual void        setTextSize(uint32_t AState, sat_coord_t ASize);
-        virtual void        setBorderColor(uint32_t AState, SAT_Color AColor);
-        virtual void        setBorderWidth(uint32_t AState, sat_coord_t AWidth);
+        virtual void        setBackgroundColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, bool AUnique=false);
+        virtual void        setForegroundColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, bool AUnique=false);
+        virtual void        setTextColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, bool AUnique=false);
+        virtual void        setTextSize(sat_coord_t ASize, uint32_t AState=SAT_SKIN_ALL, bool AUnique=false);
+        virtual void        setBorderColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, bool AUnique=false);
+        virtual void        setBorderWidth(sat_coord_t AWidth, uint32_t AState=SAT_SKIN_ALL, bool AUnique=false);
+
+    private:
+
+        bool    correct_state(uint32_t i, uint32_t AState, bool AUnique=false);
 
     protected:
 
@@ -49,6 +53,8 @@ class SAT_Skin
         sat_coord_t MTextSizes[SAT_SKIN_NUM_STATES]         = {};
         SAT_Color   MBorderColors[SAT_SKIN_NUM_STATES]      = {};
         sat_coord_t MBorderWidths[SAT_SKIN_NUM_STATES]      = {};
+
+
 
 };
 
@@ -110,57 +116,74 @@ sat_coord_t SAT_Skin::getBorderWidth(uint32_t AState)
 //
 //------------------------------
 
-void SAT_Skin::setBackgroundColor(uint32_t AState, SAT_Color AColor)
+void SAT_Skin::setBackgroundColor(SAT_Color AColor, uint32_t AState, bool AUnique)
 {
-    if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MBackgroundColors[0] = AColor;
-    for (uint32_t i=1; i<SAT_SKIN_NUM_STATES; i++)
+    //if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MBackgroundColors[0] = AColor;
+    for (uint32_t i=0; i<SAT_SKIN_NUM_STATES; i++)
     {
-        if (i & AState) MBackgroundColors[i] = AColor;
+        //if (i & AState) MBackgroundColors[i] = AColor;
+        if (correct_state(i,AState,AUnique)) MBackgroundColors[i] = AColor;
     }
 }
 
-void SAT_Skin::setForegroundColor(uint32_t AState, SAT_Color AColor)
+void SAT_Skin::setForegroundColor(SAT_Color AColor, uint32_t AState, bool AUnique)
 {
-    if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MForegroundColors[0] = AColor;
-    for (uint32_t i=1; i<SAT_SKIN_NUM_STATES; i++)
+    //if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MForegroundColors[0] = AColor;
+    for (uint32_t i=0; i<SAT_SKIN_NUM_STATES; i++)
     {
-        if (i & AState) MForegroundColors[i] = AColor;
+        //if (i & AState) MForegroundColors[i] = AColor;
+        if (correct_state(i,AState,AUnique)) MForegroundColors[i] = AColor;
     }
 }
 
-void SAT_Skin::setTextColor(uint32_t AState, SAT_Color AColor)
+void SAT_Skin::setTextColor(SAT_Color AColor, uint32_t AState, bool AUnique)
 {
-    if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MTextColors[0] = AColor;
-    for (uint32_t i=1; i<SAT_SKIN_NUM_STATES; i++)
+    //if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MTextColors[0] = AColor;
+    for (uint32_t i=0; i<SAT_SKIN_NUM_STATES; i++)
     {
-        if (i & AState) MTextColors[i] = AColor;
+        //if (i & AState) MTextColors[i] = AColor;
+        if (correct_state(i,AState,AUnique)) MTextColors[i] = AColor;
     }
 }
 
-void SAT_Skin::setTextSize(uint32_t AState, sat_coord_t ASize)
+void SAT_Skin::setTextSize(sat_coord_t ASize, uint32_t AState, bool AUnique)
 {
-    if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MTextSizes[0] = ASize;
-    for (uint32_t i=1; i<SAT_SKIN_NUM_STATES; i++)
+    //if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MTextSizes[0] = ASize;
+    for (uint32_t i=0; i<SAT_SKIN_NUM_STATES; i++)
     {
-        if (i & AState) MTextSizes[i] = ASize;
+        //if (i & AState) MTextSizes[i] = ASize;
+        if (correct_state(i,AState,AUnique)) MTextSizes[i] = ASize;
     }
 }
 
-void SAT_Skin::setBorderColor(uint32_t AState, SAT_Color AColor)
+void SAT_Skin::setBorderColor(SAT_Color AColor, uint32_t AState, bool AUnique)
 {
-    if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MBorderColors[0] = AColor;
-    for (uint32_t i=1; i<SAT_SKIN_NUM_STATES; i++)
+    //if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MBorderColors[0] = AColor;
+    for (uint32_t i=0; i<SAT_SKIN_NUM_STATES; i++)
     {
-        if (i & AState) MBorderColors[i] = AColor;
+        //if (i & AState) MBorderColors[i] = AColor;
+        if (correct_state(i,AState,AUnique)) MBorderColors[i] = AColor;
     }
 }
 
-void SAT_Skin::setBorderWidth(uint32_t AState, sat_coord_t AWidth)
+void SAT_Skin::setBorderWidth(sat_coord_t AWidth, uint32_t AState, bool AUnique)
 {
-    if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MBorderWidths[0] = AWidth;
-    for (uint32_t i=1; i<SAT_SKIN_NUM_STATES; i++)
+    //if ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) MBorderWidths[0] = AWidth;
+    for (uint32_t i=0; i<SAT_SKIN_NUM_STATES; i++)
     {
-        if (i & AState) MBorderWidths[i] = AWidth;
+        //if (i & AState) MBorderWidths[i] = AWidth;
+        if (correct_state(i,AState,AUnique)) MBorderWidths[i] = AWidth;
     }
 }
 
+//------------------------------
+//
+//------------------------------
+
+bool SAT_Skin::correct_state(uint32_t i, uint32_t AState, bool AUnique)
+{
+    if  ( (i==0) && ((AState==SAT_SKIN_NORMAL) || (AState==SAT_SKIN_ALL)) ) return true;
+    if (AUnique) { if ((i & AState) == AState) return true; }
+    else         { if (i & AState)             return true; }
+    return false;
+}

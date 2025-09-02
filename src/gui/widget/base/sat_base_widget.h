@@ -40,6 +40,7 @@ struct SAT_WidgetOptions
     bool auto_size              = false;    // scale/zoom widget (content) relative to rect/size (f.ex. font size)
     bool want_hover_events      = false;    // want hover, move, etc mouse events even when not captured
     bool realign_if_invisible   = false;    // realign (child) widgets, even if not visible (menus, etc)
+    bool auto_redraw_hover      = false;    // realign (child) widgets, even if not visible (menus, etc)
 };
 
 struct SAT_WidgetState
@@ -48,6 +49,8 @@ struct SAT_WidgetState
     bool enabled        = true;     // if false, draw 'disabled'state (greyed out)
     bool opaque         = true;     // set to true if widget fills it's entire rect
     bool visible        = true;     // drawing/alignment
+    bool hovering       = false;
+    bool interacting    = false;
 };
 
 /*
@@ -68,6 +71,14 @@ struct SAT_WidgetRecursive
  // bool            visible         = true;
  // SAT_Skin        skin            = {};
  // SAT_Color       background      = SAT_Grey;
+};
+
+struct SAT_WidgetUpdateState
+{
+  //uint32_t    last_updated    = SAT_UINT32_MAX;
+    uint32_t    last_realigned  = SAT_UINT32_MAX;
+  //uint32_t    last_redrawn    = SAT_UINT32_MAX;
+    uint32_t    last_painted    = SAT_UINT32_MAX;
 };
 
 //----------------------------------------------------------------------
@@ -206,6 +217,7 @@ class SAT_BaseWidget
         SAT_WidgetOptions           Options         = {};
         SAT_WidgetState             State           = {};
         SAT_WidgetRecursive         Recursive       = {};
+        SAT_WidgetUpdateState       UpdateState     = {};
 
     protected: // base
     

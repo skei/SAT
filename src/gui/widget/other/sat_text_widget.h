@@ -31,8 +31,9 @@ class SAT_TextWidget
 
     public:
 
-        virtual void setText(const char* AText);
         virtual void setDrawText(bool ADraw=true);
+        virtual void setText(const char* AText);
+        virtual void setTextAlignment(uint32_t AAlignment);
 
         virtual void drawText(SAT_PaintContext* AContext);
 
@@ -55,6 +56,8 @@ class SAT_TextWidget
 SAT_TextWidget::SAT_TextWidget(SAT_Rect ARect)
 : SAT_PanelWidget(ARect)
 {
+    //MFillBackground = false;
+    //MDrawBorder = false;
 }
 
 SAT_TextWidget::~SAT_TextWidget()
@@ -65,16 +68,30 @@ SAT_TextWidget::~SAT_TextWidget()
 //
 //------------------------------
 
-void SAT_TextWidget::setDrawText(bool ADraw)            { MDrawText = ADraw; }
-void SAT_TextWidget::setText(const char* AText)         { MText = AText; }
+void SAT_TextWidget::setDrawText(bool ADraw)
+{
+    MDrawText = ADraw;
+}
+
+void SAT_TextWidget::setText(const char* AText)
+{
+    MText = AText;
+}
+
+void SAT_TextWidget::setTextAlignment(uint32_t AAlignment)
+{
+    MTextAlignment = AAlignment;
+}
+
+//----------
 
 void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
 {
-    SAT_Painter* painter = AContext->painter;
     if (MDrawText)
     {
-
+        SAT_Painter* painter = AContext->painter;
         uint32_t state = MIsSelected ? SAT_SKIN_SELECTED : SAT_SKIN_NORMAL;
+        if (State.hovering) state |= SAT_SKIN_HOVER;
         SAT_Color color = MSkin->getTextColor(state);
         painter->setTextColor(color);
         // sat_coord_t size = MSkin->getTextSize(state);

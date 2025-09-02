@@ -50,14 +50,6 @@ widgets can call painter->getClipRect to find current clip-rect,
 and just don't draw things outside of this, or adjust their drawing coords..
 it will be clipped away, so don't waste time painting it..
 
-LAYOUT
+-----
 
-we could set flags during alignment, so we don't need to check things during painting:
-- isRecursivelyVisible
-- isRecursivelyOpaque
-also:
-- isRecursivelyActive
-- isRecursivelyEnabled
-
-if diaabled, the widgets should be blended towards the background color..
-how does the widgets get this color?
+* disabled_color, disabled_alpha/blend

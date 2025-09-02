@@ -394,6 +394,13 @@ void SAT_X11Window::invalidate(int32_t AXpos, int32_t AYpos, uint32_t AWidth, ui
     xcb_flush(MConnection);    
 }
 
+/*
+    this will (probably) be called form a separate timer thread,
+    to redirect the timer tick to the gui thread..
+    and is _also_ called from stopEventThread() in gui thread,
+    to kill the event loop.. see SAT_X11Window::hide()..
+*/
+
 void SAT_X11Window::sendClientMessage(uint32_t AData, uint32_t AType)
 {
     memset(MClientMessageEventBuffer,0,sizeof(MClientMessageEventBuffer));
@@ -465,6 +472,7 @@ void SAT_X11Window::startEventThread()
     had an editor close crash.. (couldn't reproduce it, needs investigation)
     had the templates audio_plugin + instrument + note_effect templates open at the same time.
     closed bitwig
+
     crashed in SAT_X11Window::stopEventThread(), called from from SAT_X11Window::close()
     called after/from two SAT_Editor::~SAT_Editor() calls in a row..
     threads closing, vs atomic bools?

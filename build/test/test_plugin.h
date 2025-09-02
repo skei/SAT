@@ -71,7 +71,7 @@ uint32_t myPlugin::params_count()
 //
 //------------------------------
 
-#ifndef SAT_NO_ENTRY
+#ifndef SAT_NO_PLUGIN_ENTRY
     #include "plugin/sat_entry.h"
     SAT_REGISTER_SINGLE_PLUGIN(myDescriptor,myPlugin)
 #endif

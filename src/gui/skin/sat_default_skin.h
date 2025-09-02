@@ -29,16 +29,25 @@ class SAT_DefaultSkin
 SAT_DefaultSkin::SAT_DefaultSkin()
 : SAT_Skin()
 {
-    setBackgroundColor( SAT_SKIN_ALL,       SAT_Grey        );
-    setForegroundColor( SAT_SKIN_ALL,       SAT_DarkGrey    );
-    setTextColor(       SAT_SKIN_ALL,       SAT_Black       );
-    setTextSize(        SAT_SKIN_ALL,       10.0            );
-    setBorderColor(     SAT_SKIN_ALL,       SAT_DarkestGrey );
-    setBorderWidth(     SAT_SKIN_ALL,       1.0             );
+    setBackgroundColor( SAT_Color(0.50,0.50,0.50) );
+    setBackgroundColor( SAT_Color(0.45,0.45,0.45), SAT_SKIN_HOVER );
+    setBackgroundColor( SAT_Color(0.30,0.30,0.70), SAT_SKIN_SELECTED );
+    setBackgroundColor( SAT_Color(0.20,0.20,0.80), SAT_SKIN_SELECTED | SAT_SKIN_HOVER, true );
 
-    setBackgroundColor( SAT_SKIN_SELECTED,  SAT_LightGrey   );
-    setForegroundColor( SAT_SKIN_SELECTED,  SAT_DarkerGrey  );
-    setTextColor(       SAT_SKIN_SELECTED,  SAT_White       );
+    setForegroundColor( SAT_Black );
+
+    setTextColor( SAT_Black );
+    setTextColor( SAT_White,        SAT_SKIN_SELECTED );
+    setTextColor( SAT_BrightYellow, SAT_SKIN_HOVER );
+    setTextColor( SAT_BrightRed,    SAT_SKIN_SELECTED | SAT_SKIN_HOVER, true );
+
+    setTextSize( 10.0 );
+
+    setBorderColor( SAT_Black );
+    //setBorderColor( SAT_White, SAT_SKIN_HOVER );
+
+    setBorderWidth( 1.0 );
+
 }
 
 SAT_DefaultSkin::~SAT_DefaultSkin()

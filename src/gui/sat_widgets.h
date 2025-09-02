@@ -48,11 +48,8 @@
 #include "gui/widget/interface/sat_plugin_footer_widget.h"
 #include "gui/widget/interface/sat_popup_menu_widget.h"
 #include "gui/widget/interface/sat_resize_handle_widget.h"
-#include "gui/widget/interface/sat_scroll_bar_widget.h"
 #include "gui/widget/interface/sat_sizer_widget.h"
 #include "gui/widget/interface/sat_tooltip_widget.h"
-#include "gui/widget/interface/sat_tree_widget.h"
-#include "gui/widget/interface/sat_tree_item_widget.h"
 
 //#include "gui/widget/nonvisual/"
 
@@ -66,8 +63,11 @@
 #include "gui/widget/other/sat_keyboard_widget.h"
 #include "gui/widget/other/sat_modular_graph_widget.h"
 #include "gui/widget/other/sat_module_widget.h"
+#include "gui/widget/other/sat_scroll_bar_widget.h"
 #include "gui/widget/other/sat_text_widget.h"
 #include "gui/widget/other/sat_text_box_widget.h"
 #include "gui/widget/other/sat_timeline_widget.h"
+#include "gui/widget/other/sat_tree_widget.h"
+#include "gui/widget/other/sat_tree_item_widget.h"
 #include "gui/widget/other/sat_voices_widget.h"
 #include "gui/widget/other/sat_waveform_widget.h"

@@ -31,6 +31,11 @@ class SAT_InteractiveWidget
      // void            activateVisibleChildren() override;
      // void            deactivateInvisibleChildren() override;
 
+    public:
+
+        void            on_widget_mouse_enter(SAT_BaseWidget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime) override;
+        void            on_widget_mouse_leave(SAT_BaseWidget* ATo, int32_t AXpos, int32_t AYpos, uint32_t ATime) override;
+
 };
 
 //----------------------------------------------------------------------
@@ -100,3 +105,15 @@ bool SAT_InteractiveWidget::isEnabled()
 //------------------------------
 //
 //------------------------------
+
+void SAT_InteractiveWidget::on_widget_mouse_enter(SAT_BaseWidget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime)
+{
+    if (Options.auto_redraw_hover) do_widget_redraw(this);
+    SAT_LayoutWidget::on_widget_mouse_enter(AFrom,AXpos,AYpos,ATime);
+}
+
+void SAT_InteractiveWidget::on_widget_mouse_leave(SAT_BaseWidget* ATo, int32_t AXpos, int32_t AYpos, uint32_t ATime)
+{
+    if (Options.auto_redraw_hover) do_widget_redraw(this);
+    SAT_LayoutWidget::on_widget_mouse_leave(ATo,AXpos,AYpos,ATime);
+}

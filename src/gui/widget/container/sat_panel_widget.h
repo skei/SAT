@@ -75,9 +75,20 @@ SAT_PanelWidget::~SAT_PanelWidget()
 //
 //------------------------------
 
-void SAT_PanelWidget::setFillBackground(bool AFill)         { MFillBackground = AFill; }
-void SAT_PanelWidget::setDrawBorder(bool ADraw)             { MDrawBorder = ADraw; }
-void SAT_PanelWidget::setCanSelect(bool ACanSelect)         { MCanSelect = ACanSelect; }
+void SAT_PanelWidget::setFillBackground(bool AFill)
+{
+    MFillBackground = AFill;
+}
+
+void SAT_PanelWidget::setDrawBorder(bool ADraw)
+{
+    MDrawBorder = ADraw;
+}
+
+void SAT_PanelWidget::setCanSelect(bool ACanSelect)
+{
+    MCanSelect = ACanSelect;
+}
 
 //------------------------------
 //
@@ -89,6 +100,7 @@ void SAT_PanelWidget::fillBackground(SAT_PaintContext* AContext)
     if (MFillBackground)
     {
         uint32_t state = MIsSelected ? SAT_SKIN_SELECTED : SAT_SKIN_NORMAL;
+        if (State.hovering) state |= SAT_SKIN_HOVER;
         SAT_Color color = MSkin->getBackgroundColor(state);
         painter->setFillColor(color);
         SAT_Rect rect = getRect();
@@ -98,10 +110,11 @@ void SAT_PanelWidget::fillBackground(SAT_PaintContext* AContext)
 
 void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
 {
-    SAT_Painter* painter = AContext->painter;
     if (MDrawBorder)
     {
+        SAT_Painter* painter = AContext->painter;
         uint32_t state = MIsSelected ? SAT_SKIN_SELECTED : SAT_SKIN_NORMAL;
+        if (State.hovering) state |= SAT_SKIN_HOVER;
         SAT_Color color = MSkin->getBorderColor(state);
         sat_coord_t width = MSkin->getBorderWidth(state);
         painter->setDrawColor(color);
@@ -118,7 +131,7 @@ void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
 
 void SAT_PanelWidget::on_widget_paint(SAT_PaintContext* AContext)
 {
-    if (!State.visible) return;
+    //if (!State.visible) return;
     pushClip(AContext);
     //pushRecursiveClip(AContext);
     fillBackground(AContext);

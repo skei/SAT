@@ -283,42 +283,31 @@ sat_coord_t SAT_VisualWidget::getPaintScale()
     return scale;
 }
 
-/*
-    draw all the child-widgets, recursively
-    (but not the widet itself)
-    clipping is already set up
-    (see on_widget_paint(), and inherited ones)..
-
-    hmmm.. no point in calling isRecursivelyVisible for each child widget?
-    if current widget is visible, it will not call child-widgets
-
-    ouch.. we need it if we call straight into a hierarchy (dirty widgets),
-    and haven't checked the visibility..
-    but we only need to do it once (fur current widget, don't we?)
-    and don't call child widgets if not this one is not visible..
-    (but #2, visibility is checked in child.paintChildren..)
-*/
-
 void SAT_VisualWidget::paintChildren(SAT_PaintContext* AContext)
 {
     // if this widget is not visible, don't do anything..
     //if (!State.visible) return;
+    
     uint32_t numchildren = MChildren.size();
     if (numchildren > 0)
     {
         for(uint32_t i=0; i<numchildren; i++)
         {
             SAT_BaseWidget* widget = MChildren[i];
-            //if (widget->isRecursivelyVisible())
-            //if (widget->State.visible)
-            //{
-                SAT_Rect widgetrect = widget->Recursive.rect;
-                widgetrect.overlap(Recursive.rect);
-                if (widgetrect.isNotEmpty())
-                {
-                    widget->on_widget_paint(AContext);
-                }
-            //}
+            if (widget->UpdateState.last_painted != AContext->current_frame)
+            {
+                //if (widget->isRecursivelyVisible())
+                //if (widget->State.visible)
+                //{
+                    SAT_Rect widgetrect = widget->Recursive.rect;
+                    widgetrect.overlap(Recursive.rect);
+                    if (widgetrect.isNotEmpty())
+                    {
+                        widget->on_widget_paint(AContext);
+                        widget->UpdateState.last_painted = AContext->current_frame;
+                    }
+                //}
+            }
         }
     }
 }

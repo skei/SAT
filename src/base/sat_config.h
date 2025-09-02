@@ -121,7 +121,7 @@
 
 // #define SAT_INCLUDE_ARA_EXTENSIONS
 // #define SAT_INCLUDE_REAPER_EXTENSIONS
-// #define SAT_NO_ENTRY
+// #define SAT_NO_PLUGIN_ENTRY
 
 // ----- setup in compile script -----
 

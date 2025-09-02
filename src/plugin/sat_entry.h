@@ -62,6 +62,7 @@
 
 #else
 
-    #define SAT_SIMPLE_PLUGIN_ENTRY(DESC,PLUG) void sat_no_entry() {}
+    // empty func.. will be optimized away.. (hopefully)..
+    #define SAT_REGISTER_SINGLE_PLUGIN(DESC,PLUG) void sat_no_entry() {}
 
 #endif

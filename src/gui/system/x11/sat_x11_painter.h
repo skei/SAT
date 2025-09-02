@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/sat.h"
+#include "base/util/sat_math.h"
 #include "gui/sat_gui_base.h"
 #include "gui/system/x11/sat_x11.h"
 
@@ -64,6 +65,7 @@ class SAT_X11Painter
         xcb_connection_t*   MConnection     = nullptr;
         xcb_gcontext_t      MGC             = XCB_NONE;
         xcb_drawable_t      MDrawable       = XCB_NONE;
+        xcb_colormap_t      MColorMap      = XCB_NONE;
 
         // #ifdef SAT_USE_X11_XRENDER
         //     xcb_render_picture_t  MTargetPicture  = 0;
@@ -104,6 +106,9 @@ SAT_X11Painter::SAT_X11Painter(SAT_PainterOwner* AOwner, SAT_PaintTarget* ATarge
 {
     MConnection = AOwner->getXcbConnection();
     MDrawable = ATarget->getXcbDrawable();
+
+    MColorMap = SAT.GUI->getScreenColorMap();
+
     MGC = xcb_generate_id(MConnection);
     uint32_t mask =
         //XCB_GC_FUNCTION
@@ -169,14 +174,20 @@ void SAT_X11Painter::endPainting()
 // clipping
 //------------------------------
 
+/*
+    from axonlib sources:
+        xlib seems to cut off one pixel to the right & bottom... ?
+*/
+
+
 void SAT_X11Painter::setClip(SAT_Rect ARect)
 {
     //resetClip();
     xcb_rectangle_t rectangles[] = {{
-        (int16_t)ARect.x,
-        (int16_t)ARect.y,
-        (uint16_t)(ARect.w + 1),
-        (uint16_t)(ARect.h + 1),
+        (int16_t)SAT_Trunc(ARect.x),
+        (int16_t)SAT_Trunc(ARect.y),
+        (uint16_t)SAT_Trunc(ARect.w) + 1,
+        (uint16_t)SAT_Trunc(ARect.h) + 1
     }};
     xcb_set_clip_rectangles(
         MConnection,
@@ -233,13 +244,24 @@ void SAT_X11Painter::setLineWidth(sat_coord_t AWidth)
 
 void SAT_X11Painter::drawLine(SAT_Point AFrom, SAT_Point ATo)
 {
-    xcb_point_t polyline[] = { (int16_t)AFrom.x, (int16_t)AFrom.y, (int16_t)ATo.x, (int16_t)ATo.y };
+    xcb_point_t polyline[] = {
+        (int16_t)SAT_Trunc(AFrom.x),
+        (int16_t)SAT_Trunc(AFrom.y),
+        (int16_t)SAT_Trunc(ATo.x),
+        (int16_t)SAT_Trunc(ATo.y)
+    };
     xcb_poly_line(MConnection,XCB_COORD_MODE_ORIGIN,MDrawable,MGC,2,polyline);
 }
 
 void SAT_X11Painter::drawRect(SAT_Rect ARect)
 {
-    xcb_rectangle_t rectangles[] = {{ (int16_t)ARect.x, (int16_t)ARect.y, (uint16_t)ARect.w, (uint16_t)ARect.h }};
+    //xcb_rectangle_t rectangles[] = {{ (int16_t)ARect.x, (int16_t)ARect.y, (uint16_t)ARect.w, (uint16_t)ARect.h }};
+    xcb_rectangle_t rectangles[] = {{
+        (int16_t)SAT_Trunc(ARect.x),
+        (int16_t)SAT_Trunc(ARect.y),
+        (uint16_t)SAT_Trunc(ARect.w) - 1,
+        (uint16_t)SAT_Trunc(ARect.h) - 1
+    }};
     xcb_poly_rectangle(MConnection,MDrawable,MGC,1,rectangles);
 }
   
@@ -257,15 +279,15 @@ void SAT_X11Painter::drawArc(SAT_Point APos, sat_coord_t ARadius, sat_coord_t AA
     sat_coord_t y = APos.y - ARadius;
     sat_coord_t w = APos.x + ARadius;
     sat_coord_t h = APos.y + ARadius;
-    sat_coord_t a1 = AAngle1;
-    sat_coord_t a2 = AAngle2;
+    sat_coord_t a1 = AAngle1 * 360.0f * 64.0f;
+    sat_coord_t a2 = AAngle2 * 360.0f * 64.0f;
     xcb_arc_t arcs[] = {
-        (int16_t)x,
-        (int16_t)y,
-        (uint16_t)w,  // +1
-        (uint16_t)h,  // +1
-        (int16_t)(a1 * 360.0f * 64.0f),
-        (int16_t)(a2 * 360.0f * 64.0f)
+        (int16_t)SAT_Trunc(x),
+        (int16_t)SAT_Trunc(y),
+        (uint16_t)SAT_Trunc(w),  // +1
+        (uint16_t)SAT_Trunc(h),  // +1
+        (int16_t)SAT_Trunc(a1),
+        (int16_t)SAT_Trunc(a2)
     };
     xcb_poly_arc(MConnection, MDrawable, MGC, 1, arcs );
 }
@@ -276,7 +298,12 @@ void SAT_X11Painter::drawArc(SAT_Point APos, sat_coord_t ARadius, sat_coord_t AA
 
 void SAT_X11Painter::fillRect(SAT_Rect ARect)
 {
-    xcb_rectangle_t rectangles[] = {{ (int16_t)ARect.x, (int16_t)ARect.y, (uint16_t)ARect.w, (uint16_t)ARect.h }};
+    xcb_rectangle_t rectangles[] = {{
+        (int16_t)ARect.x,
+        (int16_t)ARect.y,
+        (uint16_t)ARect.w,
+        (uint16_t)ARect.h
+    }};
     xcb_poly_fill_rectangle(MConnection,MDrawable,MGC,1,rectangles);
 }
 
@@ -286,15 +313,15 @@ void SAT_X11Painter::fillArc(SAT_Point APos, sat_coord_t ARadius, sat_coord_t AA
     sat_coord_t y = APos.y - ARadius;
     sat_coord_t w = APos.x + ARadius;
     sat_coord_t h = APos.y + ARadius;
-    sat_coord_t a1 = AAngle1;
-    sat_coord_t a2 = AAngle2;
+    sat_coord_t a1 = AAngle1 * 360.0f * 64.0f;
+    sat_coord_t a2 = AAngle2 * 360.0f * 64.0f;
     xcb_arc_t arcs[] = {
-        (int16_t)x,
-        (int16_t)y,
-        (uint16_t)w,  // +1
-        (uint16_t)h,  // +1
-        (int16_t)(a1 * 360.0f * 64.0f),
-        (int16_t)(a2 * 360.0f * 64.0f)
+        (int16_t)SAT_Trunc(x),
+        (int16_t)SAT_Trunc(y),
+        (uint16_t)SAT_Trunc(w),  // +1
+        (uint16_t)SAT_Trunc(h),  // +1
+        (int16_t)SAT_Trunc(a1),
+        (int16_t)SAT_Trunc(a2)
     };
     xcb_poly_fill_arc(MConnection, MDrawable, MGC, 1, arcs );
 }
@@ -310,7 +337,9 @@ void SAT_X11Painter::drawText(SAT_Point APos, const char* AText)
     pt.data = buffer;
     pt.used = 0;
     addStringText8(&pt,AText);
-    xcb_poly_text_8(MConnection,MDrawable,MGC,(int16_t)APos.x,(int16_t)APos.y,pt.used,pt.data);
+    int16_t x = (int16_t)SAT_Trunc(APos.x);
+    int16_t y = (int16_t)SAT_Trunc(APos.y);
+    xcb_poly_text_8(MConnection,MDrawable,MGC,x,y,pt.used,pt.data);
 }
 
 void SAT_X11Painter::drawText(SAT_Rect ARect, const char* AText, uint32_t AAlignment)
@@ -318,8 +347,6 @@ void SAT_X11Painter::drawText(SAT_Rect ARect, const char* AText, uint32_t AAlign
     measure_string(AText);
     SAT_Point pos;
     sat_coord_t w;
-    // sat_coord_t x2 = ARect.x + ARect.w;
-    // sat_coord_t y2 = ARect.y + ARect.h;
     if (AAlignment & SAT_TEXT_ALIGN_TOP) pos.y = ARect.y    + MFontAscent;
     else if (AAlignment & SAT_TEXT_ALIGN_BOTTOM) pos.y = ARect.y2() - MFontDescent;
     else pos.y = ARect.y + (MFontAscent * 0.5f) + (ARect.h * 0.5f);
@@ -361,14 +388,16 @@ sat_coord_t SAT_X11Painter::getTextHeight(const char* AText)
 
 void SAT_X11Painter::drawImage(SAT_Point APos, SAT_PaintSource* ASource)
 {
-    uint32_t width  = ASource->getWidth();
-    uint32_t height = ASource->getHeight();
+    int16_t x = (int16_t)SAT_Trunc(APos.x);
+    int16_t y = (int16_t)SAT_Trunc(APos.y);
+    uint32_t w = ASource->getWidth();
+    uint32_t h = ASource->getHeight();
     if (ASource->isBitmap()) {
         uint32_t* buffer    = ASource->getBuffer();
         uint32_t buffersize = ASource->getBufferSize();
         xcb_image_t* image = xcb_image_create(
-            width,                          // width      width in pixels.
-            height,                         // height     height in pixels.
+            w,                              // width      width in pixels.
+            h,                              // height     height in pixels.
             XCB_IMAGE_FORMAT_Z_PIXMAP,      // format
             32,                             // xpad       scanline pad (8,16,32)
             24, // MTargetDepth,            // depth      (1,4,8,16,24 zpixmap),    (1 xybitmap), (anything xypixmap)
@@ -388,8 +417,8 @@ void SAT_X11Painter::drawImage(SAT_Point APos, SAT_PaintSource* ASource)
             MDrawable,          // xcb_drawable_t     draw,
             MGC,                // xcb_gcontext_t     gc,
             image,              // xcb_image_t*       image,
-            (int16_t)APos.x,    // int16_t            x,
-            (int16_t)APos.y,    // int16_t            y,
+            x,                  // int16_t            x,
+            y,                  // int16_t            y,
             0                   // uint8_t            left_pad
         );
         image->base = nullptr;
@@ -406,14 +435,14 @@ void SAT_X11Painter::drawImage(SAT_Point APos, SAT_PaintSource* ASource)
                 src_picture,
                 None,
                 MTargetPicture,
-                0,//AXpos,
-                0,//AYpos,
+                0, // x
+                0, // y
                 0,
                 0,
-                AXpos,
-                AYpos,
-                width,
-                height
+                x,
+                y,
+                w,
+                h
             );
             xcb_flush(MConnection);
         #else
@@ -424,10 +453,10 @@ void SAT_X11Painter::drawImage(SAT_Point APos, SAT_PaintSource* ASource)
                 MGC,                        // A Graphic Context
                 0,                          // Top left x coordinate of the region we want to copy
                 0,                          // Top left y coordinate of the region we want to copy
-                (int16_t)APos.x,            // Top left x coordinate of the region where we want to copy
-                (int16_t)APos.y,            // Top left y coordinate of the region where we want to copy
-                width,                      // Width                 of the region we want to copy
-                height                      // Height of the region we want to copy
+                x,                          // Top left x coordinate of the region where we want to copy
+                y,                          // Top left y coordinate of the region where we want to copy
+                w,                          // Width                 of the region we want to copy
+                h                           // Height of the region we want to copy
             );
             xcb_flush(MConnection);
         #endif
@@ -438,6 +467,12 @@ void SAT_X11Painter::drawImage(SAT_Point APos, SAT_PaintSource* ASource)
 
 void SAT_X11Painter::drawImage(SAT_Point APos, SAT_PaintSource* ASource, SAT_Rect ASrc)
 {
+    int16_t x = (int16_t)SAT_Trunc(APos.x);            // Top left x coordinate of the region where we want to copy
+    int16_t y = (int16_t)SAT_Trunc(APos.y);            // Top left y coordinate of the region where we want to copy
+    int16_t src_x = (int16_t)SAT_Trunc(ASrc.x);
+    int16_t src_y = (int16_t)SAT_Trunc(ASrc.y);
+    uint16_t src_w = (uint16_t)SAT_Trunc(ASrc.w);
+    uint16_t src_h = (uint16_t)SAT_Trunc(ASrc.h);
     if (ASource->isBitmap())
     {
     }
@@ -448,12 +483,12 @@ void SAT_X11Painter::drawImage(SAT_Point APos, SAT_PaintSource* ASource, SAT_Rec
             ASource->getXcbDrawable(),  // The Drawable we want to paste
             MDrawable,                  // The Drawable on which we copy the previous Drawable
             MGC,                        // A Graphic Context
-            ASrc.x,                     // Top left x coordinate of the region we want to copy
-            ASrc.y,                     // Top left y coordinate of the region we want to copy
-            (int16_t)APos.x,            // Top left x coordinate of the region where we want to copy
-            (int16_t)APos.y,            // Top left y coordinate of the region where we want to copy
-            ASrc.w,                     // Width                 of the region we want to copy
-            ASrc.h                      // Height of the region we want to copy
+            src_x,                      // Top left x coordinate of the region we want to copy
+            src_y,                      // Top left y coordinate of the region we want to copy
+            x,                          // Top left x coordinate of the region where we want to copy
+            y,                          // Top left y coordinate of the region where we want to copy
+            src_w,                     // Width                 of the region we want to copy
+            src_h                      // Height of the region we want to copy
         );
         xcb_flush(MConnection);
     }
@@ -475,6 +510,26 @@ void SAT_X11Painter::drawImage(SAT_Rect ADst, SAT_PaintSource* ASource, SAT_Rect
 // X11
 //------------------------------
 
+// colormap = screen->default_colormap
+// xcb_colormap_t colormapId = xcb_generate_id (connection);
+// xcb_create_colormap (connection, XCB_COLORMAP_ALLOC_NONE, colormapId, window, screen->root_visual);
+
+// xcb_alloc_color_reply_t* reply = xcb_alloc_color_reply(
+//     connection,
+//     xcb_alloc_color(
+//         connection,
+//         colormapId,
+//         65535,
+//         0,
+//         0
+//     ),
+//     NULL
+// );
+// free(reply);
+
+
+
+
 void SAT_X11Painter::set_color(SAT_Color AColor)
 {
     uint8_t r = AColor.r * 255.0f;
@@ -482,6 +537,7 @@ void SAT_X11Painter::set_color(SAT_Color AColor)
     uint8_t b = AColor.b * 255.0f;
     uint8_t a = AColor.a * 255.0f;
     uint32_t color = (a << 24) + (r << 16) + (g << 8) + b;
+    // xcb_alloc_color(MConnection,MColorMap,r,g,b);
     uint32_t mask = XCB_GC_FOREGROUND;
     uint32_t values[1];
     values[0] = color;
@@ -493,7 +549,7 @@ void SAT_X11Painter::set_background_color(SAT_Color AColor)
     uint8_t r = AColor.r * 255.0f;
     uint8_t g = AColor.g * 255.0f;
     uint8_t b = AColor.b * 255.0f;
-    uint8_t a = AColor.a * 255.0f;
+    uint8_t a = 0;//AColor.a * 255.0f;
     uint32_t color = (a << 24) + (r << 16) + (g << 8) + b;
     uint32_t mask = XCB_GC_BACKGROUND;
     uint32_t values[1];
