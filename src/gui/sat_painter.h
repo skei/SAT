@@ -114,15 +114,17 @@ void SAT_Painter::pushClipRect(SAT_Rect ARect)
 }
 
 /*
-    find overlap betwen current c.ip react and argument
+    find overlap betwen current clip rect and argument
     push the current clip rect, and clip to new (overlap)
     (rect within rect)
 */
 
 void SAT_Painter::pushOverlappingClipRect(SAT_Rect ARect)
 {
-    SAT_Rect r = ARect;
-    r.overlap(MCurrentClipRect);
+    //SAT_Rect r = ARect;
+    //r.overlap(MCurrentClipRect);
+    SAT_Rect r = MCurrentClipRect;
+    r.overlap(ARect);
     pushClipRect(r);
 }
 

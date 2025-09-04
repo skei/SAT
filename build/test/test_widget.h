@@ -27,8 +27,8 @@ int main(void)
             background->appendChild(panel);
             panel->setName("panel");
             //panel->Layout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
-            //panel->Options.auto_redraw_hover = true;
-            //panel->setScale(1.5);
+            panel->Options.auto_redraw_hover = true;
+            panel->setScale(1.5);
 
                 SAT_TextWidget* text = new SAT_TextWidget(SAT_Rect(10,10,80,20));
                 panel->appendChild(text);
@@ -42,9 +42,10 @@ int main(void)
                 SAT_TextWidget* text2 = new SAT_TextWidget(SAT_Rect(10,40,80,20));
                 panel->appendChild(text2);
                 text2->setName("text2");
-                //text->Layout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
-                //text->Layout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
+                //text2->Layout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
+                //text2->Layout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
                 text2->setFillBackground(false);
+                text2->State.opaque = false;
                 text2->setDrawBorder(true);
                 text2->setCanSelect(true);
                 text2->Options.auto_redraw_hover = true;

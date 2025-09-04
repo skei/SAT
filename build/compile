@@ -7,6 +7,9 @@
 #----------------------------------------------------------------------
 
 CC="g++"
+#CC="gcc"
+#CC="musl-gcc"
+
 INPUT="build.cpp"
 OUTPUT="plugin.exe"
 SYSTEM="LINUX"
@@ -30,6 +33,7 @@ LIBRARY=false
 #EXELIB=false
 
 FLAGS=""
+#FLAGS=" -static"
 FLAGS+=" -std=gnu++17"
 FLAGS+=" -fno-exceptions"
 FLAGS+=" -Wall" # -Wfatal-errors"

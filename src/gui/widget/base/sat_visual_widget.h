@@ -36,8 +36,8 @@ class SAT_VisualWidget
         void                setVisible(bool AState=true) override;
         void                setChildrenVisible(bool AState=true) override;
         void                setScale(sat_coord_t AScale) override;
-        void                setSkin(SAT_Skin* ASkin) override;
-        void                setChildrenSkin(SAT_Skin* ASkin) override;
+        void                setSkin(SAT_Skin* ASkin, bool AReplace=true) override;
+        void                setChildrenSkin(SAT_Skin* ASkin, bool AReplace=true) override;
 
      // void                setRect(SAT_Rect ARect) override;
      // void                setBaseRect(SAT_Rect ARect) override;
@@ -122,8 +122,7 @@ void SAT_VisualWidget::setChildrenVisible(bool AState)
     for (uint32_t i=0; i<getNumChildren(); i++)
     {
         SAT_BaseWidget* child = getChild(i);
-        child->State.visible = false;
-        child->setChildrenVisible(AState);
+        child->setVisible(AState);
     }
 }
 
@@ -132,18 +131,26 @@ void SAT_VisualWidget::setScale(sat_coord_t AScale)
     MScale = AScale;
 }
 
-void SAT_VisualWidget::setSkin(SAT_Skin* ASkin)
+/*
+    if AReplace is true, it will just replace the existing skin 
+    else it will only set skin if it doesn't alreaduy have one
+*/
+
+void SAT_VisualWidget::setSkin(SAT_Skin* ASkin, bool AReplace)
 {
-    MSkin = ASkin;
+    if ((!MSkin) || AReplace)
+    {
+        MSkin = ASkin;
+    }
+    setChildrenSkin(ASkin,AReplace);
 }
 
-void SAT_VisualWidget::setChildrenSkin(SAT_Skin* ASkin)
+void SAT_VisualWidget::setChildrenSkin(SAT_Skin* ASkin, bool AReplace)
 {
     for (uint32_t i=0; i<getNumChildren(); i++)
     {
         SAT_BaseWidget* child = getChild(i);
-        child->setSkin(ASkin);
-        child->setChildrenSkin(ASkin);
+        child->setSkin(ASkin,AReplace);
     }
 }
 
@@ -247,7 +254,8 @@ void SAT_VisualWidget::pushClip(SAT_PaintContext* AContext)
     if (Options.auto_clip)
     {
         SAT_Painter* painter= AContext->painter;
-        painter->pushOverlappingClipRect(Recursive.rect);
+        SAT_Rect rect = getRect();
+        painter->pushOverlappingClipRect(rect);
     }
 }
 
@@ -256,7 +264,6 @@ void SAT_VisualWidget::pushRecursiveClip(SAT_PaintContext* AContext)
     if (Options.auto_clip)
     {
         SAT_Painter* painter= AContext->painter;
-        //SAT_Rect rect = getRecursiveClipRect();
         SAT_Rect rect = Recursive.clip_rect;
         painter->pushOverlappingClipRect(rect);
     }
@@ -294,20 +301,16 @@ void SAT_VisualWidget::paintChildren(SAT_PaintContext* AContext)
         for(uint32_t i=0; i<numchildren; i++)
         {
             SAT_BaseWidget* widget = MChildren[i];
-            if (widget->UpdateState.last_painted != AContext->current_frame)
-            {
-                //if (widget->isRecursivelyVisible())
-                //if (widget->State.visible)
-                //{
-                    SAT_Rect widgetrect = widget->Recursive.rect;
-                    widgetrect.overlap(Recursive.rect);
-                    if (widgetrect.isNotEmpty())
-                    {
-                        widget->on_widget_paint(AContext);
-                        widget->UpdateState.last_painted = AContext->current_frame;
-                    }
-                //}
-            }
+            //if (widget->UpdateState.last_painted != AContext->current_frame)
+            //{
+                SAT_Rect widgetrect = widget->Recursive.rect;
+                widgetrect.overlap(Recursive.rect);
+                if (widgetrect.isNotEmpty())
+                {
+                    widget->on_widget_paint(AContext);
+                    widget->UpdateState.last_painted = AContext->current_frame;
+                }
+            //}
         }
     }
 }

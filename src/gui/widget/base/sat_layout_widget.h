@@ -295,8 +295,16 @@ void SAT_LayoutWidget::realignChildren()
             child->Recursive.clip_rect  = child_rect;
             child->Recursive.clip_rect.overlap(Recursive.rect);
 
-            if (child->State.opaque) child->Recursive.opaque_parent = child;
-            else child->Recursive.opaque_parent = Recursive.opaque_parent;
+            if (child->State.opaque)
+            {
+                SAT_PRINT("child %s = opaque\n",child->getName());
+                child->Recursive.opaque_parent = child;
+            }
+            else
+            {
+                child->Recursive.opaque_parent = Recursive.opaque_parent;
+                SAT_PRINT("child %s = not opaque (opaque_parent %s\n",child->getName(),Recursive.opaque_parent->getName());
+            }
 
             if (!child->MSkin) child->MSkin = MSkin;
 
@@ -306,7 +314,6 @@ void SAT_LayoutWidget::realignChildren()
 
             /*
                 // scale the widget depending on its content...
-
                 if (child_layout & SAT_WIDGET_LAYOUT_CONTENT_SIZE)
                 {
                     SAT_Rect child_content = child->getContentRect();

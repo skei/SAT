@@ -41,7 +41,6 @@ class SAT_PanelWidget
         virtual void fillBackground(SAT_PaintContext* AContext);
         virtual void drawBorder(SAT_PaintContext* AContext);
 
-
     public:
 
         void on_widget_paint(SAT_PaintContext* AContext) override;
@@ -131,9 +130,13 @@ void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
 
 void SAT_PanelWidget::on_widget_paint(SAT_PaintContext* AContext)
 {
+    #ifdef SAT_WINDOW_DEBUG_PAINTING
+        SAT_PRINT("%s, frame %i (last frame %i)\n",getName(),AContext->current_frame,UpdateState.last_painted
+        );
+    #endif
     //if (!State.visible) return;
-    pushClip(AContext);
-    //pushRecursiveClip(AContext);
+    //pushClip(AContext);
+    pushRecursiveClip(AContext);
     fillBackground(AContext);
     paintChildren(AContext);    
     drawBorder(AContext);

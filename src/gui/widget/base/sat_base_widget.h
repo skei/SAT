@@ -71,6 +71,7 @@ struct SAT_WidgetRecursive
 struct SAT_WidgetUpdateState
 {
     uint32_t        last_painted            = SAT_UINT32_MAX;
+ // uint32_t        last_painted_count      = 0;
  // uint32_t        last_redrawn            = SAT_UINT32_MAX;
  // uint32_t        last_realigned          = SAT_UINT32_MAX;
  // uint32_t        last_updated            = SAT_UINT32_MAX;
@@ -122,8 +123,8 @@ class SAT_BaseWidget
         virtual void                setVisible(bool AState=true)                                        { }
         virtual void                setChildrenVisible(bool AState=true)                                { }
         virtual void                setScale(sat_coord_t AScale)                                        { }
-        virtual void                setSkin(SAT_Skin* ASkin)                                            { }
-        virtual void                setChildrenSkin(SAT_Skin* ASkin)                                    { }
+        virtual void                setSkin(SAT_Skin* ASkin, bool AReplace=true)                        { }
+        virtual void                setChildrenSkin(SAT_Skin* ASkin, bool AReplace=true)                { }
 
      // virtual void                setRect(SAT_Rect ARect)                                             { }
      // virtual void                setBaseRect(SAT_Rect ARect)                                         { }
