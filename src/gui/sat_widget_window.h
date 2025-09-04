@@ -416,8 +416,10 @@ void SAT_WidgetWindow::paintWidgets(SAT_PaintContext* AContext)
                     opaque_parent->on_widget_paint(AContext);
                     /*
                         eventual widgets inbtween the opaque_parent and this widget itself
-                        will not be marked as redrawn, will they? maybe we need to add a
-                        mark_children_as_painted(SAT_BaseWidget* AWidget, uint32_t AFrame)
+                        will not be marked as redrawn, will they?
+                        maybe we need to add a "widget.mark_children_as_painted(uint32_t AFrame)"?
+                        .. actually, SAT_VisualWidget.on_widget_paint() calls paintChildren,
+                        which sets last_painted = current frame for each child..
                     */
                     opaque_parent->UpdateState.last_painted = AContext->current_frame;
                     //opaque_parent->UpdateState.last_painted_count = paint_count;

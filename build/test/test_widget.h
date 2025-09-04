@@ -48,7 +48,7 @@ int main(void)
                 text2->State.opaque = false;
                 text2->setDrawBorder(true);
                 text2->setCanSelect(true);
-                text2->Options.auto_redraw_hover = true;
+                //text2->Options.auto_redraw_hover = true;
 
     window->show();
     window->eventLoop();

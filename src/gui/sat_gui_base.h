@@ -1,10 +1,7 @@
 #pragma once
 
 #include "base/sat_base.h"
-
-#ifdef SAT_USE_X11
-    #include "gui/system/x11/sat_x11.h"
-#endif
+#include "gui/sat_gui_system.h"
 
 class SAT_Painter;
 class SAT_Renderer;
@@ -28,48 +25,7 @@ struct SAT_PaintContext
     double          previous_time   = 0.0;
 };
 
-class SAT_PaintSource
-{
-    public:
-        virtual bool                            isBitmap()                  { return false; }
-        virtual bool                            isSurface()                 { return false; }
-        virtual uint32_t                        getWidth()                  { return 0; }
-        virtual uint32_t                        getHeight()                 { return 0; }
-        virtual uint32_t                        getDepth()                  { return 0; }
-        virtual uint32_t                        getBufferSize()             { return 0; }
-        virtual uint32_t*                       getBuffer()                 { return 0; }
-        #ifdef SAT_USE_NANOVG
-            virtual int32_t                     getImageFromRenderBuffer()  { return 0; }
-        #endif
-        #ifdef SAT_USE_X11
-            virtual xcb_drawable_t              getXcbDrawable()            { return 0; } // = 0;
-            #ifdef SAT_USE_X11_XRENDER
-                virtual xcb_render_picture_t    getXcbPicture()             { return 0; }// = 0;
-            #endif
-        #endif
-};
-
-class SAT_PaintTarget
-{
-    public:
-        virtual bool                            isBitmap()                  { return false; }
-        virtual bool                            isSurface()                 { return false; }
-        virtual bool                            isWindow()                  { return false; }
-        #ifdef SAT_USE_NANOVG
-            virtual void                        selectRenderBuffer()        { }
-        #endif
-        #ifdef SAT_USE_X11
-            virtual xcb_drawable_t              getXcbDrawable()            { return 0; } // = 0;
-        #endif
-};
-
-class SAT_PainterOwner
-{
-    public:
-        #ifdef SAT_USE_X11
-            virtual xcb_connection_t*   getXcbConnection() = 0;
-        #endif
-};
+//------------------------------
 
 class SAT_BasePainter
 {
@@ -115,25 +71,7 @@ struct SAT_RenderContext
     SAT_Renderer*   renderer    = nullptr;
 };
 
-class SAT_RenderSource
-{
-};
-
-class SAT_RenderTarget
-{
-    public:
-        #ifdef SAT_USE_X11
-            virtual xcb_drawable_t getXcbDrawable() = 0;
-        #endif
-};
-
-class SAT_RendererOwner
-{
-    public:
-        #ifdef SAT_USE_X11
-            virtual Display* getX11Display() = 0;
-        #endif
-};
+//------------------------------
 
 class SAT_BaseRenderer
 {
@@ -158,19 +96,6 @@ class SAT_BaseRenderer
 //
 //----------------------------------------------------------------------
 
-class SAT_SurfaceOwner
-{
-    public:
-        // TODO: move to SAT_Global.GUI
-        #ifdef SAT_USE_NANOVG
-            virtual NVGcontext*         getNanoVgContext() = 0;
-        #endif
-        #ifdef SAT_USE_X11
-            virtual xcb_connection_t*   getXcbConnection() = 0;
-            virtual xcb_drawable_t      getXcbDrawable() = 0;
-        #endif
-};
-
 class SAT_BaseSurface
 {
    public:
@@ -187,17 +112,6 @@ class SAT_BaseSurface
 //
 //----------------------------------------------------------------------
 
-// class SAT_BaseWidget;
-// typedef SAT_Array<SAT_BaseWidget*> SAT_WidgetArray;
-
-/*
-    some widget might need to konw things like window painter, etc..
-    so they can initialize buffers, autosize text (so they need to use
-    the window painter), etc..
-    we give the widgets the owner during on_widget_show/hide,
-    so they can save it for later, if needed..
-*/
-
 class SAT_WidgetOwner
 {
     public:
@@ -209,34 +123,19 @@ class SAT_WidgetOwner
         virtual bool            do_widget_owner_unregister_timer(SAT_BaseWidget* AWidget)   { return false; }
 };
 
-/*
-    root widget -> window
-    or should we try to make the window a root-widget itself?
-    (saving us one step of redirection)..
-*/
-
-/*
-    class SAT_WidgetListener
-    {
-    };
-*/
-
 //----------------------------------------------------------------------
 //
 // window
 //
 //----------------------------------------------------------------------
 
-// class SAT_WindowOwner
-// {
-// };
-
-// window -> editor
 class SAT_WindowListener
 {
     public:
         virtual void do_widget_update(SAT_BaseWidget* AWidget, uint32_t AIndex=0);
 };
+
+//------------------------------
 
 class SAT_BaseWindow
 {
