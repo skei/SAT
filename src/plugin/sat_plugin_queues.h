@@ -58,7 +58,7 @@
             realign_queue.write
             redraw_queue.write
 
-        handle_tweening
+        animator
             realign_queue.write
             redraw_queue_write
 

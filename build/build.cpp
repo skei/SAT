@@ -6,14 +6,29 @@
 
 //----------------------------------------------------------------------
 //
+//
+//
+//----------------------------------------------------------------------
+
+// ALWAYS include this as the first thing!
+// so, why not have it her, so we never forget it!
+// #include "base/sat.h"
+
+//----------------------------------------------------------------------
+//
 // build / test
 //
 //----------------------------------------------------------------------
 
-//#include "test/test_debug.h"
-//#include "test/test_plugin.h"
+// #include "test/test_debug.h"
+// #include "test/test_gfx.h"
+// #include "test/test_plugin.h"
 #include "test/test_widget.h"
-//#include "test/test_window.h"
+// #include "test/test_window.h"
 
-//#include "test/test_gfx.h"
 
+//----------------------------------------------------------------------
+//
+//
+//
+//----------------------------------------------------------------------

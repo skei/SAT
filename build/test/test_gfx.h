@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/sat.h"
-#include "gui/sat_widget_window.h"
+#include "gui/sat_window.h"
 
 //----------------------------------------------------------------------
 //
@@ -10,16 +10,14 @@
 //----------------------------------------------------------------------
 
 class myWindow
-: public SAT_WidgetWindow
+: public SAT_Window
 {
     public:
-
-        //SAT_DEFAULT_WINDOW_CONSTRUCTOR(myWindow)
 
         myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
         virtual ~myWindow();
 
-        void on_window_paint(SAT_PaintContext* AContext, bool ABuffered=false) override;
+        void on_window_paint(SAT_PaintContext* AContext) override;
 };
 
 //------------------------------
@@ -27,7 +25,7 @@ class myWindow
 //------------------------------
 
 myWindow::myWindow(uint32_t AWidth, uint32_t AHeight, intptr_t AParent)
-: SAT_WidgetWindow(AWidth,AHeight,AParent)
+: SAT_Window(AWidth,AHeight,AParent)
 {
 }
 
@@ -35,7 +33,7 @@ myWindow::~myWindow()
 {
 }
 
-void myWindow::on_window_paint(SAT_PaintContext* AContext, bool ABuffered)
+void myWindow::on_window_paint(SAT_PaintContext* AContext)
 {
     SAT_Painter* painter = AContext->painter;
     SAT_Rect rect = AContext->update_rect;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/sat.h"
-#include "gui/sat_widget_window.h"
+#include "gui/sat_window.h"
 #include "gui/sat_widgets.h"
 
 //----------------------------------------------------------------------
@@ -12,7 +12,7 @@
 
 int main(void)
 {
-    SAT_WidgetWindow* window = new SAT_WidgetWindow(640,480);
+    SAT_Window* window = new SAT_Window(640,480);
     window->setName("window");
     //window->Layout.inner_border = SAT_Rect(20,20,20,20);
     //window->setScale(0.5);

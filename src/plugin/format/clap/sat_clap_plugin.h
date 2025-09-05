@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "plugin/format/clap/sat_clap.h"
+#include "extern/plugin/sat_clap.h"
 #include "plugin/format/clap/sat_clap_extension.h"
 
 #ifdef SAT_INCLUDE_ARA_EXTENSIONS

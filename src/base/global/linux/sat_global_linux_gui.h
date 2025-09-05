@@ -15,7 +15,7 @@
 #include "base/global/sat_global_base.h"
 
 #if defined SAT_USE_X11
-    #include "gui/system/x11/sat_x11.h"
+    #include "extern/gui/sat_x11.h"
 #endif
 
 //----------------------------------------------------------------------

@@ -2,7 +2,6 @@
 
 #include "base/sat_base.h"
 #include "base/system/sat_paths.h"
-#include "plugin/sat_plugin_base.h"
 #include "plugin/sat_plugin.h"
 #include "plugin/format/exe/sat_exe_host.h"
 
@@ -12,7 +11,7 @@
 //
 //----------------------------------------------------------------------
 
-char*           MPath[SAT_MAX_PATH_LENGTH]  = {0};
+char            MPath[SAT_MAX_PATH_LENGTH]  = {0};
 SAT_ExeHost*    MHost                       = nullptr;
 SAT_Plugin*     MPlugin;
 uint32_t        MPluginIndex                = 0;
@@ -41,7 +40,7 @@ int main(int argc, char** argv)
 {
     // setup
     parse_args(argc,argv);
-    const char* path = SAT_GetExePath(&MPath);
+    const char* path = SAT_GetExePath(MPath);
     SAT_PRINT("path: %s\n",path);
     MHost = new SAT_ExeHost();
     // start audio/midi

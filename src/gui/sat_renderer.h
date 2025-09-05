@@ -1,7 +1,10 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "gui/sat_gui_base.h"
+#include "gui/renderer/sat_base_renderer.h"
+#include "gui/renderer/sat_renderer_owner.h"
+#include "gui/renderer/sat_render_source.h"
+#include "gui/renderer/sat_render_target.h"
 
 //----------------------------------------------------------------------
 //
@@ -10,7 +13,7 @@
 //----------------------------------------------------------------------
 
 #if defined SAT_RENDERER_X11
-    #include "gui/system/x11/sat_x11_renderer.h"
+    #include "gui/renderer/sat_x11_renderer.h"
     typedef SAT_X11Renderer SAT_ImplementedRenderer;
 #elif defined SAT_RENDERER_WIN32
     #error NOT IMPLEMENTED YET

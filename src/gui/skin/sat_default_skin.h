@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "gui/sat_gui_base.h"
 #include "gui/sat_skin.h"
 
 //----------------------------------------------------------------------

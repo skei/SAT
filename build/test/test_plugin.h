@@ -82,6 +82,8 @@ uint32_t myPlugin::params_count()
 //
 //----------------------------------------------------------------------
 
+#if 0
+
 int main(void)
 {
     //clap_entry.init("./");
@@ -91,3 +93,4 @@ int main(void)
     return 0;
 }
 
+#endif // 0

@@ -3,14 +3,18 @@
 #include "base/sat_base.h"
 #include "base/util/sat_strutils.h"
 
-#include "plugin/sat_plugin_base.h"
-#include "plugin/sat_editor.h"
 #include "plugin/sat_parameter.h"
+#include "plugin/sat_processor.h"
 #include "plugin/sat_audio_port.h"
 #include "plugin/sat_note_port.h"
-#include "plugin/sat_processor.h"
+#include "plugin/sat_editor.h"
 
-#include "plugin/format/clap/sat_clap.h"
+#include "plugin/editor/sat_editor_listener.h"
+#include "plugin/editor/sat_editor_owner.h"
+
+#include "plugin/processor/sat_processor_listener.h"
+
+#include "extern/plugin/sat_clap.h"
 #include "plugin/format/clap/sat_clap_plugin.h"
 #include "plugin/format/clap/sat_clap_extensions.h"
 

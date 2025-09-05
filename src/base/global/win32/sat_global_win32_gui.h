@@ -29,7 +29,7 @@
 #include "base/util/sat_strutils.h"         // SAT_CreateUniqueString
 
 // #if defined SAT_USE_WIN32
-//     #include "gui/system/win32/sat_win32.h"
+//     #include "extern/gui/sat_win32.h"
 // #endif
 
 //----------

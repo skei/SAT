@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "gui/sat_gui_base.h"
 #include "gui/sat_widget.h"
 
 //----------------------------------------------------------------------
@@ -10,13 +9,7 @@
 //
 //----------------------------------------------------------------------
 
-#include "gui/widget/base/sat_base_widget.h"
-#include "gui/widget/base/sat_hierarchy_widget.h"
-#include "gui/widget/base/sat_interactive_widget.h"
-#include "gui/widget/base/sat_layout_widget.h"
-#include "gui/widget/base/sat_value_widget.h"
-#include "gui/widget/base/sat_visual_widget.h"
-
+#include "gui/widget/container/sat_buffered_widget.h"
 #include "gui/widget/container/sat_dialog_box.h"
 #include "gui/widget/container/sat_group_box_widget.h"
 #include "gui/widget/container/sat_overlay_widget.h"

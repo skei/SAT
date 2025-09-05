@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "plugin/sat_plugin_base.h"
 #include "plugin/sat_host.h"
 #include "plugin/format/exe/sat_exe_window.h"
 

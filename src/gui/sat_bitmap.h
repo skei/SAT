@@ -1,15 +1,15 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "gui/sat_gui_base.h"
-
 #include "base/util/sat_intmath.h"
 #include "base/util/sat_random.h"
 #include "base/util/sat_rgba.h"
 #include "base/type/sat_color.h"
+#include "gui/painter/sat_paint_source.h"
+#include "gui/painter/sat_paint_target.h"
 
 // #ifdef SAT_USE_CAIRO
-//     #include "gui/cairo/sat_cairo.h"
+//     #include "extern/gui/sat_cairo.h"
 // #endif
 
 #ifndef SAT_NO_BITMAP_DECODE

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "gui/sat_gui_base.h"
-#include "plugin/sat_plugin_base.h"
+#include "gui/window/sat_window_listener.h"
+#include "plugin/editor/sat_editor_listener.h"
+#include "plugin/editor/sat_editor_owner.h"
 
 class SAT_Editor
 : public SAT_WindowListener

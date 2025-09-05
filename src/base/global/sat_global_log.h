@@ -16,7 +16,7 @@
 #include "base/system/sat_file.h"
 #include "base/system/sat_paths.h"
 #include "base/system/sat_time.h"
-#include "plugin/format/clap/sat_clap.h"
+#include "extern/plugin/sat_clap.h"
 
 #ifdef SAT_LOG_THREAD
     #ifdef SAT_LINUX
