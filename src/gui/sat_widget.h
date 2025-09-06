@@ -81,6 +81,7 @@ class SAT_Widget
         void                pushRecursiveClip(SAT_PaintContext* AContext) override;
         void                popClip(SAT_PaintContext* AContext) override;
         sat_coord_t         getPaintScale() override;
+        uint32_t            getPaintState() override;
         void                paintChildren(SAT_PaintContext* AContext) override;
 
     public: // layout
@@ -486,6 +487,16 @@ sat_coord_t SAT_Widget::getPaintScale()
     return scale;
 }
 
+uint32_t SAT_Widget::getPaintState()
+{
+    uint32_t state                       = SAT_SKIN_NORMAL;
+    if (WidgetState.selected) state     |= SAT_SKIN_SELECTED;
+    if (WidgetState.hovering) state     |= SAT_SKIN_HOVER;
+    if (!WidgetState.enabled) state     |= SAT_SKIN_DISABLED;
+    if (WidgetState.interacting) state  |= SAT_SKIN_INTERACT;
+    return state;
+}
+
 void SAT_Widget::paintChildren(SAT_PaintContext* AContext)
 {
     // if this widget is not visible, don't do anything..
@@ -546,6 +557,7 @@ void SAT_Widget::realignChildren()
     SAT_Rect root_rect = SAT_Rect(w,h);
 
     SAT_Rect rect = WidgetRecursive.rect;
+    //SAT_PRINT("rect %.1f,%.1f root %.1f,%.1f\n",rect.w,rect.h,w,h);
 
     SAT_Rect inner_border = WidgetLayout.inner_border;
     inner_border.scale(scale);

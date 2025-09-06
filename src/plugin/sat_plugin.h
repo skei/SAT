@@ -373,7 +373,6 @@ void SAT_Plugin::on_main_thread()
     // SAT_Assert(MIsInitialized);
     // SAT_Assert(MIsActivated);
     // SAT_Assert(MIsProcessing);
-    SAT_Assert(MState == SAT_PLUGIN_STATE_PROCESSING);
 }
 
 //------------------------------

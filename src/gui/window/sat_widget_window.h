@@ -316,8 +316,11 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta, bool AInTim
     {
         // .. possibly do some checking and culling..
 
-        if (count == 0) update_rect = widget->WidgetRecursive.clip_rect;  // WidgetRecursive.rect;
-        else update_rect.combine(widget->WidgetRecursive.clip_rect);      // WidgetRecursive.rect);
+        // if (count == 0) update_rect = widget->WidgetRecursive.rect;
+        // else update_rect.combine(widget->WidgetRecursive.rect);
+
+        if (count == 0) update_rect = widget->WidgetRecursive.clip_rect;
+        else update_rect.combine(widget->WidgetRecursive.clip_rect);
 
         Queues.paint.write(widget);
         count += 1;
@@ -629,6 +632,7 @@ void SAT_WidgetWindow::on_timer_listener_update(SAT_Timer* ATimer, double ADelta
 
 void SAT_WidgetWindow::on_window_paint(SAT_PaintContext* AContext)
 {
+    //SAT_PRINT("%i,%i\n",getWidth(),getHeight());
     paintBackground(AContext);
     paintWidgets(AContext);
     paintOverlay(AContext);
@@ -674,10 +678,12 @@ void SAT_WidgetWindow::on_window_move(int32_t AXpos, int32_t AYpos)
 void SAT_WidgetWindow::on_window_resize(uint32_t AWidth, uint32_t AHeight)
 {
     State.scale = calcScale(AWidth,AHeight,WidgetVisual.initialRect.w,WidgetVisual.initialRect.h);
-    //SAT_PRINT("scale: %.3f\n",MWindowScale);
-    SAT_PaintWindow::windowResize(AWidth,AHeight);
-    WidgetRecursive.rect = SAT_Rect(AWidth,AHeight);
+    //SAT_PRINT("%i,%i - scale: %.3f\n",AWidth,AHeight,State.scale);
+    SAT_Rect rect = SAT_Rect(AWidth,AHeight);
+    WidgetRecursive.rect = rect;
+    WidgetRecursive.clip_rect = rect;
     realignChildren();
+    SAT_PaintWindow::windowResize(AWidth,AHeight);
     State.needFullRepaint = true;
 }
 

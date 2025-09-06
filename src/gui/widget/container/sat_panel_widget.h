@@ -51,7 +51,6 @@ class SAT_PanelWidget
         bool        MFillBackground     = true;
         bool        MDrawBorder         = true;
         bool        MCanSelect          = false;
-        bool        MIsSelected         = false;
 
 };
 
@@ -95,11 +94,10 @@ void SAT_PanelWidget::setCanSelect(bool ACanSelect)
 
 void SAT_PanelWidget::fillBackground(SAT_PaintContext* AContext)
 {
-    SAT_Painter* painter = AContext->painter;
     if (MFillBackground)
     {
-        uint32_t state = MIsSelected ? SAT_SKIN_SELECTED : SAT_SKIN_NORMAL;
-        if (WidgetState.hovering) state |= SAT_SKIN_HOVER;
+        SAT_Painter* painter = AContext->painter;
+        uint32_t state = getPaintState();
         SAT_Color color = WidgetVisual.skin->getBackgroundColor(state);
         painter->setFillColor(color);
         SAT_Rect rect = getRect();
@@ -112,8 +110,7 @@ void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
     if (MDrawBorder)
     {
         SAT_Painter* painter = AContext->painter;
-        uint32_t state = MIsSelected ? SAT_SKIN_SELECTED : SAT_SKIN_NORMAL;
-        if (WidgetState.hovering) state |= SAT_SKIN_HOVER;
+        uint32_t state = getPaintState();
         SAT_Color color = WidgetVisual.skin->getBorderColor(state);
         sat_coord_t width = WidgetVisual.skin->getBorderWidth(state);
         painter->setDrawColor(color);
@@ -148,8 +145,8 @@ void SAT_PanelWidget::on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32
     {
         if (AButton == SAT_BUTTON_LEFT)
         {
-            if (MIsSelected) MIsSelected = false;
-            else MIsSelected = true;
+            if (WidgetState.selected) WidgetState.selected = false;
+            else WidgetState.selected = true;
             do_widget_redraw(this);
         }
     }

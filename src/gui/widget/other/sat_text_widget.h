@@ -88,8 +88,7 @@ void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
     if (MDrawText)
     {
         SAT_Painter* painter = AContext->painter;
-        uint32_t state = MIsSelected ? SAT_SKIN_SELECTED : SAT_SKIN_NORMAL;
-        if (WidgetState.hovering) state |= SAT_SKIN_HOVER;
+        uint32_t state = getPaintState();
         SAT_Color color = WidgetVisual.skin->getTextColor(state);
         painter->setTextColor(color);
         // sat_coord_t size = MSkin->getTextSize(state);

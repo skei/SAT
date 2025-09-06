@@ -85,6 +85,7 @@ struct SAT_Widget_State
     bool                visible                 = true;                                 // drawing/alignment
     bool                hovering                = false;                                // mouse cursor is hovering over widget
     bool                interacting             = false;                                // interacting with widget
+    bool                selected                = false;
 };
 
 struct SAT_Widget_Recursive
@@ -173,6 +174,7 @@ class SAT_BaseWidget
         virtual void                pushRecursiveClip(SAT_PaintContext* AContext)               { }
         virtual void                popClip(SAT_PaintContext* AContext)                         { }
         virtual sat_coord_t         getPaintScale()                                             { return 1.0; }
+        virtual uint32_t            getPaintState()                                             { return 0; }
         virtual void                paintChildren(SAT_PaintContext* AContext)                   { }
 
     public: // layout

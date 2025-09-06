@@ -813,15 +813,15 @@ bool SAT_X11Window::processEvent(xcb_generic_event_t* AEvent)
             //SAT_PRINT("configure: x %i y %i w %i h %i\n",x,y,w,h);
             if ((x != MXpos) || (y != MYpos))
             {
-                on_window_move(x,y);
                 MXpos = x;
                 MYpos = y;
+                on_window_move(x,y);
             }
             if ((w != MWidth) || (h != MHeight))
             {
-                on_window_resize(w,h);
                 MWidth  = w;
                 MHeight = h;
+                on_window_resize(w,h);
             }
             break;
         }

@@ -34,28 +34,28 @@ class SAT_Skin
 {
     public:
 
-        SAT_Skin();
-        virtual ~SAT_Skin();
+        // SAT_Skin();
+        // virtual ~SAT_Skin();
 
     public:
 
-        virtual SAT_Color   getBackgroundColor(uint32_t AState);
-        virtual SAT_Color   getForegroundColor(uint32_t AState);
-        virtual SAT_Color   getTextColor(uint32_t AState);
-        virtual sat_coord_t getTextSize(uint32_t AState);
-        virtual SAT_Color   getBorderColor(uint32_t AState);
-        virtual sat_coord_t getBorderWidth(uint32_t AState);
+        SAT_Color   getBackgroundColor(uint32_t AState);
+        SAT_Color   getForegroundColor(uint32_t AState);
+        SAT_Color   getTextColor(uint32_t AState);
+        sat_coord_t getTextSize(uint32_t AState);
+        SAT_Color   getBorderColor(uint32_t AState);
+        sat_coord_t getBorderWidth(uint32_t AState);
        
-        virtual void        setBackgroundColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
-        virtual void        setForegroundColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
-        virtual void        setTextColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
-        virtual void        setTextSize(sat_coord_t ASize, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
-        virtual void        setBorderColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
-        virtual void        setBorderWidth(sat_coord_t AWidth, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
+        void        setBackgroundColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
+        void        setForegroundColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
+        void        setTextColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
+        void        setTextSize(sat_coord_t ASize, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
+        void        setBorderColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
+        void        setBorderWidth(sat_coord_t AWidth, uint32_t AState=SAT_SKIN_ALL, uint32_t AMode=SAT_SKIN_MODE_ALL);
 
     private:
 
-        virtual bool        check_state(uint32_t i, uint32_t AState, uint32_t AMode);
+        bool        check_state(uint32_t i, uint32_t AState, uint32_t AMode);
 
     protected:
 
@@ -74,13 +74,13 @@ class SAT_Skin
 //
 //----------------------------------------------------------------------
 
-SAT_Skin::SAT_Skin()
-{
-}
+// SAT_Skin::SAT_Skin()
+// {
+// }
 
-SAT_Skin::~SAT_Skin()
-{
-}
+// SAT_Skin::~SAT_Skin()
+// {
+// }
 
 //------------------------------
 //
