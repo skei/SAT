@@ -16,6 +16,7 @@ class SAT_ClapExtension
 {
     friend class SAT_Host;
     friend class SAT_Plugin;
+    friend class SAT_Extensions;
 
     public:
         SAT_ClapExtension() {}
@@ -25,9 +26,9 @@ class SAT_ClapExtension
         virtual const char* getCompatId()                   { return nullptr; }         // "CLAP_EXT_*_COPMPAT"; }
         virtual const void* getPtr()                        { return nullptr; }         // plugin side struct
         virtual const void* getHostPtr()                    { return nullptr; }         // host side struct
-    private:
-        void                setStatic(bool AIsStatic=true)  { MIsStatic = AIsStatic; }
-        bool                isStatic()                      { return MIsStatic; }       
-    private:
-        bool                MIsStatic = false; // if false, extension will be deleted in plugin destructor?
+    // private:
+    //     void                setStatic(bool AIsStatic=true)  { MIsStatic = AIsStatic; }
+    //     bool                isStatic()                      { return MIsStatic; }       
+    // private:
+    //     bool                MIsStatic = false; // if false, extension will be deleted in plugin destructor?
 };

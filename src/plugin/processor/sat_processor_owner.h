@@ -8,10 +8,6 @@
 //
 //---------------------------------------------------------------------
 
-/*
-    required info when creating processor
-*/
-
 class SAT_ProcessorOwner
 {
     public:

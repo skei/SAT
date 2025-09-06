@@ -8,10 +8,6 @@
 //
 //---------------------------------------------------------------------
 
-/*
-    processor -> plugin
-*/
-
 class SAT_ProcessorListener
 {
     public:

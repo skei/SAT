@@ -1,24 +1,13 @@
 #pragma once
 
-#include "base/sat_base.h"
-
 //----------------------------------------------------------------------
 //
 //
 //
 //----------------------------------------------------------------------
 
-template <class VOICE>
-class SAT_Voice
+class SAT_Presets
 {
-    public:
-    
-        SAT_Voice();
-        ~SAT_Voice();
-
-    private:
-
-        VOICE   MVoice;
 };
 
 //----------------------------------------------------------------------
@@ -26,14 +15,3 @@ class SAT_Voice
 //
 //
 //----------------------------------------------------------------------
-
-
-template <class VOICE>
-SAT_Voice<VOICE>::SAT_Voice()
-{
-}
-
-template <class VOICE>
-SAT_Voice<VOICE>::~SAT_Voice()
-{
-}

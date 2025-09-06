@@ -119,6 +119,10 @@
 // plugin
 //----------------------------------------
 
+// #define SAT_EDITOR_NONE
+#define SAT_EDITOR_EMBEDDED
+// #define SAT_EDITOR_REMOTE
+
 // #define SAT_INCLUDE_ARA_EXTENSIONS
 // #define SAT_INCLUDE_REAPER_EXTENSIONS
 // #define SAT_NO_PLUGIN_ENTRY

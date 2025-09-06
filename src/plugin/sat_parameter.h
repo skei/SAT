@@ -34,8 +34,8 @@
 class SAT_Parameter;
 typedef SAT_Array<SAT_Parameter*> SAT_ParameterArray;
 
-class SAT_ParameterGroup;
-typedef SAT_Array<SAT_ParameterGroup*> SAT_ParameterGroupArray;
+// class SAT_ParameterGroup;
+// typedef SAT_Array<SAT_ParameterGroup*> SAT_ParameterGroupArray;
 
 //----------------------------------------------------------------------
 //
