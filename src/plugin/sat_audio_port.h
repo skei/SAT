@@ -18,6 +18,9 @@
 #include "base/sat_base.h"
 #include "extern/plugin/sat_clap.h"
 
+class SAT_AudioPort;
+typedef SAT_Array<SAT_AudioPort*> SAT_AudioPortArray;
+
 //----------------------------------------------------------------------
 //
 //

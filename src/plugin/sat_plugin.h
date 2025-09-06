@@ -2,27 +2,19 @@
 
 #include "base/sat_base.h"
 #include "base/util/sat_strutils.h"
-
-#include "plugin/sat_parameter.h"
-#include "plugin/sat_processor.h"
-#include "plugin/sat_audio_port.h"
-#include "plugin/sat_note_port.h"
-#include "plugin/sat_editor.h"
-
+#include "extern/plugin/sat_clap.h"
+#include "plugin/clap/sat_clap_extensions.h"
+#include "plugin/clap/sat_clap_plugin.h"
 #include "plugin/editor/sat_editor_listener.h"
 #include "plugin/editor/sat_editor_owner.h"
-
 #include "plugin/processor/sat_processor_listener.h"
-
-#include "extern/plugin/sat_clap.h"
-#include "plugin/format/clap/sat_clap_plugin.h"
-#include "plugin/format/clap/sat_clap_extensions.h"
-
-
-typedef SAT_Array<SAT_ClapExtension*>   SAT_ExtensionArray;
-typedef SAT_Array<SAT_Parameter*>       SAT_ParameterArray;
-typedef SAT_Array<SAT_AudioPort*>       SAT_AudioPortArray;
-typedef SAT_Array<SAT_NotePort*>        SAT_NotePortArray;
+#include "plugin/processor/sat_processor_owner.h"
+#include "plugin/sat_audio_port.h"
+#include "plugin/sat_editor.h"
+#include "plugin/sat_host_proxy.h"
+#include "plugin/sat_note_port.h"
+#include "plugin/sat_parameter.h"
+#include "plugin/sat_processor.h"
 
 //----------------------------------------------------------------------
 //
@@ -34,12 +26,18 @@ class SAT_Plugin
 : public SAT_ClapPlugin
 , public SAT_EditorOwner
 , public SAT_EditorListener
+, public SAT_ProcessorOwner
 , public SAT_ProcessorListener
 {
     public:
 
         SAT_Plugin(const clap_plugin_descriptor_t* ADescriptor, const clap_host_t* AHost);
         virtual ~SAT_Plugin();
+
+    public:
+
+        void                do_editor_listener_update_parameter(SAT_Parameter* AParameter, sat_param_t AValue) override;
+        void                do_processor_listener_update_parameter(uint32_t AId, sat_param_t AValue) override;
 
     public: // clap plugin
 
@@ -54,6 +52,8 @@ class SAT_Plugin
         const void*         get_extension(const char *id) override;
         void                on_main_thread() override;
 
+    public: // clap plugin extensions
+
     public: // extensions
 
         void                registerExtension(SAT_ClapExtension* AExtension, bool AReplace=true);
@@ -62,8 +62,6 @@ class SAT_Plugin
         void                deleteAllExtensions();
         const void*         findExtension(const char* AName);
         int32_t             findExtensionIndex(const char* AName);
-
-    public: // clap extensions
 
     public: // parameters
 
@@ -92,17 +90,16 @@ class SAT_Plugin
         uint32_t            getNumNotePorts();
         SAT_NotePort*       getNotePort(uint32_t AIndex);
 
+    public: // editor
+
     public: // processor
 
         void                setProcessor(SAT_Processor* AProcessor);
-        void                do_processor_update_parameter(uint32_t AId, sat_param_t AValue) override;
-
-    public: // editor
-
-        void                do_editor_update_parameter(SAT_Parameter* AParameter, sat_param_t AValue) override;
 
     private:
 
+        SAT_HostProxy*      MHost           = nullptr;
+        uint32_t            MState          = SAT_PLUGIN_STATE_NONE;
         SAT_ExtensionArray  MExtensions     = {};
         SAT_ParameterArray  MParameters     = {};
       //SAT_PresetManager   MPresets        = {}
@@ -122,14 +119,34 @@ class SAT_Plugin
 SAT_Plugin::SAT_Plugin(const clap_plugin_descriptor_t* ADescriptor, const clap_host_t* AHost)
 : SAT_ClapPlugin(ADescriptor,AHost)
 {
+    MHost = new SAT_HostProxy(AHost);
 }
 
 SAT_Plugin::~SAT_Plugin()
 {
+    delete MHost;
     #ifndef SAT_NO_AUTODELETE
         deleteAllExtensions();
         deleteAllParameters();
     #endif
+}
+
+//------------------------------
+//
+//------------------------------
+
+// editor owner
+
+// editor listener
+void SAT_Plugin::do_editor_listener_update_parameter(SAT_Parameter* AParameter, sat_param_t AValue)
+{
+}
+
+// processor owner
+
+// processor listener
+void SAT_Plugin::do_processor_listener_update_parameter(uint32_t AId, sat_param_t AValue)
+{
 }
 
 //------------------------------
@@ -138,29 +155,41 @@ SAT_Plugin::~SAT_Plugin()
 
 bool SAT_Plugin::init()
 {
+    SAT_Assert(MState == SAT_PLUGIN_STATE_NONE);
+    MState = SAT_PLUGIN_STATE_INITIALIZED;
     return true;
 }
 
 void SAT_Plugin::destroy()
 {
+    SAT_Assert(MState == SAT_PLUGIN_STATE_INITIALIZED);
+    MState = SAT_PLUGIN_STATE_NONE;
 }
 
 bool SAT_Plugin::activate(double sample_rate, uint32_t min_frames_count, uint32_t max_frames_count)
 {
+    SAT_Assert(MState == SAT_PLUGIN_STATE_INITIALIZED);
+    MState = SAT_PLUGIN_STATE_ACTIVATED;
     return true;
 }
 
 void SAT_Plugin::deactivate()
 {
+    SAT_Assert(MState == SAT_PLUGIN_STATE_ACTIVATED);
+    MState = SAT_PLUGIN_STATE_INITIALIZED;
 }
 
 bool SAT_Plugin::start_processing()
 {
+    SAT_Assert(MState == SAT_PLUGIN_STATE_ACTIVATED);
+    MState = SAT_PLUGIN_STATE_PROCESSING;
     return true;
 }
 
 void SAT_Plugin::stop_processing()
 {
+    SAT_Assert(MState == SAT_PLUGIN_STATE_PROCESSING);
+    MState = SAT_PLUGIN_STATE_ACTIVATED;
 }
 
 void SAT_Plugin::reset()
@@ -169,31 +198,27 @@ void SAT_Plugin::reset()
 
 clap_process_status SAT_Plugin::process(const clap_process_t *process)
 {
+    SAT_Assert(MState == SAT_PLUGIN_STATE_PROCESSING);
     return CLAP_PROCESS_CONTINUE;
 }
 
 const void* SAT_Plugin::get_extension(const char *id)
 {
+    SAT_Assert(MState == SAT_PLUGIN_STATE_INITIALIZED);
     return findExtension(id);
 }
 
 void SAT_Plugin::on_main_thread()
 {
+    //SAT_Assert(MState == SAT_PLUGIN_STATE_ACTIVATED);
+    SAT_Assert(MState == SAT_PLUGIN_STATE_PROCESSING);
 }
 
 //------------------------------
 // clap extensions
 //------------------------------
 
-//..
-
-//------------------------------
-// editor listener
-//------------------------------
-
-//------------------------------
-// processor listener
-//------------------------------
+// ...
 
 //------------------------------
 // extensions
@@ -476,6 +501,13 @@ SAT_NotePort* SAT_Plugin::getNotePort(uint32_t AIndex)
 }
 
 //------------------------------
+// editor
+//------------------------------
+
+// getDefaultSize
+// getParameters
+
+//------------------------------
 // processor
 //------------------------------
 
@@ -485,29 +517,3 @@ void SAT_Plugin::setProcessor(SAT_Processor* AProcessor)
     MProcessor = AProcessor;
 }
 
-//------------------------------
-// processor listener
-//------------------------------
-
-void SAT_Plugin::do_processor_update_parameter(uint32_t AId, sat_param_t AValue)
-{
-}
-
-//------------------------------
-// editor
-//------------------------------
-
-//------------------------------
-// editor owner
-//------------------------------
-
-// getDefaultSize
-// getParameters
-
-//------------------------------
-// editor listener
-//------------------------------
-
-void SAT_Plugin::do_editor_update_parameter(SAT_Parameter* AParameter, sat_param_t AValue)
-{
-}

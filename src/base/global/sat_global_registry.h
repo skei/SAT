@@ -5,7 +5,7 @@
 #include "base/util/sat_strutils.h"
 
 #include "extern/plugin/clap/clap.h"
-#include "plugin/format/clap/sat_clap_factory.h"
+#include "plugin/clap/sat_clap_factory.h"
 
 #ifdef SAT_INCLUDE_REGISTRY
     class SAT_GlobalRegistry;

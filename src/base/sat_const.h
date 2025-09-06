@@ -135,6 +135,11 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_OS_WIN32                                2
 #define SAT_OS_MAC                                  3
 
+#define SAT_PLUGIN_STATE_NONE                       0
+#define SAT_PLUGIN_STATE_INITIALIZED                1
+#define SAT_PLUGIN_STATE_ACTIVATED                  2
+#define SAT_PLUGIN_STATE_PROCESSING                 3
+
 #define SAT_TEXT_ALIGN_CENTER                       0
 #define SAT_TEXT_ALIGN_LEFT                         0x01
 #define SAT_TEXT_ALIGN_RIGHT                        0x02

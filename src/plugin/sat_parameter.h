@@ -31,6 +31,11 @@
 #include "base/sat_base.h"
 #include "extern/plugin/sat_clap.h"
 
+class SAT_Parameter;
+typedef SAT_Array<SAT_Parameter*> SAT_ParameterArray;
+
+class SAT_ParameterGroup;
+typedef SAT_Array<SAT_ParameterGroup*> SAT_ParameterGroupArray;
 
 //----------------------------------------------------------------------
 //
@@ -119,9 +124,11 @@ class SAT_Parameter
 
 };
 
-//------------------------------
+//----------------------------------------------------------------------
 //
-//------------------------------
+//
+//
+//----------------------------------------------------------------------
 
 // aka 'Module'
 
@@ -133,6 +140,8 @@ class SAT_ParameterGroup
 
 class SAT_ParameterManager
 {
+    private:
+        SAT_ParameterGroup  MGroups = {};
 };
 
 //----------------------------------------------------------------------
@@ -295,14 +304,14 @@ void SAT_Parameter::setParamAutomation(uint32_t AState, uint32_t AColor)
     MAutomatiuonColor = AColor;
 }
 
-bool SAT_Parameter::getIndicationState()                { return MIndicationState; }
-uint32_t SAT_Parameter::getIndicationColor()            { return  MIndicationColor; }
+bool        SAT_Parameter::getIndicationState()         { return MIndicationState; }
+uint32_t    SAT_Parameter::getIndicationColor()         { return  MIndicationColor; }
 const char* SAT_Parameter::getIndicationLabel()         { return  MIndicationLabel; }
 const char* SAT_Parameter::getIndicationDescription()   { return  MIndicationDescription; }
 
-uint32_t SAT_Parameter::getAutomationState()            { return  MAutomationState; }
-uint32_t SAT_Parameter::getAutomatiuonColor()           { return  MAutomatiuonColor; }
-uint32_t SAT_Parameter::getPreviousUpdateFrame()        { return  MPreviousUpdateFrame; }
+uint32_t    SAT_Parameter::getAutomationState()         { return  MAutomationState; }
+uint32_t    SAT_Parameter::getAutomatiuonColor()        { return  MAutomatiuonColor; }
+uint32_t    SAT_Parameter::getPreviousUpdateFrame()     { return  MPreviousUpdateFrame; }
 
 //------------------------------
 //

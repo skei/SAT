@@ -11,31 +11,31 @@
 //------------------------------
 
 #ifdef SAT_PLUGIN_CLAP
-    #include "plugin/format/clap/sat_clap_entry.h"
+    #include "plugin/clap/sat_clap_entry.h"
 #endif
 
 #ifdef SAT_PLUGIN_DSSI
-    #include "plugin/format/dssi/sat_dssi_entry.h"
+    #include "plugin/wrapper/dssi/sat_dssi_entry.h"
 #endif
 
 #ifdef SAT_PLUGIN_EXE
-    #include "plugin/format/exe/sat_exe_entry.h"
+    #include "plugin/wrapper/exe/sat_exe_entry.h"
 #endif
 
 #ifdef SAT_PLUGIN_LADSPA
-    #include "plugin/format/ladspa/sat_ladspa_entry.h"
+    #include "plugin/wrapper/ladspa/sat_ladspa_entry.h"
 #endif
 
 #ifdef SAT_PLUGIN_LV2
-    #include "plugin/format/lv2/sat_lv2_entry.h"
+    #include "plugin/wrapper/lv2/sat_lv2_entry.h"
 #endif
 
 #ifdef SAT_PLUGIN_VST2
-    #include "plugin/format/vst2/sat_vst2_entry.h"
+    #include "plugin/wrapper/vst2/sat_vst2_entry.h"
 #endif
 
 #ifdef SAT_PLUGIN_VST3
-    #include "plugin/format/vst3/sat_vst3_entry.h"
+    #include "plugin/wrapper/vst3/sat_vst3_entry.h"
 #endif
 
 //------------------------------

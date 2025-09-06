@@ -50,7 +50,6 @@ class SAT_PanelWidget
 
         bool        MFillBackground     = true;
         bool        MDrawBorder         = true;
-
         bool        MCanSelect          = false;
         bool        MIsSelected         = false;
 
@@ -63,7 +62,7 @@ class SAT_PanelWidget
 SAT_PanelWidget::SAT_PanelWidget(SAT_Rect ARect)
 : SAT_Widget(ARect)
 {
-    MWidgetTypeName = "SAT_PanelWidget";
+    WidgetBase.widgetTypeName = "SAT_PanelWidget";
 }
 
 SAT_PanelWidget::~SAT_PanelWidget()
@@ -77,6 +76,7 @@ SAT_PanelWidget::~SAT_PanelWidget()
 void SAT_PanelWidget::setFillBackground(bool AFill)
 {
     MFillBackground = AFill;
+    WidgetState.opaque = AFill;
 }
 
 void SAT_PanelWidget::setDrawBorder(bool ADraw)
@@ -99,8 +99,8 @@ void SAT_PanelWidget::fillBackground(SAT_PaintContext* AContext)
     if (MFillBackground)
     {
         uint32_t state = MIsSelected ? SAT_SKIN_SELECTED : SAT_SKIN_NORMAL;
-        if (State.hovering) state |= SAT_SKIN_HOVER;
-        SAT_Color color = MSkin->getBackgroundColor(state);
+        if (WidgetState.hovering) state |= SAT_SKIN_HOVER;
+        SAT_Color color = WidgetVisual.skin->getBackgroundColor(state);
         painter->setFillColor(color);
         SAT_Rect rect = getRect();
         painter->fillRect(rect);
@@ -113,12 +113,12 @@ void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
     {
         SAT_Painter* painter = AContext->painter;
         uint32_t state = MIsSelected ? SAT_SKIN_SELECTED : SAT_SKIN_NORMAL;
-        if (State.hovering) state |= SAT_SKIN_HOVER;
-        SAT_Color color = MSkin->getBorderColor(state);
-        sat_coord_t width = MSkin->getBorderWidth(state);
+        if (WidgetState.hovering) state |= SAT_SKIN_HOVER;
+        SAT_Color color = WidgetVisual.skin->getBorderColor(state);
+        sat_coord_t width = WidgetVisual.skin->getBorderWidth(state);
         painter->setDrawColor(color);
         painter->setLineWidth(width);
-        SAT_Rect rect = Recursive.rect;
+        SAT_Rect rect = getRect();
         painter->drawRect(rect);
         painter->setLineWidth(0);
     }
@@ -131,10 +131,9 @@ void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
 void SAT_PanelWidget::on_widget_paint(SAT_PaintContext* AContext)
 {
     #ifdef SAT_WINDOW_DEBUG_PAINTING
-        SAT_PRINT("%s, frame %i (last frame %i)\n",getName(),AContext->current_frame,Update.last_painted
-        );
+        SAT_PRINT("%s, frame %i (last frame %i)\n",getName(),AContext->current_frame,WidgetUpdate.last_painted);
     #endif
-    //if (!State.visible) return;
+    //if (!WidgetState.visible) return;
     //pushClip(AContext);
     pushRecursiveClip(AContext);
     fillBackground(AContext);
@@ -155,4 +154,3 @@ void SAT_PanelWidget::on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32
         }
     }
 }
-

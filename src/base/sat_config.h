@@ -49,7 +49,7 @@
 #define SAT_RENDERER_MINOR_VERSION                  2
 #define SAT_TWEEN_MAX_VALUES                        4
 #define SAT_TWEEN_FINISHED                          0xffffffff
-// #define SAT_WIDGET_NUM_VALUES                       16
+#define SAT_WIDGET_NUM_VALUES                       16
 #define SAT_WINDOW_BUFFER_MIN_SIZE                  256
 #define SAT_WINDOW_MOUSE_DBL_CLICK_MS               200
 #define SAT_WINDOW_TIMER_MS                         20

@@ -18,5 +18,5 @@ class SAT_Parameter;
 class SAT_EditorListener
 {
     public:
-        virtual void do_editor_update_parameter(SAT_Parameter* AParameter, sat_param_t AValue) {};
+        virtual void do_editor_listener_update_parameter(SAT_Parameter* AParameter, sat_param_t AValue) {};
 };

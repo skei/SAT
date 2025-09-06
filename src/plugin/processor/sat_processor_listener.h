@@ -15,6 +15,6 @@
 class SAT_ProcessorListener
 {
     public:
-        virtual void do_processor_update_parameter(uint32_t AId, sat_param_t AValue) {};
+        virtual void do_processor_listener_update_parameter(uint32_t AId, sat_param_t AValue) {};
 };
 

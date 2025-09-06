@@ -16,6 +16,7 @@
 class SAT_EditorOwner
 {
     public:
+        // do_editor_owner_    
         // getDefaultSize
         // getParameters
 };

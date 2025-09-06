@@ -22,8 +22,8 @@
 
 // #include "test/test_debug.h"
 // #include "test/test_gfx.h"
-// #include "test/test_plugin.h"
-#include "test/test_widget.h"
+ #include "test/test_plugin.h"
+// #include "test/test_widget.h"
 // #include "test/test_window.h"
 
 

@@ -11,6 +11,8 @@
 #include "base/sat_base.h"
 #include "extern/plugin/sat_clap.h"
 
+class SAT_NotePort;
+typedef SAT_Array<SAT_NotePort*> SAT_NotePortArray;
 
 //----------------------------------------------------------------------
 //
