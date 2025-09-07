@@ -43,6 +43,8 @@ class SAT_DefaultTextSkin : public SAT_DefaultPanelSkin
 
 SAT_DefaultSkin::SAT_DefaultSkin()
 {
+    setName("Default");
+
     setBackgroundMode(SAT_SKIN_BACKGROUND_COLOR);
     setBackgroundColor(SAT_Color(0.20, 0.20, 0.20));
 
@@ -76,6 +78,7 @@ SAT_DefaultSkin::SAT_DefaultSkin()
 SAT_DefaultPanelSkin::SAT_DefaultPanelSkin()
 : SAT_DefaultSkin()
 {
+    setName("DefaultPanel");
     setBackgroundColor(SAT_Color(0.25, 0.25, 0.25));
     setBorderColor(SAT_Color(0.35, 0.35, 0.35));
 }
@@ -87,6 +90,7 @@ SAT_DefaultPanelSkin::SAT_DefaultPanelSkin()
 SAT_DefaultTextSkin::SAT_DefaultTextSkin()
 : SAT_DefaultPanelSkin()
 {
+    setName("DefaultText");
     setBackgroundColor(SAT_Color(0.30, 0.30, 0.30));
     setBackgroundColor(SAT_Color(0.35, 0.35, 0.35), SAT_SKIN_STATE_HOVERING, SAT_SKIN_MODE_MATCH);
     setBackgroundColor(SAT_Color(0.40, 0.40, 0.40), SAT_SKIN_STATE_HIGHLIGHTED, SAT_SKIN_MODE_MATCH);

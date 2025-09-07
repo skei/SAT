@@ -212,12 +212,10 @@ class SAT_WidgetWindow
         SAT_WindowListener* MListener       = nullptr;
         SAT_Timer*          MTimer          = nullptr;
         SAT_Animator        MAnimator       = {};
-        SAT_DefaultSkin     MDefaultSkin    = {};
 
         SAT_Window_State    State           = {};
         SAT_Window_Queues   Queues          = {};
         SAT_Window_Widgets  Widgets         = {};
-
 };
 
 //----------------------------------------------------------------------
@@ -232,8 +230,8 @@ SAT_WidgetWindow::SAT_WidgetWindow(uint32_t AWidth, uint32_t AHeight, intptr_t A
 {
     WidgetBase.widgetTypeName       = "SAT_WidgetWindow";
     WidgetRecursive.opaque_parent   = this;
-    WidgetVisual.skin               = &MDefaultSkin;
     MTimer                          = new SAT_Timer(this);
+    WidgetVisual.skin               = SAT.GUI->findSkin("Default");
 };
 
 SAT_WidgetWindow::~SAT_WidgetWindow()

@@ -14,6 +14,8 @@
 #include "base/sat_base.h"
 #include "base/global/sat_global_base.h"
 
+// #ifdef SAT_GUI_NONE ...
+
 #if defined SAT_USE_X11
     #include "extern/gui/sat_x11.h"
 #endif
@@ -24,16 +26,16 @@
 //
 //----------------------------------------------------------------------
 
-class SAT_GlobalGui
+class SAT_LinuxGlobalGui
 {
     public:
 
-        SAT_GlobalGui();
-        ~SAT_GlobalGui();
+        SAT_LinuxGlobalGui();
+        ~SAT_LinuxGlobalGui();
         void activate(SAT_GlobalBase* AGlobal);
         void deactivate(SAT_GlobalBase* AGlobal);
 
-        #ifdef SAT_USE_X11
+        #if defined SAT_USE_X11
             xcb_screen_t*   getScreen();
             uint32_t        getScreenWidth();
             uint32_t        getScreenHeight();
@@ -47,8 +49,10 @@ class SAT_GlobalGui
 
     private:
 
-        bool            setup_x11();
-        bool            cleanup_x11();
+        #if defined SAT_USE_X11
+            bool            setup_x11();
+            bool            cleanup_x11();
+        #endif
 
     private:
 
@@ -57,7 +61,7 @@ class SAT_GlobalGui
 
     private:
 
-        #ifdef SAT_USE_X11
+        #if defined SAT_USE_X11
             xcb_screen_t    MScreen             = {};
         #endif
 
@@ -69,15 +73,15 @@ class SAT_GlobalGui
 //
 //----------------------------------------------------------------------
 
-SAT_GlobalGui::SAT_GlobalGui()
+SAT_LinuxGlobalGui::SAT_LinuxGlobalGui()
 {
 }
 
-SAT_GlobalGui::~SAT_GlobalGui()
+SAT_LinuxGlobalGui::~SAT_LinuxGlobalGui()
 {
 }
 
-void SAT_GlobalGui::activate(SAT_GlobalBase* AGlobal)
+void SAT_LinuxGlobalGui::activate(SAT_GlobalBase* AGlobal)
 {
     if (!MIsActivated)
     {
@@ -89,42 +93,54 @@ void SAT_GlobalGui::activate(SAT_GlobalBase* AGlobal)
     }
 }
 
-void SAT_GlobalGui::deactivate(SAT_GlobalBase* AGlobal)
+void SAT_LinuxGlobalGui::deactivate(SAT_GlobalBase* AGlobal)
 {
     if (MIsActivated)
     {
-        cleanup_x11();
+        #if defined SAT_USE_X11
+            cleanup_x11();
+        #endif
         MGlobal = nullptr;
         MIsActivated = false;
     }
 }
 
 //------------------------------
+// skins
+//------------------------------
+
+// void SAT_GlobalGui::appendSkin(SAT_Skin* ASkin);
+// void SAT_GlobalGui::removeSkin(SAT_Skin* ASkin);
+// void SAT_GlobalGui::deleteSkins();
+// SAT_Skin* SAT_GlobalGui::findSkin(const char* AName);
+
+
+//------------------------------
 // x11
 //------------------------------
 
-/*
-    // screen gc
-    MScreenGC = xcb_generate_id(MConnection);
-    xcb_drawable_t draw = MScreen->root;
-    uint32_t mask = XCB_GC_FOREGROUND | XCB_GC_BACKGROUND;
-    uint32_t values[2];
-    values[0] = MScreen->black_pixel;
-    values[1] = MScreen->white_pixel;
-    xcb_create_gc(MConnection, MScreenGC, draw, mask, values);    
-*/
+#if defined SAT_USE_X11
 
-/*
-    XCloseDisplay:
-    destroys all windows, resource IDs (Window, Font, Pixmap, Colormap, Cursor, and GContext),
-    or other resources that the client has created on this display
-*/
+    /*
+        // screen gc
+        MScreenGC = xcb_generate_id(MConnection);
+        xcb_drawable_t draw = MScreen->root;
+        uint32_t mask = XCB_GC_FOREGROUND | XCB_GC_BACKGROUND;
+        uint32_t values[2];
+        values[0] = MScreen->black_pixel;
+        values[1] = MScreen->white_pixel;
+        xcb_create_gc(MConnection, MScreenGC, draw, mask, values);    
+    */
 
-bool SAT_GlobalGui::setup_x11()
-{
-    #if defined SAT_USE_X11
-        // is this actually needed?
-        XInitThreads();
+    /*
+        XCloseDisplay:
+        destroys all windows, resource IDs (Window, Font, Pixmap, Colormap, Cursor, and GContext),
+        or other resources that the client has created on this display
+    */
+
+    bool SAT_LinuxGlobalGui::setup_x11()
+    {
+        XInitThreads(); // is this actually needed?
         // MConnection = xcb_connect(ADisplayName,&MDefaultScreen);
         Display* display = XOpenDisplay(nullptr);
         xcb_connection_t* connection = XGetXCBConnection(display);
@@ -155,27 +171,32 @@ bool SAT_GlobalGui::setup_x11()
         }
         // XSetEventQueueOwner(display,XlibOwnsEventQueue);
         XCloseDisplay(display);
-    #endif
-    return true;
-}
+        return true;
+    }
 
-bool SAT_GlobalGui::cleanup_x11()
-{
-    #if defined SAT_USE_X11
-    #endif
-    return true;
-}
+    bool SAT_LinuxGlobalGui::cleanup_x11()
+    {
+        return true;
+    }
 
-//----------
+    //----------
 
-#ifdef SAT_USE_X11
-    xcb_screen_t*   SAT_GlobalGui::getScreen()              { return &MScreen; }
-    uint32_t        SAT_GlobalGui::getScreenWidth()         { return MScreen.width_in_pixels; }
-    uint32_t        SAT_GlobalGui::getScreenHeight()        { return MScreen.height_in_pixels; }
-    uint32_t        SAT_GlobalGui::getScreenDepth()         { return MScreen.root_depth; }
-    uint32_t        SAT_GlobalGui::getScreenWhitePixel()    { return MScreen.white_pixel; }
-    uint32_t        SAT_GlobalGui::getScreenBlackPixel()    { return MScreen.black_pixel; }
-    xcb_visualid_t  SAT_GlobalGui::getScreenVisual()        { return MScreen.root_visual; }
-    xcb_window_t    SAT_GlobalGui::getScreenRoot()          { return MScreen.root; }
-    xcb_colormap_t  SAT_GlobalGui::getScreenColorMap()      { return MScreen.default_colormap; }
+    xcb_screen_t*   SAT_LinuxGlobalGui::getScreen()              { return &MScreen; }
+    uint32_t        SAT_LinuxGlobalGui::getScreenWidth()         { return MScreen.width_in_pixels; }
+    uint32_t        SAT_LinuxGlobalGui::getScreenHeight()        { return MScreen.height_in_pixels; }
+    uint32_t        SAT_LinuxGlobalGui::getScreenDepth()         { return MScreen.root_depth; }
+    uint32_t        SAT_LinuxGlobalGui::getScreenWhitePixel()    { return MScreen.white_pixel; }
+    uint32_t        SAT_LinuxGlobalGui::getScreenBlackPixel()    { return MScreen.black_pixel; }
+    xcb_visualid_t  SAT_LinuxGlobalGui::getScreenVisual()        { return MScreen.root_visual; }
+    xcb_window_t    SAT_LinuxGlobalGui::getScreenRoot()          { return MScreen.root; }
+    xcb_colormap_t  SAT_LinuxGlobalGui::getScreenColorMap()      { return MScreen.default_colormap; }
+
+#elif defined SAT_USE_WAYLAND
+
+    // ...
+
+#else
+
+    #error NO GUI DEFINED
+
 #endif

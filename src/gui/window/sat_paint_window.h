@@ -208,6 +208,7 @@ void SAT_PaintWindow::handleResizing()
         MResizedWindow = true;
         #ifndef SAT_NO_WINDOW_BUFFERING
             MResizedBuffer = MBuffer->resizeBuffer(width,height);
+            //TODO: clear buffer?
             // SAT.STATISTICS->report_WindowBufferResize(width,height);
         #endif
     }

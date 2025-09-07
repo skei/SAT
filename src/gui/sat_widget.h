@@ -45,7 +45,7 @@ class SAT_Widget
         uint32_t            getIndex() override;
         SAT_Widget*         appendChild(SAT_Widget* AWidget) override;
         void                deleteChildren() override;
-        void                removeChild(SAT_Widget* AWidget) override;
+        void                removeChild(SAT_Widget* AWidget, bool ADelete=true) override;
         uint32_t            getNumChildren() override;
         SAT_Widget*         getChild(uint32_t AIndex) override;
         SAT_Widget*         findChild(const char* AName) override;
@@ -151,13 +151,14 @@ class SAT_Widget
 SAT_Widget::SAT_Widget(SAT_Rect ARect)
 : SAT_BaseWidget()
 {
-    WidgetBase.widgetTypeName     = "SAT_Widget";
-    WidgetVisual.baseRect         = ARect;
-    WidgetVisual.initialRect      = ARect;
-    WidgetRecursive.rect          = ARect;
-    WidgetRecursive.clip_rect     = ARect;
-    WidgetRecursive.content_rect  = ARect;
-    WidgetRecursive.opaque_parent = this;
+    WidgetBase.widgetTypeName       = "SAT_Widget";
+    WidgetVisual.baseRect           = ARect;
+    WidgetVisual.initialRect        = ARect;
+    WidgetVisual.skin               = SAT.GUI->findSkin("Default");
+    WidgetRecursive.rect            = ARect;
+    WidgetRecursive.clip_rect       = ARect;
+    WidgetRecursive.content_rect    = ARect;
+    WidgetRecursive.opaque_parent   = this;
 }
 
 SAT_Widget::~SAT_Widget()
@@ -257,10 +258,11 @@ void SAT_Widget::deleteChildren()
     }
 }
 
-void SAT_Widget::removeChild(SAT_Widget* AWidget)
+void SAT_Widget::removeChild(SAT_Widget* AWidget, bool ADelete)
 {
     AWidget->setParent(nullptr);
     WidgetHierarchy.children.remove(AWidget);
+    if (ADelete) delete AWidget;
 }
 
 uint32_t SAT_Widget::getNumChildren()

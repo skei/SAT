@@ -52,6 +52,7 @@ SAT_TextWidget::SAT_TextWidget(SAT_Rect ARect)
 : SAT_PanelWidget(ARect)
 {
     WidgetBase.widgetTypeName = "SAT_TextWidget";
+    WidgetVisual.skin = SAT.GUI->findSkin("DefaultText");
 }
 
 SAT_TextWidget::~SAT_TextWidget()

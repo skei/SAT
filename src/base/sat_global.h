@@ -33,6 +33,8 @@ class SAT_Global
         void        cleanup();
         void        activate(SAT_GlobalBase* AGlobal);
         void        deactivate(SAT_GlobalBase* AGlobal);
+        bool        initialized();
+        bool        activated();
     private:
         bool        MIsInitialized  = false;
         bool        MIsActivated    = false;
@@ -47,14 +49,20 @@ class SAT_Global
 SAT_Global::SAT_Global()
 : SAT_GlobalBase()
 {
-    initialize();
-    activate(this);
+    #ifndef SAT_NO_GLOBAL_INITIALIZATION
+        initialize();
+        activate(this);
+    #endif
 }
 
 SAT_Global::~SAT_Global()
 {
-    deactivate(this);
-    cleanup();
+    #ifndef SAT_NO_GLOBAL_INITIALIZATION
+        deactivate(this);
+        cleanup();
+    #endif
+    if (MIsActivated) PRINT->print("SAT.destructor - deactivate() not called\n");
+    if (MIsInitialized) PRINT->print("SAT.destructor - cleanup() not called\n");
 }
 
 void SAT_Global::initialize()
@@ -71,6 +79,10 @@ void SAT_Global::initialize()
         REGISTRY    = new SAT_GlobalRegistry();
         MIsInitialized = true;
         //PRINT->setPrefix(__FILE__, __FUNCTION__, __LINE__); PRINT->print("\n");
+    }
+    else
+    {
+        fprintf(stderr,"SAT.initialize() - already initialized\n");
     }
 }
 
@@ -89,38 +101,74 @@ void SAT_Global::cleanup()
         delete SYSTEM;
         MIsInitialized = false;
     }
+    else{
+        fprintf(stderr,"SAT.cleanup() - not initialized\n");
+    }
 }
 
 void SAT_Global::activate(SAT_GlobalBase* ASelf)
 {
-    if (MIsInitialized && !MIsActivated)
+    if (MIsInitialized)
     {
-        //PRINT->setPrefix(__FILE__, __FUNCTION__, __LINE__); PRINT->print("\n");
-        SYSTEM->activate(this);
-        PRINT->activate(this);
-        DEBUG->activate(this);
-        LOG->activate(this);
-        TEST->activate(this);
-        GUI->activate(this);
-        STATISTICS->activate(this);
-        REGISTRY->activate(this);
-        MIsActivated = true;
+        if (!MIsActivated)
+        {
+            //PRINT->setPrefix(__FILE__, __FUNCTION__, __LINE__); PRINT->print("\n");
+            SYSTEM->activate(this);
+            PRINT->activate(this);
+            DEBUG->activate(this);
+            LOG->activate(this);
+            TEST->activate(this);
+            GUI->activate(this);
+            STATISTICS->activate(this);
+            REGISTRY->activate(this);
+            MIsActivated = true;
+        }
+        else
+        {
+            fprintf(stderr,"SAT.activate() - already activated\n");
+        }
     }
+    else
+    {
+        fprintf(stderr,"SAT.activate() - not initialized\n");
+    }
+
 }
 
 void SAT_Global::deactivate(SAT_GlobalBase* ASelf)
 {
-    if (MIsInitialized && MIsActivated)
+    if (MIsInitialized)
     {
-        //PRINT->setPrefix(__FILE__, __FUNCTION__, __LINE__); PRINT->print("\n");
-        REGISTRY->deactivate(this);
-        STATISTICS->deactivate(this);
-        GUI->deactivate(this);
-        TEST->deactivate(this);
-        LOG->deactivate(this);
-        DEBUG->deactivate(this);
-        PRINT->deactivate(this);
-        SYSTEM->deactivate(this);
-        MIsActivated = false;
+        if (MIsActivated)
+        {
+            //PRINT->setPrefix(__FILE__, __FUNCTION__, __LINE__); PRINT->print("\n");
+            REGISTRY->deactivate(this);
+            STATISTICS->deactivate(this);
+            GUI->deactivate(this);
+            TEST->deactivate(this);
+            LOG->deactivate(this);
+            DEBUG->deactivate(this);
+            PRINT->deactivate(this);
+            SYSTEM->deactivate(this);
+            MIsActivated = false;
+        }
+        else
+        {
+            fprintf(stderr,"SAT.deactivate() - not activated\n");
+        }
     }
+    else
+    {
+        fprintf(stderr,"SAT.deactivate() - not initialized\n");
+    }
+}
+
+bool SAT_Global::initialized()
+{
+    return MIsInitialized;
+}
+
+bool SAT_Global::activated()
+{
+    return MIsActivated;
 }

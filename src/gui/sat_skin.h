@@ -2,6 +2,13 @@
 
 #include "base/sat_base.h"
 
+class SAT_Skin;
+typedef SAT_Array<SAT_Skin*> SAT_SkinArray;
+
+/*
+    note: included in SAT_Global, so SAT_Assert ia not defined yet..
+*/
+
 #define SAT_SKIN_STATE_NORMAL           0
 #define SAT_SKIN_STATE_HOVERING         0x01
 #define SAT_SKIN_STATE_DISABLED         0x02
@@ -78,6 +85,9 @@ class SAT_Skin
        
     public:
 
+        void        setName(const char* AName);
+        const char* getName();
+
         void        setBackgroundMode(uint32_t AMode, uint32_t AState=SAT_SKIN_STATE_ALL, uint32_t AWhich=SAT_SKIN_MODE_ALL);
         void        setBackgroundColor(SAT_Color AColor, uint32_t AState=SAT_SKIN_STATE_ALL, uint32_t AWhich=SAT_SKIN_MODE_ALL);
 
@@ -107,36 +117,27 @@ class SAT_Skin
 
         bool        check_state(uint32_t i, uint32_t AState, uint32_t AMode);
 
-    protected:
-
+    private:
+        const char*         MName = "No name";
         uint32_t            MBackgroundModes[SAT_SKIN_STATE_COUNT]  = {};
         SAT_Color           MBackgroundColors[SAT_SKIN_STATE_COUNT] = {};
-
         uint32_t            MGradientModes[SAT_SKIN_STATE_COUNT]    = {};
         SAT_Color           MGradientColors[SAT_SKIN_STATE_COUNT]   = {};
-
         intptr_t            MImages[SAT_SKIN_STATE_COUNT]           = {};
-
         uint32_t            MDropShadowModes[SAT_SKIN_STATE_COUNT]  = {};
         SAT_Color           MDropShadowColors[SAT_SKIN_STATE_COUNT] = {};
         sat_coord_t         MDropShadowSizes[SAT_SKIN_STATE_COUNT]  = {};
-
         uint32_t            MBorderModes[SAT_SKIN_STATE_COUNT]      = {};
         SAT_Color           MBorderColors[SAT_SKIN_STATE_COUNT]     = {};
         sat_coord_t         MBorderWidths[SAT_SKIN_STATE_COUNT]     = {};
         sat_coord_t         MBorderRadiuses[SAT_SKIN_STATE_COUNT]   = {};
         uint32_t            MBorderCorners[SAT_SKIN_STATE_COUNT]    = {};
         uint32_t            MBorderEdges[SAT_SKIN_STATE_COUNT]      = {};
-
         uint32_t            MTextModes[SAT_SKIN_STATE_COUNT]        = {};
         SAT_Color           MTextColors[SAT_SKIN_STATE_COUNT]       = {};
         sat_coord_t         MTextSizes[SAT_SKIN_STATE_COUNT]        = {};
         uint32_t            MTextAlignments[SAT_SKIN_STATE_COUNT]   = {};
         intptr_t            MTextFonts[SAT_SKIN_STATE_COUNT]        = {};
-
-        // MDropShadowMode
-        // MDropShadowColor
-        // MDropShadowSize
 };
 
 //----------------------------------------------------------------------
@@ -145,19 +146,29 @@ class SAT_Skin
 //
 //----------------------------------------------------------------------
 
+void SAT_Skin::setName(const char* AName)
+{
+    MName = AName;
+}
+
+const char* SAT_Skin::getName()
+{
+    return MName;
+}
+
 //------------------------------
 // background
 //------------------------------
 
 uint32_t SAT_Skin::getBackgroundMode(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MBackgroundModes[AState];
 }
 
 SAT_Color SAT_Skin::getBackgroundColor(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MBackgroundColors[AState];
 }
 
@@ -167,13 +178,13 @@ SAT_Color SAT_Skin::getBackgroundColor(uint32_t AState)
 
 uint32_t SAT_Skin::getGradientMode(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MGradientModes[AState];
 }
 
 SAT_Color SAT_Skin::getGradientColor(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MGradientColors[AState];
 }
 
@@ -183,7 +194,7 @@ SAT_Color SAT_Skin::getGradientColor(uint32_t AState)
 
 intptr_t SAT_Skin::getImage(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MImages[AState];
 }
 
@@ -193,19 +204,19 @@ intptr_t SAT_Skin::getImage(uint32_t AState)
 
 uint32_t SAT_Skin::getDropShadowMode(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MDropShadowModes[AState];
 }
 
 SAT_Color SAT_Skin::getDropShadowColor(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MDropShadowColors[AState];
 }
 
 sat_coord_t SAT_Skin::getDropShadowSize(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MDropShadowSizes[AState];
 }
 
@@ -215,37 +226,37 @@ sat_coord_t SAT_Skin::getDropShadowSize(uint32_t AState)
 
 uint32_t SAT_Skin::getBorderMode(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MBorderModes[AState];
 }
 
 SAT_Color SAT_Skin::getBorderColor(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MBorderColors[AState];
 }
 
 sat_coord_t SAT_Skin::getBorderWidth(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MBorderWidths[AState];
 }
 
 sat_coord_t SAT_Skin::getBorderRadius(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MBorderRadiuses[AState];
 }
 
 uint32_t SAT_Skin::getBorderCorners(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MBorderCorners[AState];
 }
 
 uint32_t SAT_Skin::getBorderEdges(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MBorderEdges[AState];
 }
 
@@ -255,31 +266,31 @@ uint32_t SAT_Skin::getBorderEdges(uint32_t AState)
 
 uint32_t SAT_Skin::getTextMode(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MTextModes[AState];
 }
 
 SAT_Color SAT_Skin::getTextColor(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MTextColors[AState];
 }
 
 sat_coord_t SAT_Skin::getTextSize(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MTextSizes[AState];
 }
 
 uint32_t SAT_Skin::getTextAlignment(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MTextAlignments[AState];
 }
 
 intptr_t SAT_Skin::getTextFont(uint32_t AState)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     return MTextFonts[AState];
 }
 
@@ -295,14 +306,14 @@ intptr_t SAT_Skin::getTextFont(uint32_t AState)
 
 void SAT_Skin::setBackgroundMode(uint32_t AMode, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MBackgroundModes[i] = AMode;
 }
 
 void SAT_Skin::setBackgroundColor(SAT_Color AColor, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MBackgroundColors[i] = AColor;
 }
@@ -313,14 +324,14 @@ void SAT_Skin::setBackgroundColor(SAT_Color AColor, uint32_t AState, uint32_t AW
 
 void SAT_Skin::setGradientMode(uint32_t AMode, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MGradientModes[i] = AMode;
 }
 
 void SAT_Skin::setGradientColor(SAT_Color AColor, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MGradientColors[i] = AColor;
 }
@@ -331,7 +342,7 @@ void SAT_Skin::setGradientColor(SAT_Color AColor, uint32_t AState, uint32_t AWhi
 
 void SAT_Skin::setImage(intptr_t AImage, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MImages[i] = AImage;
 }
@@ -342,21 +353,21 @@ void SAT_Skin::setImage(intptr_t AImage, uint32_t AState, uint32_t AWhich)
 
 void SAT_Skin::setDropShadowMode(uint32_t AMode, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MDropShadowModes[i] = AMode;
 }
 
 void SAT_Skin::setDropShadowColor(SAT_Color AColor, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MDropShadowColors[i] = AColor;
 }
 
 void SAT_Skin::setDropShadowSize(sat_coord_t ASize, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MDropShadowSizes[i] = ASize;
 }
@@ -367,42 +378,42 @@ void SAT_Skin::setDropShadowSize(sat_coord_t ASize, uint32_t AState, uint32_t AW
 
 void SAT_Skin::setBorderMode(uint32_t AMode, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MBorderModes[i] = AMode;
 }
 
 void SAT_Skin::setBorderColor(SAT_Color AColor, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MBorderColors[i] = AColor;
 }
 
 void SAT_Skin::setBorderWidth(sat_coord_t AWidth, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MBorderWidths[i] = AWidth;
 }
 
 void SAT_Skin::setBorderRadius(sat_coord_t ARadius, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MBorderRadiuses[i] = ARadius;
 }
 
 void SAT_Skin::setBorderCorners(uint32_t ACorners, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MBorderCorners[i] = ACorners;
 }
 
 void SAT_Skin::setBorderEdges(uint32_t AEdges, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MBorderEdges[i] = AEdges;
 }
@@ -413,35 +424,35 @@ void SAT_Skin::setBorderEdges(uint32_t AEdges, uint32_t AState, uint32_t AWhich)
 
 void SAT_Skin::setTextMode(uint32_t AMode, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MTextModes[i] = AMode;
 }
 
 void SAT_Skin::setTextColor(SAT_Color AColor, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MTextColors[i] = AColor;
 }
 
 void SAT_Skin::setTextSize(sat_coord_t ASize, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MTextSizes[i] = ASize;
 }
 
 void SAT_Skin::setTextAlignment(uint32_t AAlignment, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MTextAlignments[i] = AAlignment;
 }
 
 void SAT_Skin::setTextFont(intptr_t AFont, uint32_t AState, uint32_t AWhich)
 {
-    SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
+    //SAT_Assert(AState < SAT_SKIN_STATE_COUNT);
     for (uint32_t i=0; i<SAT_SKIN_STATE_COUNT; i++)
         if (check_state(i,AState,AWhich)) MTextFonts[i] = AFont;
 }

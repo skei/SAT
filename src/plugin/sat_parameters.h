@@ -27,8 +27,8 @@ class SAT_Parameters
     public:
 
         SAT_Parameter*  append(SAT_Parameter* AParameter);
-        void            remove(SAT_Parameter* AParameter);
-        void            remove(uint32_t AIndex);
+        void            remove(SAT_Parameter* AParameter, bool ADelete=true);
+        void            remove(uint32_t AIndex, bool ADelete=true);
         void            deleteAll();
         uint32_t        getCount();
         SAT_Parameter*  get(uint32_t AIndex);
@@ -74,13 +74,15 @@ SAT_Parameter* SAT_Parameters::append(SAT_Parameter* AParameter)
     return AParameter;
 }
 
-void SAT_Parameters::remove(SAT_Parameter* AParameter)
+void SAT_Parameters::remove(SAT_Parameter* AParameter, bool ADelete)
 {
     MParameters.remove(AParameter);
+    if (ADelete) delete AParameter;
 }
 
-void SAT_Parameters::remove(uint32_t AIndex)
+void SAT_Parameters::remove(uint32_t AIndex, bool ADelete)
 {
+    if (ADelete) delete MParameters[AIndex];
     MParameters.remove(AIndex);
 }
 

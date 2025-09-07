@@ -16,8 +16,8 @@ class SAT_Extensions
         ~SAT_Extensions();
     public:
         void        append(SAT_ClapExtension* AExtension, bool AReplace=true);
-     // void        appendStatic(SAT_ClapExtension* AExtension, bool AReplace=true);
-        void        remove(uint32_t AIndex, bool ARemove=true);
+        //void        remove(uint32_t AIndex, bool ARemove=true);
+        void        remove(uint32_t AIndex, bool ADelete=true);
         void        deleteAll();
         const void* find(const char* AName);
         int32_t     findIndex(const char* AName);
@@ -83,12 +83,21 @@ void SAT_Extensions::append(SAT_ClapExtension* AExtension, bool AReplace)
     otherwise the pointer will be set to NULL
 */
 
-void SAT_Extensions::remove(uint32_t AIndex, bool ARemove)
+// void SAT_Extensions::remove(uint32_t AIndex, bool ARemove)
+// {
+//     SAT_ClapExtension* ext = MExtensions[AIndex];
+//     if (ext) delete ext;
+//     if (ARemove) MExtensions.remove(AIndex);
+// }
+
+void SAT_Extensions::remove(uint32_t AIndex, bool ADelete)
 {
     SAT_ClapExtension* ext = MExtensions[AIndex];
-    //if ((ext && !ext->isStatic())) delete ext;
-    if (ext) delete ext;
-    if (ARemove) MExtensions.remove(AIndex);
+    if (ext)
+    {
+        MExtensions.remove(AIndex);        
+        if (ADelete) delete ext;
+    }
 }
 
 /*
@@ -102,7 +111,6 @@ void SAT_Extensions::deleteAll()
     for (uint32_t i=0; i<num; i++)
     {
         SAT_ClapExtension* ext = MExtensions[i];
-        //if ((ext) && (!ext->isStatic())) delete ext;
         if (ext) delete ext;
     }
     MExtensions.clear();

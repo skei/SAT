@@ -19,17 +19,17 @@ typedef SAT_Array<SAT_Widget*> SAT_WidgetArray;
 
 struct SAT_Widget_Base
 {
-    const char*         name                                = "";
-    const char*         hint                                = "";
-    const char*         widgetTypeName                      = "SAT_Widget";
+    const char*         name                                = "";           // name of widget
+    const char*         hint                                = "";           // hint/description
+    const char*         widgetTypeName                      = "SAT_Widget"; // widget type (todo: enum too?)
 };
 
 struct SAT_Widget_Hierarchy
 {
-    SAT_WidgetOwner*    owner                               = nullptr;
-    SAT_Widget*         parent                              = nullptr;
-    SAT_WidgetArray     children                            = {};
-    uint32_t            index                               = 0;
+    SAT_WidgetOwner*    owner                               = nullptr;      // aka (widget-) window
+    SAT_Widget*         parent                              = nullptr;      // parent widget
+    uint32_t            index                               = 0;            // index (in parent's child-widgets)
+    SAT_WidgetArray     children                            = {};           // sub-widgets
 };
 
 struct SAT_Widget_Visual
@@ -42,9 +42,9 @@ struct SAT_Widget_Visual
 
 struct SAT_Widget_Value
 {
-    uint32_t            index                               = 0;
-    sat_param_t         values[SAT_WIDGET_NUM_VALUES]       = {};
-    SAT_Parameter*      parameters[SAT_WIDGET_NUM_VALUES]   = {};
+    uint32_t            index                               = 0;            // current selected value (index)
+    sat_param_t         values[SAT_WIDGET_NUM_VALUES]       = {};           // values.. normalized (if control)
+    SAT_Parameter*      parameters[SAT_WIDGET_NUM_VALUES]   = {};           // connected parameters
 };
 
 //----------
@@ -95,18 +95,11 @@ struct SAT_Widget_Recursive
     SAT_Rect            content_rect            = {};
     sat_coord_t         scale                   = 1.0;
     SAT_Widget*         opaque_parent           = nullptr;
- // bool                active                  = true;
- // bool                enabled                 = true;
- // bool                opaque                  = true;
- // bool                visible                 = true;
- // SAT_Skin            skin                    = {};
- // SAT_Color           background              = SAT_Grey;
 };
 
 struct SAT_Widget_Update
 {
     uint32_t            last_painted            = SAT_UINT32_MAX;
- // uint32_t            last_painted_count      = 0;
  // uint32_t            last_redrawn            = SAT_UINT32_MAX;
  // uint32_t            last_realigned          = SAT_UINT32_MAX;
  // uint32_t            last_updated            = SAT_UINT32_MAX;
@@ -146,7 +139,7 @@ class SAT_BaseWidget
         virtual uint32_t            getIndex()                                                  { return 0; }
         virtual SAT_Widget*         appendChild(SAT_Widget* AWidget)                            { return AWidget; }
         virtual void                deleteChildren()                                            { }
-        virtual void                removeChild(SAT_Widget* AWidget)                            { }
+        virtual void                removeChild(SAT_Widget* AWidget, bool ADelete=true)         { }
         virtual uint32_t            getNumChildren()                                            { return 0; }
         virtual SAT_Widget*         getChild(uint32_t AIndex)                                   { return nullptr; }
         virtual SAT_Widget*         findChild(const char* AName)                                { return nullptr; }
