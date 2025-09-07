@@ -80,12 +80,12 @@ struct SAT_Widget_Options
 struct SAT_Widget_State
 {
     bool                active                  = true;                                 // handles events
-    bool                enabled                 = true;                                 // if false, draw 'disabled'state (greyed out)
-    bool                opaque                  = true;                                 // set to true if widget fills it's entire rect
     bool                visible                 = true;                                 // drawing/alignment
+    bool                opaque                  = true;                                 // set to true if widget fills it's entire rect
     bool                hovering                = false;                                // mouse cursor is hovering over widget
-    bool                interacting             = false;                                // interacting with widget
-    bool                selected                = false;
+    bool                enabled                 = true;                                 // if false, draw 'disabled'state (greyed out)
+    bool                interact                = false;                                // interacting with widget
+    bool                highlighted             = false;                                // selected, on, ..
 };
 
 struct SAT_Widget_Recursive
@@ -150,6 +150,7 @@ class SAT_BaseWidget
         virtual uint32_t            getNumChildren()                                            { return 0; }
         virtual SAT_Widget*         getChild(uint32_t AIndex)                                   { return nullptr; }
         virtual SAT_Widget*         findChild(const char* AName)                                { return nullptr; }
+
 
     public: // visual
 
@@ -240,12 +241,12 @@ class SAT_BaseWidget
         virtual void                do_widget_capture_mouse(SAT_Widget* AWidget)                                                                { }
         virtual void                do_widget_capture_keyboard(SAT_Widget* AWidget)                                                             { }
 
-    public: // options
+    public:
 
         SAT_Widget_Layout           WidgetLayout    = {};
         SAT_Widget_Options          WidgetOptions   = {};
 
-    protected: // options
+    protected:
 
         SAT_Widget_State            WidgetState     = {};
         SAT_Widget_Recursive        WidgetRecursive = {};

@@ -4,19 +4,11 @@
 #include "gui/painter/sat_paint_context.h"
 #include "gui/widget/sat_base_widget.h"
 #include "gui/widget/sat_widget_owner.h"
-// #include "gui/widget/sat_widget_layout.h"
-// #include "gui/widget/sat_widget_options.h"
-// #include "gui/widget/sat_widget_state.h"
-// #include "gui/widget/sat_widget_recursive.h"
-// #include "gui/widget/sat_widget_update.h"
 #include "gui/sat_painter.h"
 #include "gui/sat_skin.h"
 
 class SAT_AnimChain;
 class SAT_Parameter;
-
-// class SAT_Widget;
-// typedef SAT_Array<SAT_Widget*> SAT_WidgetArray;
 
 //----------------------------------------------------------------------
 //
@@ -87,6 +79,7 @@ class SAT_Widget
     public: // layout
 
         void                realignChildren() override;
+
 
     public: // interactive
 
@@ -165,7 +158,6 @@ SAT_Widget::SAT_Widget(SAT_Rect ARect)
     WidgetRecursive.clip_rect     = ARect;
     WidgetRecursive.content_rect  = ARect;
     WidgetRecursive.opaque_parent = this;
-
 }
 
 SAT_Widget::~SAT_Widget()
@@ -281,8 +273,6 @@ SAT_Widget* SAT_Widget::getChild(uint32_t AIndex)
     return WidgetHierarchy.children[AIndex];
 }
 
-//----------
-
 SAT_Widget* SAT_Widget::findChild(const char* AName)
 {
     const char* name = getName();
@@ -307,6 +297,30 @@ SAT_Widget* SAT_Widget::findChild(const char* AName)
     return nullptr;
 }
 
+//----------
+
+// void SAT_Widget::setshowOwner(SAT_WidgetOwner* AOwner)
+// {
+//     setOwner(AOwner);
+//     uint32_t num = getNumChildren();
+//     for (uint32_t i=0; i<num; i++)
+//     {
+//         SAT_Widget* widget = getChild(i);
+//         widget->showOwner(AOwner);
+//     }
+// }
+
+// void SAT_Widget::hideOwner(SAT_WidgetOwner* AOwner)
+// {
+//     setOwner(nullptr);
+//     uint32_t num = getNumChildren();
+//     for (uint32_t i=0; i<num; i++)
+//     {
+//         SAT_Widget* widget = getChild(i);
+//         widget->hideOwner(AOwner);
+//     }
+// }
+
 void SAT_Widget::setOpaque(bool AState)
 {
     WidgetState.opaque = AState;
@@ -316,6 +330,7 @@ void SAT_Widget::setVisible(bool AState)
 {
     WidgetState.visible = AState;
     setChildrenVisible(AState);
+
 }
 
 void SAT_Widget::setChildrenVisible(bool AState)
@@ -489,35 +504,44 @@ sat_coord_t SAT_Widget::getPaintScale()
 
 uint32_t SAT_Widget::getPaintState()
 {
-    uint32_t state                       = SAT_SKIN_NORMAL;
-    if (WidgetState.selected) state     |= SAT_SKIN_SELECTED;
-    if (WidgetState.hovering) state     |= SAT_SKIN_HOVER;
-    if (!WidgetState.enabled) state     |= SAT_SKIN_DISABLED;
-    if (WidgetState.interacting) state  |= SAT_SKIN_INTERACT;
+    uint32_t state = SAT_SKIN_STATE_NORMAL;
+    if (WidgetOptions.redraw_if_hovering)
+    {
+        if (WidgetState.hovering) state |= SAT_SKIN_STATE_HOVERING;
+    }
+    if (WidgetState.highlighted) state |= SAT_SKIN_STATE_HIGHLIGHTED;
+    if (!WidgetState.enabled) state |= SAT_SKIN_STATE_DISABLED;
+    if (WidgetState.interact) state |= SAT_SKIN_STATE_INTERACT;
     return state;
 }
 
+/*
+    assumes widget is visible, and clipping is set up
+    see: WidgetState.visible, pushRecursiveClip/popClip
+*/
+
 void SAT_Widget::paintChildren(SAT_PaintContext* AContext)
 {
-    // if this widget is not visible, don't do anything..
-    //if (!WidgetState.visible) return;
-    
     uint32_t numchildren = WidgetHierarchy.children.size();
     if (numchildren > 0)
     {
         for(uint32_t i=0; i<numchildren; i++)
         {
-            SAT_Widget* widget = WidgetHierarchy.children[i];
-            //if (widget->WidgetUpdate.last_painted != AContext->current_frame)
-            //{
-                SAT_Rect widgetrect = widget->WidgetRecursive.rect;
-                widgetrect.overlap(WidgetRecursive.rect);
-                if (widgetrect.isNotEmpty())
+            SAT_Widget* child = WidgetHierarchy.children[i];
+            if (child->WidgetState.visible)
+            {
+                //SAT_Rect widgetrect = child->WidgetRecursive.rect;
+                //widgetrect.overlap(WidgetRecursive.rect);
+                //if (widgetrect.isNotEmpty())
+                if (child->WidgetRecursive.rect.intersects(WidgetRecursive.rect))
                 {
-                    widget->on_widget_paint(AContext);
-                    widget->WidgetUpdate.last_painted = AContext->current_frame;
+                    // widget->pushClip(AContext);
+                    child->pushRecursiveClip(AContext);
+                    child->on_widget_paint(AContext);
+                    child->popClip(AContext);
+                    child->WidgetUpdate.last_painted = AContext->current_frame;
                 }
-            //}
+            }
         }
     }
 }
@@ -944,11 +968,7 @@ void SAT_Widget::on_widget_hide(SAT_WidgetOwner* AOwner)
 
 void SAT_Widget::on_widget_paint(SAT_PaintContext* AContext)
 {
-    if (!WidgetState.visible) return;
-    pushClip(AContext);
-    //pushRecursiveClip(AContext);
     paintChildren(AContext);
-    popClip(AContext);
 }
 
 void SAT_Widget::on_widget_pre_paint(SAT_PaintContext* AContext)
@@ -1014,12 +1034,10 @@ void SAT_Widget::on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t ASt
 
 void SAT_Widget::on_widget_mouse_enter(SAT_Widget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime)
 {
-    if (WidgetOptions.redraw_if_hovering) do_widget_redraw(this);
 }
 
 void SAT_Widget::on_widget_mouse_leave(SAT_Widget* ATo, int32_t AXpos, int32_t AYpos, uint32_t ATime)
 {
-    if (WidgetOptions.redraw_if_hovering) do_widget_redraw(this);
 }
 
 void SAT_Widget::on_widget_key_press(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime)

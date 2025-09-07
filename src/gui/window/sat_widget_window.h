@@ -353,12 +353,6 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta, bool AInTim
 
 void SAT_WidgetWindow::paintBackground(SAT_PaintContext* AContext)
 {
-    // if (MClearBackground)
-    // {
-    //     SAT_Assert(AContext->painter);
-    //     AContext->painter->setFillColor(MBackgroundColor);
-    //     AContext->painter->fillRect(WidgetRecursive.rect);
-    // }
     #ifdef SAT_WINDOW_DEBUG_PAINTING
         AContext->painter->setDrawColor(SAT_Yellow);
         AContext->painter->fillRect(AContext->update_rect);
@@ -369,7 +363,7 @@ void SAT_WidgetWindow::paintBackground(SAT_PaintContext* AContext)
     paint widgets, after background have been drawn
     MNeedFullRepaint set in on_window_show and on_window_resize
 
-    lots of messy stuff here left from testing and debugging..
+    todo: lots of messy stuff here left from testing and debugging..
     needs to be cleaned up.. find out what's actually needed, etc..
 */
 
@@ -378,31 +372,24 @@ void SAT_WidgetWindow::paintWidgets(SAT_PaintContext* AContext)
 {
     uint32_t paint_count = 0;
     SAT_Widget* widget = nullptr;
-
     if (State.needFullRepaint)
     {
-
-        // if (MClearBackground)
-        // {
-        //     SAT_Assert(AContext->painter);
-        //     AContext->painter->setFillColor(MBackgroundColor);
-        //     AContext->painter->fillRect(WidgetRecursive.rect);
-        // }
-
         //SAT_PRINT("full repaint\n");
         uint32_t num = getNumChildren();
         for (uint32_t i=0; i<num; i++)
         {
             widget = getChild(i);
-            widget->on_widget_paint(AContext);
+            if (widget->WidgetState.visible)
+            {
+                // widget->pushClip(AContext);
+                widget->pushRecursiveClip(AContext);
+                widget->on_widget_paint(AContext);
+                widget->popClip(AContext);
+            }
             widget->WidgetUpdate.last_painted = AContext->current_frame;
-            // if (have_painted_rect) painted_rect.combine(widget->getRect());
-            // else painted_rect = widget->getRect();
-            // have_painted_rect = true;
         }
         // flush queue, so we don't re-draw them next time..
         while (Queues.paint.read(&widget)) { paint_count += 1; }
-
         // SAT.STATISTICS.report_WindowPaintAll();
         State.needFullRepaint = false;
     }
@@ -413,10 +400,6 @@ void SAT_WidgetWindow::paintWidgets(SAT_PaintContext* AContext)
             #ifdef SAT_WINDOW_DEBUG_PAINTING
                 SAT_PRINT("frame %i, count %i\n",AContext->current_frame,paint_count);
             #endif
-
-            // widget->WidgetUpdate.last_painted_count = 0;
-            //if ((widget->WidgetUpdate.last_painted == AContext->current_frame) && (widget->WidgetUpdate.last_painted_count == paint_count))
-
             if (widget->WidgetUpdate.last_painted == AContext->current_frame)
             {
                 #ifdef SAT_WINDOW_DEBUG_PAINTING
@@ -426,9 +409,6 @@ void SAT_WidgetWindow::paintWidgets(SAT_PaintContext* AContext)
             else
             {
                 //SAT_PRINT("painting widget %i\n",paint_count);
-                //widget->pushRecursiveClip(AContext);
-                //widget->pushClip(AContext);
-
                 SAT_Widget* opaque_parent = widget->WidgetRecursive.opaque_parent;
                 if (opaque_parent != widget)
                 {
@@ -436,37 +416,34 @@ void SAT_WidgetWindow::paintWidgets(SAT_PaintContext* AContext)
                         SAT_PRINT("%s is opaque, drawing opaque_parent %s\n",widget->getName(),opaque_parent->getName());
                         // paint_count still sount this as 1..
                     #endif
-                    opaque_parent->pushRecursiveClip(AContext);
-                    opaque_parent->on_widget_paint(AContext);
-                    /*
-                        eventual widgets inbtween the opaque_parent and this widget itself
-                        will not be marked as redrawn, will they?
-                        maybe we need to add a "widget.mark_children_as_painted(uint32_t AFrame)"?
-                        .. actually, SAT_VisualWidget.on_widget_paint() calls paintChildren,
-                        which sets last_painted = current frame for each child..
-                    */
+                    if (opaque_parent->WidgetState.visible)
+                    {
+                        // opaque_parent->pushClip(AContext);
+                        opaque_parent->pushRecursiveClip(AContext);
+                        opaque_parent->on_widget_paint(AContext);
+                        opaque_parent->popClip(AContext);
+                    }
                     opaque_parent->WidgetUpdate.last_painted = AContext->current_frame;
-                    //opaque_parent->WidgetUpdate.last_painted_count = paint_count;
                 }
                 else
                 {
                     #ifdef SAT_WINDOW_DEBUG_PAINTING
                         SAT_PRINT("painting %s (opaque_parent %s)\n",widget->getName(),opaque_parent->getName());
                     #endif
-                    widget->pushRecursiveClip(AContext);
-                    widget->on_widget_paint(AContext);
+                    if (widget->WidgetState.visible)
+                    {
+                        // widget->pushClip(AContext);
+                        widget->pushRecursiveClip(AContext);
+                        widget->on_widget_paint(AContext);
+                        widget->popClip(AContext);
+                    }
                     widget->WidgetUpdate.last_painted = AContext->current_frame;
-                    // widget->WidgetUpdate.last_painted_count = paint_count;
                 }
-                widget->popClip(AContext);
             }
             paint_count += 1;
         }
         // SAT.STATISTICS.report_WindowPaintQueue(paint_count);
     }
-
-    //return painted_rect;
-    //return AContext->update_rect;
 }
 
 /*
@@ -514,25 +491,21 @@ sat_coord_t SAT_WidgetWindow::calcScale(uint32_t ANewWidth, uint32_t ANewHeight,
     todo: take widget->isActive into account
     if we can't interact with it, don't respøond to hover events???
     (also consider drag/drop, disabled)
-
-
 */
 
 void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
 {
-    SAT_Widget* hover = nullptr;
+    SAT_Widget* new_hover = nullptr;
 
     int32_t winw = (int32_t)getWidth();
     int32_t winh = (int32_t)getHeight();
     if ( (AXpos >= 0) && (AXpos < winw) && (AYpos >= 0) && (AYpos < winh) ) State.mouseInsideWindow = true;
     else State.mouseInsideWindow = false;
     //SAT_PRINT("inside window: %i\n",MMouseInsideWindow);
-
     if (State.mouseInsideWindow)
     {
-        if (Widgets.modal) hover = Widgets.modal->findChildAt(AXpos,AYpos);
-        else hover = findChildAt(AXpos,AYpos);
-        // hover        = new hover
+        if (Widgets.modal) new_hover = Widgets.modal->findChildAt(AXpos,AYpos);
+        else new_hover = findChildAt(AXpos,AYpos);
         // MHoverWidget = previous hover (if null = just entered window)
         if (!Widgets.hover)
         {
@@ -540,27 +513,30 @@ void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime)
             #ifdef SAT_WINDOW_DEBUG_MOUSE_EVENTS            
                 SAT_PRINT("entering: %s %s\n",hover->getWidgetTypeName(), hover->getName());
             #endif
-            hover->WidgetState.hovering = true;
-            hover->on_widget_mouse_enter(Widgets.hover,AXpos,AYpos,ATime);
-            Widgets.hover = hover;
+            new_hover->WidgetState.hovering = true;
+            new_hover->on_widget_mouse_enter(Widgets.hover,AXpos,AYpos,ATime);
+            if (new_hover->WidgetOptions.redraw_if_hovering) new_hover->do_widget_redraw(new_hover);
+            Widgets.hover = new_hover;
         }
         else
         {
             // are we hovering over the same, or a different widget?
-            if (hover != Widgets.hover)
+            if (new_hover != Widgets.hover)
             {
                 // differemt, leave the old, enter the new
                 #ifdef SAT_WINDOW_DEBUG_MOUSE_EVENTS            
                     SAT_PRINT("leaving: %s %s\n",MHoverWidget->getWidgetTypeName(),MHoverWidget->getName());
                 #endif
                 Widgets.hover->WidgetState.hovering = false;
-                Widgets.hover->on_widget_mouse_leave(hover,AXpos,AYpos,ATime);
+                Widgets.hover->on_widget_mouse_leave(new_hover,AXpos,AYpos,ATime);
+                if (Widgets.hover->WidgetOptions.redraw_if_hovering) Widgets.hover->do_widget_redraw(Widgets.hover);
                 #ifdef SAT_WINDOW_DEBUG_MOUSE_EVENTS            
                     SAT_PRINT("entering: %s %s\n",hover->getWidgetTypeName(), hover->getName());
                 #endif
-                hover->WidgetState.hovering = true;
-                hover->on_widget_mouse_enter(Widgets.hover,AXpos,AYpos,ATime);
-                Widgets.hover = hover;
+                new_hover->WidgetState.hovering = true;
+                new_hover->on_widget_mouse_enter(Widgets.hover,AXpos,AYpos,ATime);
+                if (new_hover->WidgetOptions.redraw_if_hovering) new_hover->do_widget_redraw(new_hover);
+                Widgets.hover = new_hover;
             }
             else
             {
@@ -615,10 +591,8 @@ void SAT_WidgetWindow::on_timer_listener_update(SAT_Timer* ATimer, double ADelta
         // SAT.STATISTICS.report_WindowTimerWhen WindowIsClosing(time);
         return;
     }
-
     // set to false at the end of handleTimer()
     State.timerBlocked = true;
-
     #ifdef SAT_WINDOW_REDIRECT_TIMER_TO_GUI_THREAD
         sendClientMessage(SAT_WINDOW_USER_MESSAGE_TIMER,0);
         // see on_window_timer(), which will call handleTimer()...
@@ -830,6 +804,7 @@ void SAT_WidgetWindow::on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint3
         #endif
         Widgets.hover->WidgetState.hovering = false;
         Widgets.hover->on_widget_mouse_leave(nullptr,AXpos,AYpos,ATime);
+        if (Widgets.hover->WidgetOptions.redraw_if_hovering) Widgets.hover->do_widget_redraw(Widgets.hover);
         Widgets.hover = nullptr;
     }
     else

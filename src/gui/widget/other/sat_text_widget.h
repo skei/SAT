@@ -31,9 +31,7 @@ class SAT_TextWidget
 
     public:
 
-        virtual void setDrawText(bool ADraw=true);
         virtual void setText(const char* AText);
-        virtual void setTextAlignment(uint32_t AAlignment);
         virtual void drawText(SAT_PaintContext* AContext);
 
     public:
@@ -42,9 +40,7 @@ class SAT_TextWidget
 
     protected:
 
-        bool        MDrawText           = true;
-        const char* MText               = "Text";
-        uint32_t    MTextAlignment      = SAT_TEXT_ALIGN_CENTER;
+        const char* MText = "Text";
 
 };
 
@@ -66,35 +62,42 @@ SAT_TextWidget::~SAT_TextWidget()
 //
 //------------------------------
 
-void SAT_TextWidget::setDrawText(bool ADraw)
-{
-    MDrawText = ADraw;
-}
+// void SAT_TextWidget::setDrawText(bool ADraw)
+// {
+//     MDrawText = ADraw;
+// }
 
 void SAT_TextWidget::setText(const char* AText)
 {
     MText = AText;
 }
 
-void SAT_TextWidget::setTextAlignment(uint32_t AAlignment)
-{
-    MTextAlignment = AAlignment;
-}
+// void SAT_TextWidget::setTextAlignment(uint32_t AAlignment)
+// {
+//     MTextAlignment = AAlignment;
+// }
 
 //----------
 
 void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
 {
-    if (MDrawText)
+    SAT_Painter* painter = AContext->painter;
+    SAT_Rect rect = getRect();
+    uint32_t state = getPaintState();
+    uint32_t mode = WidgetVisual.skin->getTextMode(state);
+    switch (mode)
     {
-        SAT_Painter* painter = AContext->painter;
-        uint32_t state = getPaintState();
-        SAT_Color color = WidgetVisual.skin->getTextColor(state);
-        painter->setTextColor(color);
-        // sat_coord_t size = MSkin->getTextSize(state);
-        // painter->setTextSize(size);
-        SAT_Rect rect = getRect();
-        painter->drawText(rect,MText,MTextAlignment);
+        case SAT_SKIN_TEXT_NORMAL:
+        {
+            SAT_Color color = WidgetVisual.skin->getTextColor(state);
+            uint32_t align = WidgetVisual.skin->getTextAlignment(state);
+            // sat_coord_t size = WidgetVisual.skin->getTextSize(state);
+            // intptr_t font = WidgetVisual.skin->getTextFont(state);
+            painter->setTextColor(color);
+            // painter->setTextSize(size);
+            // painter->setTextFont(font);
+            painter->drawText(rect,MText,align);
+        }
     }
 }
 
@@ -107,12 +110,8 @@ void SAT_TextWidget::on_widget_paint(SAT_PaintContext* AContext)
     #ifdef SAT_WINDOW_DEBUG_PAINTING
         SAT_PRINT("%s, frame %i (last frame %i)\n",getName(),AContext->current_frame,WidgetUpdate.last_painted);
     #endif
-    if (!WidgetState.visible) return;
-    pushClip(AContext);
-    //pushRecursiveClip(AContext);
     fillBackground(AContext);
     paintChildren(AContext);    
     drawText(AContext);
     drawBorder(AContext);
-    popClip(AContext);
 }

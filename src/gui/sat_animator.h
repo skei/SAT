@@ -45,17 +45,17 @@ class SAT_AnimChain
         SAT_AnimChain();
         ~SAT_AnimChain();
     public:
-        SAT_AnimNode* appendNode(SAT_AnimNode* ANode);
-        void deleteNodes();
-        uint32_t getNumNodes();
-        void start(void);
-        void stop(void);
-        bool isActive();
+        SAT_AnimNode*   appendNode(SAT_AnimNode* ANode);
+        void            deleteNodes();
+        uint32_t        getNumNodes();
+        void            start(void);
+        void            stop(void);
+        bool            isActive();
     public:
         bool                MActive         = true;
         uint32_t            MCurrentNode    = 0;
         double              MCurrentTime    = 0.0;
-        SAT_AnimNodeArray  MNodes          = {};
+        SAT_AnimNodeArray   MNodes          = {};
 };
 
 class SAT_Animator
@@ -64,13 +64,13 @@ class SAT_Animator
         SAT_Animator();
         ~SAT_Animator();
     public:
-        // void appendAnim(SAT_AnimNode* AAnim);
-        SAT_AnimChain* appendChain(SAT_AnimChain* AChain);
-        void deleteChains();
-        virtual void process(double ADelta);
+     // void            appendAnim(SAT_AnimNode* AAnim);
+        SAT_AnimChain*  appendChain(SAT_AnimChain* AChain);
+        void            deleteChains();
+        virtual void    process(double ADelta);
     private:
-        SAT_AnimChainArray MChains;    // = {};
-        SAT_AnimChainQueue MPending;   // = {};
+        SAT_AnimChainArray  MChains;    // = {};
+        SAT_AnimChainQueue  MPending;   // = {};
 };
 
 //----------------------------------------------------------------------
@@ -184,7 +184,10 @@ void SAT_Animator::deleteChains()
 {
     for (uint32_t i=0; i<MChains.size(); i++) delete MChains[i];
     SAT_AnimChain* chain = nullptr;
-    while (MPending.read(&chain)) { delete chain; }
+    while (MPending.read(&chain))
+    {
+        delete chain;
+    }
 }
   
 /*
