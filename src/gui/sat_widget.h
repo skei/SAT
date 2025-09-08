@@ -143,7 +143,7 @@ class SAT_Widget
         void                do_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, int32_t AValue=0) override;
         void                do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint) override;
         void                do_widget_modal(SAT_Widget* AWidget) override;
-        void                do_widget_cursor(SAT_Widget* AWidget, uint32_t ACursor) override;
+        void                do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor) override;
         void                do_widget_capture_mouse(SAT_Widget* AWidget) override;
         void                do_widget_capture_keyboard(SAT_Widget* AWidget) override;
 
@@ -1127,7 +1127,7 @@ void SAT_Widget::do_widget_modal(SAT_Widget* AWidget)
     if (parent) parent->do_widget_modal(AWidget);
 }
 
-void SAT_Widget::do_widget_cursor(SAT_Widget* AWidget, uint32_t ACursor)
+void SAT_Widget::do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor)
 {
     SAT_Widget* parent = getParent();
     if (parent) parent->do_widget_cursor(AWidget,ACursor);

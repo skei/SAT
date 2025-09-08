@@ -107,6 +107,11 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_CORNER_RIGHT                            (SAT_CORNER_UPPER_RIGHT | SAT_CORNER_LOWER_RIGHT)
 #define SAT_CORNER_ALL                              (SAT_CORNER_UPPER       | SAT_CORNER_LOWER)
 
+#define SAT_CURSOR_RESET                            -5
+#define SAT_CURSOR_LOCK                             -4
+#define SAT_CURSOR_UNLOCK                           -3
+#define SAT_CURSOR_SHOW                             -2
+#define SAT_CURSOR_HIDE                             -1
 #define SAT_CURSOR_DEFAULT                          0
 
 #define SAT_EDGE_NONE                               0
@@ -127,8 +132,8 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 
 #define SAT_HINT_NORMAL                             0
 #define SAT_HINT_CLEAR                              1
-// #define SAT_HINT_SHOW                               2
-// #define SAT_HINT_HIDE                               3
+// #define SAT_HINT_SHOW                            2
+// #define SAT_HINT_HIDE                            3
 
 #define SAT_KEY_NONE                                0
 #define SAT_KEY_BACKSPACE                           8

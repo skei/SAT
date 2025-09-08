@@ -146,8 +146,10 @@ struct SAT_Window_Mouse
     bool                    tooltipVisible      = false;
     SAT_Widget*             tooltipWidget       = nullptr;
     bool                    tooltipExpected     = false;
-    bool                    posIsLocked         = false;
+    bool                    locked              = false;
     SAT_MouseCoords         lockedPos           = {0,0};
+    SAT_MouseCoords         lockedVirtualPos    = {0,0};
+    int32_t                 currentCursor       = SAT_CURSOR_DEFAULT;
 };
 
 //----------------------------------------------------------------------
@@ -176,6 +178,9 @@ class SAT_WidgetWindow
         virtual void        removeTimerWidget(SAT_Widget* AWidget);
         virtual void        handleTimer(uint32_t ATimerId, double ADelta, bool AInTimerThread=false);
         virtual void        handleMouseTimer(double ADelta);
+        virtual void        lockMouseCursor();
+        virtual void        unlockMouseCursor();
+        virtual bool        updateLockedMouse(int32_t AXpos, int32_t AYpos);
         virtual void        showTooltip(int32_t AXpos, int32_t AYpos, SAT_Widget* AWidget);
         virtual void        hideTooltip();
         virtual sat_coord_t calcScale(uint32_t ANewWidth, uint32_t ANewHeight, uint32_t AInitialWidth, uint32_t AInitialHeight);
@@ -247,7 +252,7 @@ class SAT_WidgetWindow
         void                do_widget_notify(SAT_Widget* AWidget, uint32_t AType, int32_t AValue) override;
         void                do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint) override;
         void                do_widget_modal(SAT_Widget* AWidget) override;
-        void                do_widget_cursor(SAT_Widget* AWidget, uint32_t ACursor) override;
+        void                do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor) override;
         void                do_widget_capture_mouse(SAT_Widget* AWidget) override;
         void                do_widget_capture_keyboard(SAT_Widget* AWidget) override;
 
@@ -395,6 +400,42 @@ void SAT_WidgetWindow::handleMouseTimer(double ADelta)
             Mouse.tooltipExpected = false;
         }
     }
+}
+
+void SAT_WidgetWindow::lockMouseCursor()
+{
+    Mouse.locked = true;
+    Mouse.lockedPos.x = Mouse.currentPos.x;
+    Mouse.lockedPos.y = Mouse.currentPos.y;
+    Mouse.lockedVirtualPos.x = Mouse.currentPos.x;
+    Mouse.lockedVirtualPos.y = Mouse.currentPos.y;
+}
+
+void SAT_WidgetWindow::unlockMouseCursor()
+{
+    Mouse.locked = false;
+    // Mouse.currentPos.x = Mouse.lockedVirtualPos.x;
+    // Mouse.currentPos.y = Mouse.lockedVirtualPos.y;
+}
+
+/*
+    updates Mouse.lockedVirtualPos
+*/
+
+bool SAT_WidgetWindow::updateLockedMouse(int32_t AXpos, int32_t AYpos)
+{
+    if ((AXpos == Mouse.lockedPos.x) && (AYpos == Mouse.lockedPos.y))
+    {
+        // not moved
+        // (might be because of the previous setMouseCursorPos)
+        return false;
+    }
+    int32_t xdiff = AXpos - Mouse.lockedPos.x;
+    int32_t ydiff = AYpos - Mouse.lockedPos.y;
+    Mouse.lockedVirtualPos.x += xdiff;
+    Mouse.lockedVirtualPos.y += ydiff;
+    setMouseCursorPos(Mouse.lockedPos.x,Mouse.lockedPos.y);
+    return true;
 }
 
 void SAT_WidgetWindow::showTooltip(int32_t AXpos, int32_t AYpos, SAT_Widget* AWidget)
@@ -702,8 +743,6 @@ void SAT_WidgetWindow::on_window_mouse_release(int32_t AXpos, int32_t AYpos, uin
 void SAT_WidgetWindow::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
 {
     Mouse.lastMovedTime = Mouse.currentTime;
-    Mouse.currentPos.x = AXpos;
-    Mouse.currentPos.y = AYpos;
     Mouse.waitingForLongpress = false;
     Mouse.waitingForTooltip = false;
     if (Mouse.tooltipVisible)
@@ -711,32 +750,50 @@ void SAT_WidgetWindow::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32
         Mouse.tooltipVisible = false;
         hideTooltip();
     }
-    updateHover(AXpos,AYpos,ATime);
-    if (Widgets.mouseCaptured)
+
+    if (Mouse.locked)
     {
-        if (Mouse.tooltipExpected)
+        if (updateLockedMouse(AXpos,AYpos))
         {
-            Mouse.waitingForTooltip = true;
-            Mouse.tooltipWidget = Widgets.mouseCaptured;
+            if (Widgets.mouseCaptured)
+            {
+                int32_t x = Mouse.lockedVirtualPos.x;
+                int32_t y = Mouse.lockedVirtualPos.y;
+                Widgets.mouseCaptured->on_widget_mouse_move(x,y,AState,ATime);
+            }
         }
-        Widgets.mouseCaptured->on_widget_mouse_move(AXpos,AYpos,AState,ATime);
-        // if (is_dragging)
-        // {
-        // }
     }
-    else 
+    else
     {
-        //SAT_Assert(MHoverWidget);
-        if (Widgets.hover)
+        Mouse.currentPos.x = AXpos;
+        Mouse.currentPos.y = AYpos;
+        updateHover(AXpos,AYpos,ATime);
+        if (Widgets.mouseCaptured)
         {
             if (Mouse.tooltipExpected)
             {
                 Mouse.waitingForTooltip = true;
-                Mouse.tooltipWidget = Widgets.hover;
+                Mouse.tooltipWidget = Widgets.mouseCaptured;
             }
-            if (Widgets.hover->WidgetOptions.want_hover_events)
+            Widgets.mouseCaptured->on_widget_mouse_move(AXpos,AYpos,AState,ATime);
+            // if (is_dragging)
+            // {
+            // }
+        }
+        else 
+        {
+            //SAT_Assert(MHoverWidget);
+            if (Widgets.hover)
             {
-                Widgets.hover->on_widget_mouse_move(AXpos,AYpos,AState,ATime);
+                if (Mouse.tooltipExpected)
+                {
+                    Mouse.waitingForTooltip = true;
+                    Mouse.tooltipWidget = Widgets.hover;
+                }
+                if (Widgets.hover->WidgetOptions.want_hover_events)
+                {
+                    Widgets.hover->on_widget_mouse_move(AXpos,AYpos,AState,ATime);
+                }
             }
         }
     }
@@ -922,33 +979,40 @@ void SAT_WidgetWindow::do_widget_modal(SAT_Widget* AWidget)
     Widgets.modal = AWidget;
 }
 
-void SAT_WidgetWindow::do_widget_cursor(SAT_Widget* AWidget, uint32_t ACursor)
+void SAT_WidgetWindow::do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor)
 {
-    //SAT_PRINT("widget '%s' cursor %i\n",AWidget->getName(),ACursor);
-    /*
-        switch(ACursor)
+    switch(ACursor)
+    {
+        case SAT_CURSOR_LOCK:
         {
-            case SAT_CURSOR_LOCK:
-                lockMouseCursor();
-                break;
-            case SAT_CURSOR_UNLOCK:
-                unlockMouseCursor();
-                break;
-            case SAT_CURSOR_SHOW:  
-                showMouseCursor();
-                setMouseCursorShape(MMouseCurrentCursor);
-                break;
-            case SAT_CURSOR_HIDE:
-                hideMouseCursor();
-                break;
-            default:
-                if (ACursor != MMouseCurrentCursor)
-                {
-                    setMouseCursorShape(ACursor);
-                    MMouseCurrentCursor = ACursor;
-                }
+            lockMouseCursor();
+            break;
         }
-    */
+        case SAT_CURSOR_UNLOCK:
+        {
+            unlockMouseCursor();
+            break;
+        }
+        case SAT_CURSOR_SHOW:  
+        {
+            showMouseCursor();
+            setMouseCursorShape(Mouse.currentCursor);
+            break;
+        }
+        case SAT_CURSOR_HIDE:
+        {
+            hideMouseCursor();
+            break;
+        }
+        default:
+        {
+            if (ACursor != Mouse.currentCursor)
+            {
+                setMouseCursorShape(ACursor);
+                Mouse.currentCursor = ACursor;
+            }
+        }
+    }
 }
 
 void SAT_WidgetWindow::do_widget_capture_mouse(SAT_Widget* AWidget)
