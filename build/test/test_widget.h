@@ -39,6 +39,7 @@ int main(void)
                 text->setCanSelect(true);
                 text->WidgetOptions.redraw_if_hovering = true;
                 text->WidgetOptions.tooltip = true;
+                text->setTooltip("some nice tooltip text here...");
 
                 SAT_TextWidget* text2 = new SAT_TextWidget(SAT_Rect(10,40,80,20));
                 panel->appendChild(text2);

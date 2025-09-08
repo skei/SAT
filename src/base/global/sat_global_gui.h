@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "base/sat_base.h"
+#include "base/sat_base.h"
 #include "gui/sat_skins.h"
 
 //----------------------------------------------------------------------
@@ -36,7 +36,19 @@ class SAT_GlobalGui
         void activate(SAT_GlobalBase* AGlobal);
         void deactivate(SAT_GlobalBase* AGlobal);
     public:
+        void        setDoubleClickTime(double ASeconds);
+        void        setLongPressTime(double ASeconds);
+        void        setTooltipDelayTime(double ASeconds);
+    public:
+        double      getDoubleClickTime();
+        double      getLongPressTime();
+        double      getTooltipDelayTime();
+    public:
         SAT_Skins   SKINS = {};
+    private:
+        double      MDoubleClickTime    = SAT_MOUSE_DBL_CLICK_SEC;
+        double      MLongPressTime      = SAT_MOUSE_LONGPRESS_SEC;
+        double      MTooltipDelayTime   = SAT_MOUSE_TOOLTIP_SEC;
 };
 
 //----------------------------------------------------------------------
@@ -65,3 +77,15 @@ void SAT_GlobalGui::deactivate(SAT_GlobalBase* AGlobal)
     SKINS.cleanup();
     SAT_ImplementedGlobalGui::deactivate(AGlobal);
 }
+
+//------------------------------
+//
+//------------------------------
+
+void SAT_GlobalGui::setDoubleClickTime(double ASeconds)     { MDoubleClickTime = ASeconds; }
+void SAT_GlobalGui::setLongPressTime(double ASeconds)       { MLongPressTime = ASeconds; }
+void SAT_GlobalGui::setTooltipDelayTime(double ASeconds)    { MTooltipDelayTime = ASeconds; }
+
+double SAT_GlobalGui::getDoubleClickTime()  { return MDoubleClickTime; }
+double SAT_GlobalGui::getLongPressTime()    { return MLongPressTime; }
+double SAT_GlobalGui::getTooltipDelayTime() { return MTooltipDelayTime; }

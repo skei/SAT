@@ -30,14 +30,15 @@ class SAT_Widget
     public: // base
 
         void                setName(const char* AName) override;
-     // void                setHint(const char* AHint) override;
+        void                setHint(const char* AHint) override;
+        void                setTooltip(const char* ATooltip) override;
         const char*         getName() override;
-     // const char*         getHint() override;
+        const char*         getHint() override;
+        const char*         getTooltip() override;
         const char*         getWidgetTypeName() override;
 
     public: // hierarchy
 
-     // void                setOwner(SAT_WidgetOwner* AOwner) override;
         void                setParent(SAT_Widget* AParent) override;
         void                setIndex(uint32_t AIndex) override;
         SAT_WidgetOwner*    getOwner() override;
@@ -77,6 +78,8 @@ class SAT_Widget
         sat_coord_t         getPaintScale() override;
         uint32_t            getPaintState() override;
         void                paintChildren(SAT_PaintContext* AContext) override;
+        void                paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidget) override;
+
 
     public: // layout
 
@@ -183,30 +186,30 @@ void SAT_Widget::setName(const char* AName)
     WidgetBase.name = AName;
 }
 
-// void SAT_Widget::setHint(const char* AHint)
-// {
-//     WidgetBase.hint = AHint;
-// }
+void SAT_Widget::setHint(const char* AHint)
+{
+    WidgetBase.hint = AHint;
+}
 
-// void SAT_Widget::setTooltip(const char* ATooltip)
-// {
-//     WidgetBase.tooltip = ATooltip;
-// }
+void SAT_Widget::setTooltip(const char* ATooltip)
+{
+    WidgetBase.tooltip = ATooltip;
+}
 
 const char* SAT_Widget::getName()
 {
     return WidgetBase.name;
 }
 
-// const char* SAT_Widget::getHint()
-// {
-//     return WidgetBase.hint;
-// }
+const char* SAT_Widget::getHint()
+{
+    return WidgetBase.hint;
+}
 
-// const char* SAT_Widget::getTooltip()
-// {
-//     return WidgetBase.hint;
-// }
+const char* SAT_Widget::getTooltip()
+{
+    return WidgetBase.tooltip;
+}
 
 const char* SAT_Widget::getWidgetTypeName()
 {
@@ -218,11 +221,6 @@ const char* SAT_Widget::getWidgetTypeName()
 // hierarchy
 //
 //------------------------------
-
-// void SAT_Widget::setOwner(SAT_WidgetOwner* AOwner)
-// {
-//     WidgetHierarchy.owner = AOwner;
-// }
 
 void SAT_Widget::setParent(SAT_Widget* AParent)
 {
@@ -551,21 +549,30 @@ void SAT_Widget::paintChildren(SAT_PaintContext* AContext)
         for(uint32_t i=0; i<numchildren; i++)
         {
             SAT_Widget* child = WidgetHierarchy.children[i];
-            if (child->WidgetState.visible)
+            if (child->WidgetRecursive.rect.intersects(WidgetRecursive.rect))
             {
-                //SAT_Rect widgetrect = child->WidgetRecursive.rect;
-                //widgetrect.overlap(WidgetRecursive.rect);
-                //if (widgetrect.isNotEmpty())
-                if (child->WidgetRecursive.rect.intersects(WidgetRecursive.rect))
-                {
-                    // widget->pushClip(AContext);
-                    child->pushRecursiveClip(AContext);
-                    child->on_widget_paint(AContext);
-                    child->popClip(AContext);
-                    child->WidgetUpdate.last_painted = AContext->current_frame;
-                }
+                // if (child->WidgetState.visible)
+                // {
+                //     // widget->pushClip(AContext);
+                //     child->pushRecursiveClip(AContext);
+                //     child->on_widget_paint(AContext);
+                //     child->popClip(AContext);
+                //     child->WidgetUpdate.last_painted = AContext->current_frame;
+                // }
+                paintWidget(AContext,child);
             }
         }
+    }
+}
+
+void SAT_Widget::paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidget)
+{
+    if (AWidget->WidgetState.visible)
+    {
+        AWidget->pushRecursiveClip(AContext);
+        AWidget->on_widget_paint(AContext);
+        AWidget->popClip(AContext);
+        AWidget->WidgetUpdate.last_painted = AContext->current_frame;
     }
 }
 
