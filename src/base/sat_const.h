@@ -107,6 +107,8 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_CORNER_RIGHT                            (SAT_CORNER_UPPER_RIGHT | SAT_CORNER_LOWER_RIGHT)
 #define SAT_CORNER_ALL                              (SAT_CORNER_UPPER       | SAT_CORNER_LOWER)
 
+#define SAT_CURSOR_DEFAULT                          0
+
 #define SAT_EDGE_NONE                               0
 #define SAT_EDGE_LEFT                               0x01
 #define SAT_EDGE_RIGHT                              0x02
@@ -122,6 +124,11 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_FILE_WRITE_TEXT                         (char*)"w"
 #define SAT_FILE_APPEND_BINARY                      (char*)"ab"
 #define SAT_FILE_APPEND_TEXT                        (char*)"a"
+
+#define SAT_HINT_NORMAL                             0
+#define SAT_HINT_CLEAR                              1
+// #define SAT_HINT_SHOW                               2
+// #define SAT_HINT_HIDE                               3
 
 #define SAT_KEY_NONE                                0
 #define SAT_KEY_BACKSPACE                           8
@@ -154,6 +161,38 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_OS_LINUX                                1
 #define SAT_OS_WIN32                                2
 #define SAT_OS_MAC                                  3
+
+#define SAT_SKIN_BACKGROUND_NONE                    0
+#define SAT_SKIN_BACKGROUND_COLOR                   1
+#define SAT_SKIN_BACKGROUND_GRADIENT                2
+#define SAT_SKIN_BACKGROUND_IMAGE                   3
+
+#define SAT_SKIN_BORDER_NONE                        0
+#define SAT_SKIN_BORDER_RECT                        1
+#define SAT_SKIN_BORDER_ROUNDED                     2
+
+#define SAT_SKIN_DROP_SHADOW_NONE                   0
+#define SAT_SKIN_DROP_SHADOW_INNER                  1
+#define SAT_SKIN_DROP_SHADOW_OUTER                  2
+
+#define SAT_SKIN_GRADIENT_NONE                      0
+#define SAT_SKIN_GRADIENT_VERTICAL                  1
+
+#define SAT_SKIN_MATCH_ALL                          0
+#define SAT_SKIN_MATCH_SINGLE                       1
+#define SAT_SKIN_MATCH_MATCH                        2
+#define SAT_SKIN_MATCH_ANY                          3
+
+#define SAT_SKIN_STATE_NORMAL                       0
+#define SAT_SKIN_STATE_HOVERING                     0x01
+#define SAT_SKIN_STATE_DISABLED                     0x02
+#define SAT_SKIN_STATE_HIGHLIGHTED                  0x04
+#define SAT_SKIN_STATE_INTERACT                     0x08
+#define SAT_SKIN_STATE_ALL                          0x0F
+#define SAT_SKIN_STATE_COUNT                        16
+
+#define SAT_SKIN_TEXT_NONE                          0
+#define SAT_SKIN_TEXT_NORMAL                        1
 
 #define SAT_TEXT_ALIGN_CENTER                       0
 #define SAT_TEXT_ALIGN_LEFT                         0x01

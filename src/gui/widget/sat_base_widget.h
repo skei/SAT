@@ -19,9 +19,11 @@ typedef SAT_Array<SAT_Widget*> SAT_WidgetArray;
 
 struct SAT_Widget_Base
 {
-    const char*         name                                = "";           // name of widget
-    const char*         hint                                = "";           // hint/description
-    const char*         widgetTypeName                      = "SAT_Widget"; // widget type (todo: enum too?)
+    const char*         widgetTypeName                      = "SAT_Widget";         // widget type (todo: enum too?)
+    const char*         name                                = "";                   // name of widget
+    const char*         hint                                = "";                   // hint/description
+    const char*         tooltip                             = "";                   // hint/description
+    uint32_t            cursor                              = SAT_CURSOR_DEFAULT;   // hint/description
 };
 
 struct SAT_Widget_Hierarchy
@@ -65,16 +67,19 @@ struct SAT_Widget_Layout
 
 struct SAT_Widget_Options
 {
-    bool                auto_capture            = true;                                 // auto capture mouse when clicking
-    bool                auto_clip               = true;                                 // clip child widgets
-    bool                auto_cursor_shape       = true;                                 // set cursor shape when hovering over widget
-    bool                auto_cursor_lock        = true;                                 // lock cursor in place (when dragging)
-    bool                auto_cursor_hide        = true;                                 // auto hide cursor when dragging
-    bool                auto_hint               = false;                                // auto send hint when hovering
-    bool                auto_size               = false;                                // scale/zoom widget (content) relative to rect/size (f.ex. font size)
+    bool                mouse_capture           = true;                                 // capture mouse when clicking
+    bool                clip                    = true;                                 // clip child widgets
+    bool                tooltip                 = false;
     bool                want_hover_events       = false;                                // want hover, move, etc mouse events even when not captured
     bool                realign_if_invisible    = false;                                // realign (child) widgets, even if not visible (menus, etc)
     bool                redraw_if_hovering      = false;                                // realign (child) widgets, even if not visible (menus, etc)
+    bool                auto_hint               = false;                                // auto send hint when hovering
+    bool                auto_mouse_cursor       = true;                                 // set cursor shape when hovering over widget
+    bool                auto_mouse_lock         = true;                                 // lock cursor in place (when dragging)
+    bool                auto_mouse_hide         = true;                                 // auto hide cursor when dragging
+ // bool                auto_size               = false;                                // scale/zoom widget (content) relative to rect/size (f.ex. font size)
+    // bool movable
+    // bool sizable
 };
 
 struct SAT_Widget_State
@@ -125,13 +130,15 @@ class SAT_BaseWidget
 
         virtual void                setName(const char* AName)                                  { }
         virtual void                setHint(const char* AHint)                                  { }
+        virtual void                setTooltip(const char* ATooltip)                            { }
         virtual const char*         getName()                                                   { return ""; }
         virtual const char*         getHint()                                                   { return ""; }
+        virtual const char*         getTooltip()                                                { return ""; }
         virtual const char*         getWidgetTypeName()                                         { return ""; }
 
     public: // hierarchy
 
-        virtual void                setOwner(SAT_WidgetOwner* AOwner)                           { }
+     // virtual void                setOwner(SAT_WidgetOwner* AOwner)                           { }
         virtual void                setParent(SAT_Widget* AParent)                              { }
         virtual void                setIndex(uint32_t AIndex)                                   { }
         virtual SAT_WidgetOwner*    getOwner()                                                  { return nullptr; }
@@ -143,7 +150,8 @@ class SAT_BaseWidget
         virtual uint32_t            getNumChildren()                                            { return 0; }
         virtual SAT_Widget*         getChild(uint32_t AIndex)                                   { return nullptr; }
         virtual SAT_Widget*         findChild(const char* AName)                                { return nullptr; }
-
+        virtual void                showOwner(SAT_WidgetOwner* AOwner)                          { }
+        virtual void                hideOwner(SAT_WidgetOwner* AOwner)                          { }
 
     public: // visual
 
@@ -211,9 +219,11 @@ class SAT_BaseWidget
         virtual SAT_Rect            on_widget_post_align(SAT_Rect ARect)                                                                        { return SAT_Rect(); }
         virtual void                on_widget_timer(uint32_t ATimerId, double ADelta)                                                           { }
         virtual void                on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues)                          { }
-        virtual void                on_widget_hint(uint32_t AType, const char* AHint)                                                           { }
+     // virtual void                on_widget_hint(uint32_t AType, const char* AHint)                                                           { }
+     // virtual void                on_widget_tooltip(uint32_t AType, const char* ATooltip)                                                     { }
         virtual void                on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)      { }
         virtual void                on_widget_mouse_dbl_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)  { }
+        virtual void                on_widget_mouse_longpress(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)  { }
         virtual void                on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)    { }
         virtual void                on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)                         { }
         virtual void                on_widget_mouse_enter(SAT_Widget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime)                      { }

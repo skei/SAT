@@ -58,7 +58,7 @@ SAT_PanelWidget::SAT_PanelWidget(SAT_Rect ARect)
 : SAT_Widget(ARect)
 {
     WidgetBase.widgetTypeName   = "SAT_PanelWidget";
-    WidgetVisual.skin           = SAT.GUI->findSkin("DefaultPanel");
+    WidgetVisual.skin           = SAT.GUI->SKINS.find("DefaultPanel");
 }
 
 SAT_PanelWidget::~SAT_PanelWidget()

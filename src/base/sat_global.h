@@ -1,7 +1,9 @@
 #pragma once
 
 /*
-    we could have a watchdog timer here...
+    TODO:
+        - watchdog timer?
+        - plugin instances (give each plugin instance a name or id/class.. communicate 'connections')
 */
 
 #include "base/sat_base.h"
@@ -61,8 +63,8 @@ SAT_Global::~SAT_Global()
         deactivate(this);
         cleanup();
     #endif
-    if (MIsActivated) PRINT->print("SAT.destructor - deactivate() not called\n");
-    if (MIsInitialized) PRINT->print("SAT.destructor - cleanup() not called\n");
+    // if (MIsActivated) PRINT->print("SAT.destructor - deactivate() not called\n");
+    // if (MIsInitialized) PRINT->print("SAT.destructor - cleanup() not called\n");
 }
 
 void SAT_Global::initialize()
@@ -80,10 +82,7 @@ void SAT_Global::initialize()
         MIsInitialized = true;
         //PRINT->setPrefix(__FILE__, __FUNCTION__, __LINE__); PRINT->print("\n");
     }
-    else
-    {
-        fprintf(stderr,"SAT.initialize() - already initialized\n");
-    }
+    // else fprintf(stderr,"SAT.initialize() - already initialized\n");
 }
 
 void SAT_Global::cleanup()
@@ -101,9 +100,7 @@ void SAT_Global::cleanup()
         delete SYSTEM;
         MIsInitialized = false;
     }
-    else{
-        fprintf(stderr,"SAT.cleanup() - not initialized\n");
-    }
+    // else fprintf(stderr,"SAT.cleanup() - not initialized\n");
 }
 
 void SAT_Global::activate(SAT_GlobalBase* ASelf)
@@ -123,16 +120,9 @@ void SAT_Global::activate(SAT_GlobalBase* ASelf)
             REGISTRY->activate(this);
             MIsActivated = true;
         }
-        else
-        {
-            fprintf(stderr,"SAT.activate() - already activated\n");
-        }
+        // else fprintf(stderr,"SAT.activate() - already activated\n");
     }
-    else
-    {
-        fprintf(stderr,"SAT.activate() - not initialized\n");
-    }
-
+    // else fprintf(stderr,"SAT.activate() - not initialized\n");
 }
 
 void SAT_Global::deactivate(SAT_GlobalBase* ASelf)
@@ -152,15 +142,9 @@ void SAT_Global::deactivate(SAT_GlobalBase* ASelf)
             SYSTEM->deactivate(this);
             MIsActivated = false;
         }
-        else
-        {
-            fprintf(stderr,"SAT.deactivate() - not activated\n");
-        }
+        // else fprintf(stderr,"SAT.deactivate() - not activated\n");
     }
-    else
-    {
-        fprintf(stderr,"SAT.deactivate() - not initialized\n");
-    }
+    // else fprintf(stderr,"SAT.deactivate() - not initialized\n");
 }
 
 bool SAT_Global::initialized()

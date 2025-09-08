@@ -1,6 +1,5 @@
 #pragma once
 
-// #define SAT_NO_GLOBAL_INITIALIZATION
 // #define SAT_DEBUG_MEMTRACE
 
 #include "base/sat.h"
@@ -16,24 +15,19 @@
 int main(void)
 {
 
-    // #ifdef SAT_NO_GLOBAL_INITIALIZATION
-    //     SAT.initialize();
-    //     SAT.activate(&SAT);
-    // #endif
-
     SAT_Window* window = new SAT_Window(640,480);
     window->setName("window");
 
         SAT_PanelWidget* background = new SAT_PanelWidget(SAT_Rect(640,480));
         window->appendChild(background);
         background->setName("background");
-        //background->WidgetLayout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
+        background->WidgetLayout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
         //background->setScale(1.0);
 
             SAT_PanelWidget* panel = new SAT_PanelWidget(SAT_Rect(10,10,100,100));
             background->appendChild(panel);
             panel->setName("panel");
-            panel->WidgetLayout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
+            //panel->WidgetLayout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
             //panel->WidgetOptions.auto_redraw_hover = true;
             panel->setScale(1.0);
 
@@ -44,6 +38,7 @@ int main(void)
                 //text->WidgetLayout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
                 text->setCanSelect(true);
                 text->WidgetOptions.redraw_if_hovering = true;
+                text->WidgetOptions.tooltip = true;
 
                 SAT_TextWidget* text2 = new SAT_TextWidget(SAT_Rect(10,40,80,20));
                 panel->appendChild(text2);
@@ -52,16 +47,12 @@ int main(void)
                 //text2->WidgetLayout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
                 text2->setCanSelect(true);
                 //text2->WidgetOptions.redraw_if_hovering = true;
+                text2->WidgetOptions.tooltip = true;
 
     window->show();
     window->eventLoop();
     window->hide();
     delete window;
-
-    // #ifdef SAT_NO_GLOBAL_INITIALIZATION
-    //     SAT.deactivate(&SAT);
-    //     SAT.cleanup();
-    // #endif
 
     return 0;
 }

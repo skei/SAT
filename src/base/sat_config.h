@@ -38,7 +38,9 @@
 // gui
 //----------------------------------------
 
-#define SAT_PAINTER_CLIP_RECT_STACK_SIZE                 256
+#define SAT_MOUSE_LONGPRESS_SEC                     1.0
+#define SAT_MOUSE_TOOLTIP_SEC                       0.5
+#define SAT_PAINTER_CLIP_RECT_STACK_SIZE            256
 #define SAT_QUEUE_SIZE_PAINT                        256
 #define SAT_QUEUE_SIZE_REALIGN                      256
 #define SAT_QUEUE_SIZE_REDRAW                       256
@@ -52,6 +54,7 @@
 #define SAT_WIDGET_NUM_VALUES                       16
 #define SAT_WINDOW_BUFFER_MIN_SIZE                  256
 #define SAT_WINDOW_MOUSE_DBL_CLICK_MS               200
+#define SAT_WINDOW_TIMER_MS                         20
 #define SAT_WINDOW_TIMER_MS                         20
 
 //----------------------------------------
@@ -103,6 +106,7 @@
 #define SAT_LOG_THREAD
 // #define SAT_NO_AUTODELETE
 // #define SAT_NO_GLOBAL
+// #define SAT_NO_GLOBAL_INITIALIZATION
 // #define SAT_PRINT_ALWAYS
 // #define SAT_PRINT_PRETTY_FUNCTION
 // #define SAT_PRINT_SOCKET

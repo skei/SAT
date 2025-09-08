@@ -106,16 +106,6 @@ void SAT_LinuxGlobalGui::deactivate(SAT_GlobalBase* AGlobal)
 }
 
 //------------------------------
-// skins
-//------------------------------
-
-// void SAT_GlobalGui::appendSkin(SAT_Skin* ASkin);
-// void SAT_GlobalGui::removeSkin(SAT_Skin* ASkin);
-// void SAT_GlobalGui::deleteSkins();
-// SAT_Skin* SAT_GlobalGui::findSkin(const char* AName);
-
-
-//------------------------------
 // x11
 //------------------------------
 

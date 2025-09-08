@@ -30,14 +30,14 @@ class SAT_Widget
     public: // base
 
         void                setName(const char* AName) override;
-        void                setHint(const char* AHint) override;
+     // void                setHint(const char* AHint) override;
         const char*         getName() override;
-        const char*         getHint() override;
+     // const char*         getHint() override;
         const char*         getWidgetTypeName() override;
 
     public: // hierarchy
 
-        void                setOwner(SAT_WidgetOwner* AOwner) override;
+     // void                setOwner(SAT_WidgetOwner* AOwner) override;
         void                setParent(SAT_Widget* AParent) override;
         void                setIndex(uint32_t AIndex) override;
         SAT_WidgetOwner*    getOwner() override;
@@ -49,6 +49,8 @@ class SAT_Widget
         uint32_t            getNumChildren() override;
         SAT_Widget*         getChild(uint32_t AIndex) override;
         SAT_Widget*         findChild(const char* AName) override;
+        void                showOwner(SAT_WidgetOwner* AOwner) override;
+        void                hideOwner(SAT_WidgetOwner* AOwner) override;
 
     public: // visual
 
@@ -117,9 +119,11 @@ class SAT_Widget
         SAT_Rect            on_widget_post_align(SAT_Rect ARect) override;
         void                on_widget_timer(uint32_t ATimerId, double ADelta) override;
         void                on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues) override;
-        void                on_widget_hint(uint32_t AType, const char* AHint) override;
+     // void                on_widget_hint(uint32_t AType, const char* AHint) override;
+     // void                on_widget_tooltip(uint32_t AType, const char* ATooltip) override;
         void                on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
         void                on_widget_mouse_dbl_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
+        void                on_widget_mouse_longpress(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
         void                on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
         void                on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
         void                on_widget_mouse_enter(SAT_Widget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime) override;
@@ -154,7 +158,7 @@ SAT_Widget::SAT_Widget(SAT_Rect ARect)
     WidgetBase.widgetTypeName       = "SAT_Widget";
     WidgetVisual.baseRect           = ARect;
     WidgetVisual.initialRect        = ARect;
-    WidgetVisual.skin               = SAT.GUI->findSkin("Default");
+    WidgetVisual.skin               = SAT.GUI->SKINS.find("Default");
     WidgetRecursive.rect            = ARect;
     WidgetRecursive.clip_rect       = ARect;
     WidgetRecursive.content_rect    = ARect;
@@ -179,20 +183,30 @@ void SAT_Widget::setName(const char* AName)
     WidgetBase.name = AName;
 }
 
-void SAT_Widget::setHint(const char* AHint)
-{
-    WidgetBase.hint = AHint;
-}
+// void SAT_Widget::setHint(const char* AHint)
+// {
+//     WidgetBase.hint = AHint;
+// }
+
+// void SAT_Widget::setTooltip(const char* ATooltip)
+// {
+//     WidgetBase.tooltip = ATooltip;
+// }
 
 const char* SAT_Widget::getName()
 {
     return WidgetBase.name;
 }
 
-const char* SAT_Widget::getHint()
-{
-    return WidgetBase.hint;
-}
+// const char* SAT_Widget::getHint()
+// {
+//     return WidgetBase.hint;
+// }
+
+// const char* SAT_Widget::getTooltip()
+// {
+//     return WidgetBase.hint;
+// }
 
 const char* SAT_Widget::getWidgetTypeName()
 {
@@ -205,10 +219,10 @@ const char* SAT_Widget::getWidgetTypeName()
 //
 //------------------------------
 
-void SAT_Widget::setOwner(SAT_WidgetOwner* AOwner)
-{
-    WidgetHierarchy.owner = AOwner;
-}
+// void SAT_Widget::setOwner(SAT_WidgetOwner* AOwner)
+// {
+//     WidgetHierarchy.owner = AOwner;
+// }
 
 void SAT_Widget::setParent(SAT_Widget* AParent)
 {
@@ -301,27 +315,34 @@ SAT_Widget* SAT_Widget::findChild(const char* AName)
 
 //----------
 
-// void SAT_Widget::setshowOwner(SAT_WidgetOwner* AOwner)
-// {
-//     setOwner(AOwner);
-//     uint32_t num = getNumChildren();
-//     for (uint32_t i=0; i<num; i++)
-//     {
-//         SAT_Widget* widget = getChild(i);
-//         widget->showOwner(AOwner);
-//     }
-// }
+void SAT_Widget::showOwner(SAT_WidgetOwner* AOwner)
+{
+    // setOwner(AOwner);
+    on_widget_show(AOwner);
+    WidgetHierarchy.owner = AOwner;
+    uint32_t num = getNumChildren();
+    for (uint32_t i=0; i<num; i++)
+    {
+        SAT_Widget* widget = getChild(i);
+        widget->showOwner(AOwner);
+    }
+}
 
-// void SAT_Widget::hideOwner(SAT_WidgetOwner* AOwner)
-// {
-//     setOwner(nullptr);
-//     uint32_t num = getNumChildren();
-//     for (uint32_t i=0; i<num; i++)
-//     {
-//         SAT_Widget* widget = getChild(i);
-//         widget->hideOwner(AOwner);
-//     }
-// }
+void SAT_Widget::hideOwner(SAT_WidgetOwner* AOwner)
+{
+    // setOwner(nullptr);
+    on_widget_hide(AOwner);
+    WidgetHierarchy.owner = nullptr;
+    uint32_t num = getNumChildren();
+    for (uint32_t i=0; i<num; i++)
+    {
+        SAT_Widget* widget = getChild(i);
+        widget->hideOwner(AOwner);
+    }
+}
+
+
+//----------
 
 void SAT_Widget::setOpaque(bool AState)
 {
@@ -351,12 +372,12 @@ void SAT_Widget::setScale(sat_coord_t AScale)
 
 /*
     if AReplace is true, it will just replace the existing skin 
-    else it will only set skin if it doesn't alreaduy have one
+    else it will only set skin if it doesn't already have one
 */
 
 void SAT_Widget::setSkin(SAT_Skin* ASkin, bool AReplace)
 {
-    if ((!WidgetVisual.skin) || AReplace)
+    if (!WidgetVisual.skin || AReplace)
     {
         WidgetVisual.skin = ASkin;
     }
@@ -465,7 +486,7 @@ SAT_Widget* SAT_Widget::findChildAt(int32_t AXpos, int32_t AYpos)
 
 void SAT_Widget::pushClip(SAT_PaintContext* AContext)
 {
-    if (WidgetOptions.auto_clip)
+    if (WidgetOptions.clip)
     {
         SAT_Painter* painter= AContext->painter;
         SAT_Rect rect = getRect();
@@ -475,7 +496,7 @@ void SAT_Widget::pushClip(SAT_PaintContext* AContext)
 
 void SAT_Widget::pushRecursiveClip(SAT_PaintContext* AContext)
 {
-    if (WidgetOptions.auto_clip)
+    if (WidgetOptions.clip)
     {
         SAT_Painter* painter= AContext->painter;
         SAT_Rect rect = WidgetRecursive.clip_rect;
@@ -485,7 +506,7 @@ void SAT_Widget::pushRecursiveClip(SAT_PaintContext* AContext)
 
 void SAT_Widget::popClip(SAT_PaintContext* AContext)
 {
-    if (WidgetOptions.auto_clip)
+    if (WidgetOptions.clip)
     {
         SAT_Painter* painter= AContext->painter;
         painter->popClipRect();
@@ -946,26 +967,14 @@ void SAT_Widget::setParameter(SAT_Parameter* AParameter, uint32_t AIndex)
 //
 //------------------------------
 
+// see showOwner
 void SAT_Widget::on_widget_show(SAT_WidgetOwner* AOwner)
 {
-    setOwner(AOwner);
-    uint32_t num = getNumChildren();
-    for (uint32_t i=0; i<num; i++)
-    {
-        SAT_Widget* widget = getChild(i);
-        widget->on_widget_show(AOwner);
-    }
 }
 
+// see hideOwner
 void SAT_Widget::on_widget_hide(SAT_WidgetOwner* AOwner)
 {
-    setOwner(nullptr);
-    uint32_t num = getNumChildren();
-    for (uint32_t i=0; i<num; i++)
-    {
-        SAT_Widget* widget = getChild(i);
-        widget->on_widget_hide(AOwner);
-    }
 }
 
 void SAT_Widget::on_widget_paint(SAT_PaintContext* AContext)
@@ -1014,9 +1023,13 @@ void SAT_Widget::on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValue
 {
 }
 
-void SAT_Widget::on_widget_hint(uint32_t AType, const char* AHint)
-{
-}
+// void SAT_Widget::on_widget_hint(uint32_t AType, const char* AHint)
+// {
+// }
+
+// void SAT_Widget::on_widget_tooltip(uint32_t AType, const char* ATooltip)
+// {
+// }
 
 void SAT_Widget::on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
@@ -1024,6 +1037,11 @@ void SAT_Widget::on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AB
 
 void SAT_Widget::on_widget_mouse_dbl_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
+}
+
+void SAT_Widget::on_widget_mouse_longpress(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
+{
+    SAT_TRACE;    
 }
 
 void SAT_Widget::on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
@@ -1036,10 +1054,14 @@ void SAT_Widget::on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t ASt
 
 void SAT_Widget::on_widget_mouse_enter(SAT_Widget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime)
 {
+    if (WidgetOptions.auto_mouse_cursor) do_widget_cursor(this,WidgetBase.cursor);
+    if (WidgetOptions.auto_hint) do_widget_hint(this,SAT_HINT_NORMAL,WidgetBase.hint);
 }
 
 void SAT_Widget::on_widget_mouse_leave(SAT_Widget* ATo, int32_t AXpos, int32_t AYpos, uint32_t ATime)
 {
+    // if (WidgetOptions.auto_mouse_cursor) do_widget_cursor(this,WidgetBase.cursor);
+    // if (WidgetOptions.auto_hint) do_widget_hint(this,SAT_HINT_CLEAR,"");
 }
 
 void SAT_Widget::on_widget_key_press(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime)
