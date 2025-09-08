@@ -44,6 +44,7 @@ class SAT_PanelWidget
         void on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
         void on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
         void on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
+        void on_widget_mouse_start_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
 
     protected:
 
@@ -148,10 +149,17 @@ void SAT_PanelWidget::on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32
 
 void SAT_PanelWidget::on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
+    do_widget_cursor(this,SAT_CURSOR_SHOW);
     do_widget_cursor(this,SAT_CURSOR_UNLOCK);
 };
 
 void SAT_PanelWidget::on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
 {
     SAT_PRINT("x %i y %i\n",AXpos,AYpos);
+}
+
+void SAT_PanelWidget::on_widget_mouse_start_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
+{
+    SAT_PRINT("x %i y %i\n",AXpos,AYpos);
+    do_widget_cursor(this,SAT_CURSOR_HIDE);
 }

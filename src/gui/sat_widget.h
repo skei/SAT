@@ -129,6 +129,8 @@ class SAT_Widget
         void                on_widget_mouse_longpress(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
         void                on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
         void                on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
+        void                on_widget_mouse_start_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
+        void                on_widget_mouse_end_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
         void                on_widget_mouse_enter(SAT_Widget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime) override;
         void                on_widget_mouse_leave(SAT_Widget* ATo, int32_t AXpos, int32_t AYpos, uint32_t ATime) override;
         void                on_widget_key_press(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) override;
@@ -1056,6 +1058,14 @@ void SAT_Widget::on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t 
 }
 
 void SAT_Widget::on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
+{
+}
+
+void SAT_Widget::on_widget_mouse_start_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
+{
+}
+
+void SAT_Widget::on_widget_mouse_end_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
 {
 }
 

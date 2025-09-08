@@ -140,6 +140,7 @@ struct SAT_Window_Mouse
     uint32_t                clickedButton       = SAT_BUTTON_NONE;
     uint32_t                clickedState        = SAT_KEY_STATE_NONE;
     SAT_Widget*             clickedWidget       = nullptr;
+    bool                    waitingForDrag      = false;
     bool                    waitingForLongpress = false;
     uint32_t                longpressTime       = 0;
     bool                    waitingForTooltip   = false;
@@ -678,6 +679,7 @@ void SAT_WidgetWindow::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint3
     // Mouse.waiting_longpress = true;
     Mouse.waitingForLongpress = false;
     Mouse.waitingForTooltip = false;
+    Mouse.waitingForDrag = true;
     if (Mouse.tooltipVisible)
     {
         Mouse.tooltipVisible = false;
@@ -715,13 +717,13 @@ void SAT_WidgetWindow::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint3
 
 void SAT_WidgetWindow::on_window_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
-
     // Mouse.clicked_time = ATime;
     // Mouse.clicked_pos.x = AXpos;
     // Mouse.clicked_pos.y = AXpos;
     // Mouse.clicked_button = AButton;
     // Mouse.clicked_widget = nullptr;
     Mouse.waitingForLongpress = false;
+    Mouse.waitingForDrag = false;
     if (Widgets.mouseCaptured)
     {
         Widgets.mouseCaptured->on_widget_mouse_release(AXpos,AYpos,AButton,AState,ATime);
@@ -750,7 +752,11 @@ void SAT_WidgetWindow::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32
         Mouse.tooltipVisible = false;
         hideTooltip();
     }
-
+    if (Mouse.waitingForDrag)
+    {
+        Mouse.clickedWidget->on_widget_mouse_start_drag(AXpos,AYpos,AState,ATime);
+        Mouse.waitingForDrag = false;
+    }
     if (Mouse.locked)
     {
         if (updateLockedMouse(AXpos,AYpos))
