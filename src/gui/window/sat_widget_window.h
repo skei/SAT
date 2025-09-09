@@ -113,12 +113,9 @@ struct SAT_Window_Widgets
     SAT_Widget*             keyCaptured         = nullptr;          // send key events directoy to this
     uint32_t                capturedButton      = SAT_BUTTON_NONE;  // button that caused the capture
  // SAT_Widget*             drag                = nullptr;          // drag'n'drop, start widget (drag from)
-
-    // widget tooptip
-    // double time_last_mouse_move
-
-    // widget longpress
-    // double time_last_mouse_click
+ 
+    SAT_WidgetArray         background          = {};
+    SAT_WidgetArray         overlay             = {};
 
 };
 
@@ -133,24 +130,35 @@ struct SAT_Window_Queues
 struct SAT_Window_Mouse
 {
     SAT_MouseCoords         currentPos          = {0,0};
+    int32_t                 currentCursor       = SAT_CURSOR_DEFAULT;
+
     double                  currentTime         = 0.0;
     double                  lastMovedTime       = 0.0;
+
     double                  clickedTime         = 0.0;
     SAT_MouseCoords         clickedPos          = {0,0};
     uint32_t                clickedButton       = SAT_BUTTON_NONE;
     uint32_t                clickedState        = SAT_KEY_STATE_NONE;
     SAT_Widget*             clickedWidget       = nullptr;
-    bool                    waitingForDrag      = false;
+
+    SAT_Widget*             releasedWidget      = nullptr;
+    uint32_t                releasedButton      = SAT_BUTTON_NONE;
+    double                  releasedTime        = 0.0;
+
     bool                    waitingForLongpress = false;
     uint32_t                longpressTime       = 0;
+
     bool                    waitingForTooltip   = false;
     bool                    tooltipVisible      = false;
     SAT_Widget*             tooltipWidget       = nullptr;
     bool                    tooltipExpected     = false;
+
     bool                    locked              = false;
     SAT_MouseCoords         lockedPos           = {0,0};
     SAT_MouseCoords         lockedVirtualPos    = {0,0};
-    int32_t                 currentCursor       = SAT_CURSOR_DEFAULT;
+
+    bool                    waitingForDrag      = false;
+
 };
 
 //----------------------------------------------------------------------
@@ -383,8 +391,10 @@ void SAT_WidgetWindow::handleMouseTimer(double ADelta)
             uint32_t b = Mouse.clickedButton;
             uint32_t s = Mouse.clickedState;
             uint32_t t = Mouse.longpressTime + (uint32_t)(SAT.GUI->getLongPressTime() * 1000); // SAT_MOUSE_LONGPRESS_SEC * 1000
-            on_widget_mouse_longpress(x,y,b,s,t);
+            SAT_PRINT("longpress  - %s\n",Mouse.clickedWidget->getName());
+            Mouse.clickedWidget->on_widget_mouse_longpress(x,y,b,s,t);
             Mouse.waitingForLongpress = false;
+            // Mouse.waitingForDrag = false;
         }
     }
     if (Mouse.waitingForTooltip)
@@ -565,29 +575,37 @@ void SAT_WidgetWindow::paintWidgets(SAT_PaintContext* AContext)
 }
 
 /*
-    first, redraw anything inside the update_rect
-    (paint any background widgets intersecting the update rect)
-    note we haven't 'dived down' into each widget that needs to be drawn yet,
-    so clipping is set to the update_rect, that encompass/surround all
-    the (unclipped) widgets that are to be drawn, not just the changed parts..
-    (when we set a widget 'dirty', we don't know which part of will be clipped)
-    todo: check through background_widgets (?), if any of them intersects the
-    update_rect, redraw them first..
+    draw any background widgets that intersect the update_rect
 */
 
 void SAT_WidgetWindow::paintBackground(SAT_PaintContext* AContext)
 {
+    for (uint32_t i=0; i<Widgets.background.size(); i++)
+    {
+        SAT_Widget* widget = Widgets.background[i];
+        SAT_Rect rect = widget->getRect();
+        if (rect.intersects(AContext->update_rect))
+        {
+            paintWidget(AContext,widget);
+        }
+    }
 }
 
 /*
-    after widgets have been drawn, we might need to repaint the overlay on top of them
-    (paint any overlay widgets intersecting the update rect)
-    todo: check through overlay_widgets (?), if any of them intersects the
-    update_rect, redraw them on top..
+    draw any overlay widgets that intersect the update_rect
 */
 
 void SAT_WidgetWindow::paintOverlay(SAT_PaintContext* AContext)
 {
+    for (uint32_t i=0; i<Widgets.overlay.size(); i++)
+    {
+        SAT_Widget* widget = Widgets.overlay[i];
+        SAT_Rect rect = widget->getRect();
+        if (rect.intersects(AContext->update_rect))
+        {
+            paintWidget(AContext,widget);
+        }
+    }
 }
 
 //------------------------------
@@ -680,11 +698,25 @@ void SAT_WidgetWindow::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint3
     Mouse.waitingForLongpress = false;
     Mouse.waitingForTooltip = false;
     Mouse.waitingForDrag = true;
+
     if (Mouse.tooltipVisible)
     {
         Mouse.tooltipVisible = false;
         hideTooltip();
     }
+
+    if (AButton == Mouse.releasedButton)
+    {
+        if ((Mouse.currentTime - Mouse.releasedTime) <= SAT.GUI->getDoubleClickTime())  // <= SAT_MOUSE_DBL_CLICK_SEC)
+        {
+            if (Mouse.releasedWidget == Widgets.hover)
+            {
+                SAT_PRINT("double click - %s\n",Widgets.hover->getName());
+                Widgets.hover->on_widget_mouse_dbl_click(AXpos,AYpos,AButton,AState,ATime);
+            }
+        }
+    }
+
     if (Widgets.mouseCaptured)
     {
         // a widget is captured, and we clicked another button
@@ -692,8 +724,13 @@ void SAT_WidgetWindow::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint3
         Mouse.waitingForLongpress = true;
         Widgets.mouseCaptured->on_widget_mouse_click(AXpos,AYpos,AButton,AState,ATime);
     }
+
     else if (Widgets.hover)
     {
+        Mouse.clickedWidget = Widgets.hover;
+        Mouse.waitingForLongpress = true;
+        Widgets.hover->on_widget_mouse_click(AXpos,AYpos,AButton,AState,ATime);
+
         if (Widgets.hover->WidgetOptions.mouse_capture)
         {
             if ((AButton == SAT_BUTTON_LEFT) || (AButton == SAT_BUTTON_MIDDLE) || (AButton == SAT_BUTTON_RIGHT))
@@ -702,9 +739,7 @@ void SAT_WidgetWindow::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint3
                 Widgets.capturedButton = AButton;
             }
         }
-        Mouse.clickedWidget = Widgets.hover;
-        Mouse.waitingForLongpress = true;
-        Widgets.hover->on_widget_mouse_click(AXpos,AYpos,AButton,AState,ATime);
+
     }
 }
 
@@ -722,6 +757,11 @@ void SAT_WidgetWindow::on_window_mouse_release(int32_t AXpos, int32_t AYpos, uin
     // Mouse.clicked_pos.y = AXpos;
     // Mouse.clicked_button = AButton;
     // Mouse.clicked_widget = nullptr;
+
+    Mouse.releasedButton = AButton;
+    Mouse.releasedTime = Mouse.currentTime;
+    Mouse.releasedWidget = Widgets.hover;    // Mouse.clickedWidget;
+
     Mouse.waitingForLongpress = false;
     Mouse.waitingForDrag = false;
     if (Widgets.mouseCaptured)
@@ -754,6 +794,7 @@ void SAT_WidgetWindow::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32
     }
     if (Mouse.waitingForDrag)
     {
+        SAT_PRINT("start drag  - %s\n",Mouse.clickedWidget->getName());
         Mouse.clickedWidget->on_widget_mouse_start_drag(AXpos,AYpos,AState,ATime);
         Mouse.waitingForDrag = false;
     }

@@ -5,6 +5,7 @@
 #include "base/sat.h"
 #include "gui/sat_window.h"
 #include "gui/sat_widgets.h"
+#include "gui/widget/sat_test_widget.h"
 
 //----------------------------------------------------------------------
 //
@@ -31,24 +32,22 @@ int main(void)
             //panel->WidgetOptions.auto_redraw_hover = true;
             panel->setScale(1.0);
 
-                SAT_TextWidget* text = new SAT_TextWidget(SAT_Rect(10,10,80,20));
-                panel->appendChild(text);
-                text->setName("text");
-                //text->WidgetLayout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
-                //text->WidgetLayout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
-                text->setCanSelect(true);
-                text->WidgetOptions.redraw_if_hovering = true;
-                text->WidgetOptions.tooltip = true;
-                text->setTooltip("some nice tooltip text here...");
+                SAT_TestWidget* widget = new SAT_TestWidget(SAT_Rect(10,10,80,20));
+                panel->appendChild(widget);
+                widget->setName("text");
+                //widget->WidgetLayout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
+                //widget->WidgetLayout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
+                widget->WidgetOptions.redraw_if_hovering = true;
+                widget->WidgetOptions.tooltip = true;
+                widget->setTooltip("some nice tooltip text here...");
 
-                SAT_TextWidget* text2 = new SAT_TextWidget(SAT_Rect(10,40,80,20));
-                panel->appendChild(text2);
-                text2->setName("text2");
-                //text2->WidgetLayout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
-                //text2->WidgetLayout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
-                text2->setCanSelect(true);
-                //text2->WidgetOptions.redraw_if_hovering = true;
-                text2->WidgetOptions.tooltip = true;
+                SAT_TestWidget* widget2 = new SAT_TestWidget(SAT_Rect(10,40,80,20));
+                panel->appendChild(widget2);
+                widget2->setName("text2");
+                //widget2->WidgetLayout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
+                //widget2->WidgetLayout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
+                //widget2->WidgetOptions.redraw_if_hovering = true;
+                widget2->WidgetOptions.tooltip = true;
 
     window->show();
     window->eventLoop();

@@ -1050,7 +1050,6 @@ void SAT_Widget::on_widget_mouse_dbl_click(int32_t AXpos, int32_t AYpos, uint32_
 
 void SAT_Widget::on_widget_mouse_longpress(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
-    SAT_TRACE;    
 }
 
 void SAT_Widget::on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
