@@ -108,9 +108,6 @@ void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
 
 void SAT_TextWidget::on_widget_paint(SAT_PaintContext* AContext)
 {
-    #ifdef SAT_WINDOW_DEBUG_PAINTING
-        SAT_PRINT("%s, frame %i (last frame %i)\n",getName(),AContext->current_frame,WidgetUpdate.last_painted);
-    #endif
     fillBackground(AContext);
     paintChildren(AContext);    
     drawText(AContext);
