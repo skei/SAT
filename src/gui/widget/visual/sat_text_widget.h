@@ -51,8 +51,8 @@ class SAT_TextWidget
 SAT_TextWidget::SAT_TextWidget(SAT_Rect ARect)
 : SAT_PanelWidget(ARect)
 {
-    WidgetBase.widgetTypeName = "SAT_TextWidget";
-    WidgetVisual.skin = SAT.GUI->SKINS.find("DefaultText");
+    MTypeName = "SAT_TextWidget";
+    MSkin = SAT.GUI->SKINS.find("DefaultText");
 }
 
 SAT_TextWidget::~SAT_TextWidget()
@@ -85,15 +85,15 @@ void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
     SAT_Painter* painter = AContext->painter;
     SAT_Rect rect = getRect();
     uint32_t state = getPaintState();
-    uint32_t mode = WidgetVisual.skin->getTextMode(state);
+    uint32_t mode = MSkin->getTextMode(state);
     switch (mode)
     {
         case SAT_SKIN_TEXT_NORMAL:
         {
-            SAT_Color color = WidgetVisual.skin->getTextColor(state);
-            uint32_t align = WidgetVisual.skin->getTextAlignment(state);
-            // sat_coord_t size = WidgetVisual.skin->getTextSize(state);
-            // intptr_t font = WidgetVisual.skin->getTextFont(state);
+            SAT_Color color = MSkin->getTextColor(state);
+            uint32_t align = MSkin->getTextAlignment(state);
+            // sat_coord_t size = Visual.skin->getTextSize(state);
+            // intptr_t font = Visual.skin->getTextFont(state);
             painter->setTextColor(color);
             // painter->setTextSize(size);
             // painter->setTextFont(font);

@@ -46,7 +46,7 @@ class SAT_GlobalGui
     public:
         SAT_Skins   SKINS = {};
     private:
-        double      MDoubleClickTime    = SAT_MOUSE_DBL_CLICK_SEC;
+        double      MDoubleClickTime    = SAT_MOUSE_DOUBLE_CLICK_SEC;
         double      MLongPressTime      = SAT_MOUSE_LONGPRESS_SEC;
         double      MTooltipDelayTime   = SAT_MOUSE_TOOLTIP_SEC;
 };
