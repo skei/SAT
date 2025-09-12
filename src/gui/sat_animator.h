@@ -26,13 +26,13 @@ typedef SAT_SPSCQueue<SAT_AnimChain*,SAT_QUEUE_SIZE_TWEEN>  SAT_AnimChainQueue;
 class SAT_AnimNode
 {
     public:
-        SAT_AnimNode(void* ATarget, uint32_t AId, double ADuration, uint32_t AType, uint32_t ANumValues=0, double* AStartValues=nullptr, double* AEndValues=nullptr, uint32_t AEasing=0);
+        SAT_AnimNode(SAT_Widget* ATarget, uint32_t AId, double ADuration, uint32_t AType, uint32_t ANumValues=0, double* AStartValues=nullptr, double* AEndValues=nullptr, uint32_t AEasing=0);
         ~SAT_AnimNode();
     public:
         uint32_t    MType                               = 0;        // anim, pause, signal ..
         uint32_t    MId                                 = 0;        // id
         double      MDuration                           = 0.0;      // in seconds
-        void*       MTarget                             = nullptr;  // target widget
+        SAT_Widget* MTarget                             = nullptr;  // target widget
         uint32_t    MEasing                             = 0;        // easing
         uint32_t    MNumValues                          = 0;        // number of coords/vriables
         double      MStartValues[SAT_TWEEN_MAX_VALUES]  = {0};      // start values
@@ -83,7 +83,7 @@ class SAT_Animator
 // anim node
 //------------------------------
 
-SAT_AnimNode::SAT_AnimNode(void* ATarget, uint32_t AId, double ADuration, uint32_t AType, uint32_t ANumValues, double* AStartValues, double* AEndValues, uint32_t AEasing)
+SAT_AnimNode::SAT_AnimNode(SAT_Widget* ATarget, uint32_t AId, double ADuration, uint32_t AType, uint32_t ANumValues, double* AStartValues, double* AEndValues, uint32_t AEasing)
 {
     //SAT_TRACE;
     MId         = AId;
@@ -212,7 +212,7 @@ void SAT_Animator::process(double ADelta)
             SAT_AnimNode* node = MChains[i]->MNodes[index];
             if (node)
             {
-                SAT_Widget* target = (SAT_Widget*)node->MTarget;
+                SAT_Widget* target = node->MTarget;
                 double data[16] = {0};
                 // double time_left = node->MDuration - (MChains[i]->MCurrentTime + ADelta);
                 for (uint32_t j=0; j<node->MNumValues; j++)

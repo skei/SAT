@@ -32,24 +32,14 @@ class SAT_PanelWidget
         SAT_PanelWidget(SAT_Rect ARect);
         virtual ~SAT_PanelWidget();
 
-    public:
+    protected:
 
-        // virtual void setCanSelect(bool ACanSelect=true);
         virtual void fillBackground(SAT_PaintContext* AContext);
         virtual void drawBorder(SAT_PaintContext* AContext);
 
     public:
 
         void on_widget_paint(SAT_PaintContext* AContext) override;
-        // void on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
-        // void on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
-        // void on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
-        // void on_widget_mouse_start_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
-
-    protected:
-
-        // bool        MCanSelect  = false;
-        // bool        MIsSelected = false;
 
 };
 
@@ -67,15 +57,6 @@ SAT_PanelWidget::SAT_PanelWidget(SAT_Rect ARect)
 SAT_PanelWidget::~SAT_PanelWidget()
 {
 }
-
-//------------------------------
-//
-//------------------------------
-
-// void SAT_PanelWidget::setCanSelect(bool ACanSelect)
-// {
-//     MCanSelect = ACanSelect;
-// }
 
 //------------------------------
 //
@@ -129,34 +110,3 @@ void SAT_PanelWidget::on_widget_paint(SAT_PaintContext* AContext)
     paintChildren(AContext);    
     drawBorder(AContext);
 }
-
-// void SAT_PanelWidget::on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
-// {
-//     if (MCanSelect)
-//     {
-//         if (AButton == SAT_BUTTON_LEFT)
-//         {
-//             MIsSelected = !MIsSelected;
-//             MState.highlighted = MIsSelected;
-//             do_widget_redraw(this);
-//         }
-//     }
-//     do_widget_cursor(this,SAT_CURSOR_LOCK);
-// }
-
-// void SAT_PanelWidget::on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
-// {
-//     do_widget_cursor(this,SAT_CURSOR_SHOW);
-//     do_widget_cursor(this,SAT_CURSOR_UNLOCK);
-// };
-
-// void SAT_PanelWidget::on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
-// {
-//     SAT_PRINT("x %i y %i\n",AXpos,AYpos);
-// }
-
-// void SAT_PanelWidget::on_widget_mouse_start_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
-// {
-//     SAT_PRINT("x %i y %i\n",AXpos,AYpos);
-//     do_widget_cursor(this,SAT_CURSOR_HIDE);
-// }

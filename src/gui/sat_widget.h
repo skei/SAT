@@ -8,6 +8,8 @@
 #include "gui/sat_skin.h"
 
 class SAT_AnimChain;
+class SAT_KeyboardState;
+class SAT_MouseState;
 class SAT_Parameter;
 
 class SAT_Widget;
@@ -21,37 +23,27 @@ typedef SAT_Array<SAT_Widget*> SAT_WidgetArray;
 
 struct SAT_Widget__Layout
 {
-    uint32_t    anchor              = SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT;    // snap widget pos to parent
-    uint32_t    stretch             = SAT_WIDGET_LAYOUT_STRETCH_NONE;       // stretch widget sides (after snapping)
-    uint32_t    crop                = SAT_WIDGET_LAYOUT_CROP_NONE;          // crop widget rect out of 'available' layout rect (for following widgets)
-    uint32_t    relative            = SAT_WIDGET_LAYOUT_RELATIVE_NONE;      // pos/size relative to parent, layout (percentages)
-    uint32_t    stack               = SAT_WIDGET_LAYOUT_STACK_NONE;         // horiz/vert stacked (icon view)
-    SAT_Rect    inner_border        = {};                                   // border around child widgets
-    SAT_Rect    outer_border        = {};                                   // border around widget itself (in parent widget)
-    SAT_Point   spacing             = {};                                   // space between widgets
-    SAT_Point   minSize             = {-1,-1};                              // minimum widget size (-1 for none)
-    SAT_Point   maxSize             = {-1,-1};                              // maximum widget size (-1 for none)
+    uint32_t    anchor              = SAT_WIDGET_LAYOUT_ANCHOR_CURRENT | SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT;
+    uint32_t    stretch             = SAT_WIDGET_LAYOUT_STRETCH_CURRENT | SAT_WIDGET_LAYOUT_STRETCH_NONE;
+    uint32_t    crop                = SAT_WIDGET_LAYOUT_CROP_NONE;
+    uint32_t    relative            = SAT_WIDGET_LAYOUT_RELATIVE_NONE;
+    uint32_t    stack               = SAT_WIDGET_LAYOUT_STACK_CURRENT | SAT_WIDGET_LAYOUT_STACK_NONE;
+    SAT_Rect    innerBorder         = {};
+    SAT_Rect    outerBorder         = {};
+    SAT_Point   spacing             = {};
+    uint32_t    limit               = SAT_WIDGET_LAYOUT_LIMIT_NONE;
+    SAT_Rect    minimum             = {-1,-1,-1,-1};
+    SAT_Rect    maximum             = {-1,-1,-1,-1};
 };
 
 struct SAT_Widget__Options
 {
-    bool        mouseCapture        = true;                                 // capture mouse when clicking
     bool        clip                = true;                                 // clip child widgets
-    bool        hasTooltip          = false;                                // widget has tooltip
-    bool        wantUncapturedHover = false;                                // want move events when not captured
-    bool        captureHover        = false;                                // want move events when not captured
-    bool        wantDoubleClick     = false;                                // want double click events
-    bool        wantLongPress       = false;                                // want long press events
-    bool        wantStartDrag       = false;                                // want start drag events
     bool        realignIfInvisible  = false;                                // realign (child) widgets, even if not visible (menus, etc)
-    bool        redrawIfHovering    = false;                                // realign (child) widgets, even if not visible (menus, etc)
-    bool        autoHint            = false;                                // auto send hint when hovering
-    bool        autoMouseCursor     = false;                                // set cursor shape when hovering over widget
-    bool        autoMouseLock       = false;                                // lock cursor in place (when dragging)
-    bool        autoMouseHide       = false;                                // auto hide cursor when dragging
-    // bool     auto_size           = false;                                // scale/zoom widget (content) relative to rect/size (f.ex. font size)
-    // bool     movable             = false;
-    // bool     sizable             = false;
+    uint32_t    wantMouseEvent      = SAT_MOUSE_EVENT_NONE;
+    uint32_t    wantMouseGesture    = SAT_MOUSE_GESTURE_NONE;
+    uint32_t    wantKeyboardEvent   = SAT_KEYBOARD_EVENT_NONE;
+    uint32_t    wantKeyboardGesture = SAT_KEYBOARD_GESTURE_NONE;
 };
 
 struct SAT_Widget__State
@@ -177,25 +169,19 @@ class SAT_Widget
         SAT_Rect            on_widget_post_align(SAT_Rect ARect) override;
         void                on_widget_timer(uint32_t ATimerId, double ADelta) override;
         void                on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues) override;
+        void                on_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, intptr_t AValue=0) override;
+        void                on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState) override;
+        void                on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState) override;
+        void                on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState) override;
+        void                on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState) override;
      // void                on_widget_hint(uint32_t AType, const char* AHint) override;
      // void                on_widget_tooltip(uint32_t AType, const char* ATooltip) override;
-        void                on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
-        void                on_widget_mouse_double_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
-        void                on_widget_mouse_longpress(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
-        void                on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
-        void                on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
-        void                on_widget_mouse_start_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
-        void                on_widget_mouse_end_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) override;
-        void                on_widget_mouse_enter(SAT_Widget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime) override;
-        void                on_widget_mouse_leave(SAT_Widget* ATo, int32_t AXpos, int32_t AYpos, uint32_t ATime) override;
-        void                on_widget_key_press(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) override;
-        void                on_widget_key_release(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) override;
 
     public: // do_
 
         void                do_widget_update(SAT_Widget* AWidget, uint32_t AIndex=0) override;
-        void                do_widget_realign(SAT_Widget* AWidget) override;
-        void                do_widget_redraw(SAT_Widget* AWidget) override;
+        void                do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT) override;
+        void                do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF) override;
         void                do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain) override;
         void                do_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, int32_t AValue=0) override;
         void                do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint) override;
@@ -209,9 +195,9 @@ class SAT_Widget
         SAT_Widget__Layout      Layout                              = {};
         SAT_Widget__Options     Options                             = {};
 
-    protected:
+    //protected:
 
-        SAT_Widget__State       MState                              = {};
+        SAT_Widget__State        State                              = {};
 
     protected:
 
@@ -443,12 +429,12 @@ void SAT_Widget::hideOwner(SAT_WidgetOwner* AOwner)
 
 void SAT_Widget::setOpaque(bool AState)
 {
-    MState.opaque = AState;
+    State.opaque = AState;
 }
 
 void SAT_Widget::setVisible(bool AState)
 {
-    MState.visible = AState;
+    State.visible = AState;
     setChildrenVisible(AState);
 
 }
@@ -512,12 +498,12 @@ void SAT_Widget::setChildrenSkin(SAT_Skin* ASkin, bool AReplace)
 
 bool SAT_Widget::isOpaque()
 {
-    return MState.opaque;
+    return State.opaque;
 }
 
 bool SAT_Widget::isVisible()
 {
-    return MState.visible;
+    return State.visible;
 }
 
 sat_coord_t SAT_Widget::getScale()
@@ -555,7 +541,7 @@ SAT_Widget* SAT_Widget::getOpaqueParent()
 //----------
 
 /*
-    returns null if no child widgets at x,y
+    returns this if no child widgets at x,y
 */
 
 SAT_Widget* SAT_Widget::findChildAt(int32_t AXpos, int32_t AYpos)
@@ -567,9 +553,11 @@ SAT_Widget* SAT_Widget::findChildAt(int32_t AXpos, int32_t AYpos)
         {
             SAT_Widget* widget = getChild(i);
             SAT_Rect widget_rect = widget->MRect;
-            if (widget->MState.active)
+            if (widget_rect.contains(AXpos,AYpos))
             {
-                if (widget_rect.contains(AXpos,AYpos))
+                bool widget_is_visible = widget->State.visible;
+                // widget_is_visible |= widget->Options.visibleIfHovering;
+                if (widget_is_visible)
                 {
                     return widget->findChildAt(AXpos,AYpos);
                 }
@@ -625,19 +613,19 @@ sat_coord_t SAT_Widget::getPaintScale()
 uint32_t SAT_Widget::getPaintState()
 {
     uint32_t state = SAT_SKIN_STATE_NORMAL;
-    if (Options.redrawIfHovering)
-    {
-        if (MState.hovering) state |= SAT_SKIN_STATE_HOVERING;
-    }
-    if (MState.highlighted) state |= SAT_SKIN_STATE_HIGHLIGHTED;
-    if (!MState.enabled) state |= SAT_SKIN_STATE_DISABLED;
-    if (MState.interact) state |= SAT_SKIN_STATE_INTERACT;
+    //if (Options.autoHoverRedraw)
+    //{
+        if (State.hovering) state |= SAT_SKIN_STATE_HOVERING;
+    //}
+    if (State.highlighted) state |= SAT_SKIN_STATE_HIGHLIGHTED;
+    if (!State.enabled) state |= SAT_SKIN_STATE_DISABLED;
+    if (State.interact) state |= SAT_SKIN_STATE_INTERACT;
     return state;
 }
 
 /*
     assumes widget is visible, and clipping is set up
-    see: MState.visible, pushRecursiveClip/popClip
+    see: State.visible, pushRecursiveClip/popClip
 
 */
 
@@ -660,11 +648,13 @@ void SAT_Widget::paintChildren(SAT_PaintContext* AContext)
 
 void SAT_Widget::paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidget)
 {
+    SAT_PRINT("painting: %s\n",AWidget->getName());
     // skip if widget doesn't intersect update_rect..
     if (!AWidget->MRect.intersects(AContext->update_rect)) return;
 
-    if (AWidget->MState.visible)
+    if (AWidget->State.visible)
     {
+        //SAT_PRINT("painting %s\n",AWidget->getName());
         AWidget->pushRecursiveClip(AContext);
         AWidget->on_widget_paint(AContext);
         AWidget->popClip(AContext);
@@ -681,21 +671,10 @@ void SAT_Widget::paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidget)
 /*
     realign all child widgets (recursively)
     note: MOwner (SAT_WidgetOwner) needs to be set..
-    (we need it to ask for window.scaling and root.size, etc)
-
-    called directly from:
-        SAT_WidgetWindow.on_window_show     // after on_widget_show() has been called (and given the WidgetOwner to the widgets)
-        SAT_WidgetWindow.on_window_resize   // we are waiting for the initial MAP_NOTIFY events when opning the window,
-                                            // (if SAT_X11_WAIT_FOR_MAPNOTIFY is defined, see SAT_X11Window.show())
-                                            // so we shouldn't get any resize events, and thus, realignChildren() calls, before on_window_show()?
-    via on_widget_realign:
-        SAT_WidgetWindow.handleTimer        // via SAT_WidgetWindow.on_timer_listener_update() (timer thread)
-                                            // -> sendClientMessage -> on_window_timer() (gui thread) -> handleTimer
 */
 
 void SAT_Widget::realignChildren()
 {
-    // on_window_show -> on_widget_show should have set this..
     SAT_Assert(MOwner);
 
     sat_coord_t scale = MOwner->do_widget_owner_get_scale(this);
@@ -706,25 +685,22 @@ void SAT_Widget::realignChildren()
     sat_coord_t h = MOwner->do_widget_owner_get_height(this);
     SAT_Rect root_rect = SAT_Rect(w,h);
 
-    SAT_Rect rect = MRect;
-    //SAT_PRINT("rect %.1f,%.1f root %.1f,%.1f\n",rect.w,rect.h,w,h);
+    SAT_Rect widget_rect = MRect;
 
-    SAT_Rect inner_border = Layout.inner_border;
+    SAT_Rect inner_border = Layout.innerBorder;
     inner_border.scale(scale);
 
     SAT_Point spacing = Layout.spacing;
     spacing.scale(scale);
 
-    SAT_Rect parent_rect = rect;
+    SAT_Rect parent_rect = widget_rect;
     parent_rect.shrink(inner_border);
 
-    SAT_Rect layout_rect = rect;
-    layout_rect.shrink(inner_border);
+    SAT_Rect current_rect = widget_rect;
+    current_rect.shrink(inner_border);
 
-    MContentRect = SAT_Rect( rect.x,rect.y, 0,0 );
+    MContentRect = SAT_Rect( widget_rect.x,widget_rect.y, 0,0 );
 
-    double layout_xcenter   = layout_rect.x + (layout_rect.w * 0.5);
-    double layout_ycenter   = layout_rect.y + (layout_rect.h * 0.5);
     double stackx           = 0;
     double stacky           = 0;
     double stack_highest    = 0;
@@ -739,78 +715,95 @@ void SAT_Widget::realignChildren()
 
         SAT_Rect child_rect;
 
-        bool need_realign = (child->MState.visible || child->Options.realignIfInvisible);
+        bool need_realign = (child->State.visible || child->Options.realignIfInvisible);
         if (need_realign)
         {
 
-            // --- relative ---
+            // --- relative pos/size ---
+            // (percentages)
 
-            if (child->Layout.relative)
+            switch(child->Layout.relative)
             {
-                if (child->Layout.relative == SAT_WIDGET_LAYOUT_RELATIVE_ROOT)
-                {
-                    child_rect = SAT_Rect(root_rect.w,root_rect.h,root_rect.w,root_rect.h);
-                    child_rect.scale(child->MInitialRect);
-                    child_rect.scale(0.01);
-                }
-                else if (child->Layout.relative == SAT_WIDGET_LAYOUT_RELATIVE_PARENT)
-                {
+                case SAT_WIDGET_LAYOUT_RELATIVE_NONE:
+                    child_rect = child->MBaseRect;
+                    child_rect.scale(scale);
+                    break;
+                case SAT_WIDGET_LAYOUT_RELATIVE_PARENT:
                     child_rect = SAT_Rect(parent_rect.w,parent_rect.h,parent_rect.w,parent_rect.h);
                     child_rect.scale(child->MInitialRect);
                     child_rect.scale(0.01);
-                }
-                else if (child->Layout.relative == SAT_WIDGET_LAYOUT_RELATIVE_LAYOUT)
-                {
-                    child_rect = SAT_Rect(layout_rect.w,layout_rect.h,layout_rect.w,layout_rect.h);
+                case SAT_WIDGET_LAYOUT_RELATIVE_CURRENT:
+                    child_rect = SAT_Rect(current_rect.w,current_rect.h,current_rect.w,current_rect.h);
                     child_rect.scale(child->MInitialRect);
                     child_rect.scale(0.01);
-                }
-                else // relative to current/self ??
-                {
-                    child_rect = SAT_Rect(rect.w,rect.h,rect.w,rect.h);
+                case SAT_WIDGET_LAYOUT_RELATIVE_ROOT:
+                    child_rect = SAT_Rect(root_rect.w,root_rect.h,root_rect.w,root_rect.h);
                     child_rect.scale(child->MInitialRect);
                     child_rect.scale(0.01);
-                }
-            }
-            else
-            {
-                child_rect = child->MBaseRect;
-                child_rect.scale(scale);
-            }
+                default:
+                    SAT_PRINT("Error! unknown layout relative mode: %i\n",child->Layout.relative);
+                    break;
+            };
 
             // --- TODO: anim / manual movement ---
             
-            /*
-                SAT_Rect manual = child->MManualAnim;
-                manual.scale(scale);
-                child_rect.add(manual);
-                //child_rect.add(child->MManuallyMoved);
-            */
+            // SAT_Rect manual = child->MManualAnim;
+            // manual.scale(scale);
+            // child_rect.add(manual);
+            // //child_rect.add(child->MManuallyMoved);
 
             // --- pre-align ---
 
             child_rect = child->on_widget_pre_align(child_rect);
 
-            /*
-                child_rect.add(child->MManuallyMoved);
-            */
+            // child_rect.add(child->MManuallyMoved);
 
             // --- anchor ---
 
+            SAT_Rect anchor_rect;
+            switch (child->Layout.anchor & 0xff000000)
+            {
+                case SAT_WIDGET_LAYOUT_ANCHOR_CURRENT:
+                    anchor_rect = current_rect;
+                    break;
+                case SAT_WIDGET_LAYOUT_ANCHOR_PARENT:
+                    anchor_rect = parent_rect;
+                    break;
+                default:
+                    SAT_PRINT("Error: unknown layout anchor mode: %i\n",child->Layout.anchor & 0xff000000);
+                    break;
+            };
+
             bool xanchored = false;
             bool yanchored = false;
-            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_LEFT)               { xanchored = true; child_rect.x += layout_rect.x; }
-            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_TOP)                { yanchored = true; child_rect.y += layout_rect.y; }
-            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_RIGHT)              { xanchored = true; child_rect.x += (layout_rect.x2()  - child_rect.w); }
-            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_BOTTOM)             { yanchored = true; child_rect.y += (layout_rect.y2()  - child_rect.h); }
-            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_CENTER_HORIZONTAL)  { xanchored = true; child_rect.x += (layout_xcenter - (child_rect.w * 0.5)); }
-            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_CENTER_VERTICAL)    { yanchored = true; child_rect.y += (layout_ycenter - (child_rect.h * 0.5)); }
+            double anchor_xcenter = anchor_rect.x + (anchor_rect.w * 0.5);
+            double anchor_ycenter = anchor_rect.y + (anchor_rect.h * 0.5);
+            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_LEFT)               { xanchored = true; child_rect.x += anchor_rect.x; }
+            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_TOP)                { yanchored = true; child_rect.y += anchor_rect.y; }
+            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_RIGHT)              { xanchored = true; child_rect.x += (anchor_rect.x2()  - child_rect.w); }
+            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_BOTTOM)             { yanchored = true; child_rect.y += (anchor_rect.y2()  - child_rect.h); }
+            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_CENTER_HORIZONTAL)  { xanchored = true; child_rect.x += (anchor_xcenter - (child_rect.w * 0.5)); }
+            if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_CENTER_VERTICAL)    { yanchored = true; child_rect.y += (anchor_ycenter - (child_rect.h * 0.5)); }
 
             // --- stack ---
 
+            SAT_Rect stack_rect;
+            switch (child->Layout.stack & 0xff000000)
+            {
+                case SAT_WIDGET_LAYOUT_STACK_CURRENT:
+                    stack_rect = current_rect;
+                    break;
+                case SAT_WIDGET_LAYOUT_STACK_PARENT:
+                    stack_rect = parent_rect;
+                    break;
+                default:
+                    SAT_PRINT("Error! unknown layout stack mode: %i\n",child->Layout.stack & 0xff000000);
+                    break;
+            }
+
             if (child->Layout.stack & SAT_WIDGET_LAYOUT_STACK_HORIZONTAL)
             {
-                if ((stackx + child_rect.w) >= layout_rect.w)
+                if ((stackx + child_rect.w) >= stack_rect.w)
                 {
                     if (stackx != 0)
                     {
@@ -821,15 +814,15 @@ void SAT_Widget::realignChildren()
                 }
                 xanchored = true;
                 yanchored = true;
-                child_rect.x += (layout_rect.x + stackx);
-                child_rect.y += (layout_rect.y + stacky);
+                child_rect.x += (stack_rect.x + stackx);
+                child_rect.y += (stack_rect.y + stacky);
                 stackx += child_rect.w + spacing.x;
                 if (child_rect.h > stack_highest) stack_highest = child_rect.h;
             }
 
             if (child->Layout.stack & SAT_WIDGET_LAYOUT_STACK_VERTICAL)
             {
-                if ((stacky + child_rect.h) >= layout_rect.h)
+                if ((stacky + child_rect.h) >= stack_rect.h)
                 {
                     if (stacky != 0)
                     {
@@ -840,28 +833,44 @@ void SAT_Widget::realignChildren()
                 }
                 xanchored = true;
                 yanchored = true;
-                child_rect.x += (layout_rect.x + stackx);
-                child_rect.y += (layout_rect.y + stacky);
+                child_rect.x += (stack_rect.x + stackx);
+                child_rect.y += (stack_rect.y + stacky);
                 stacky += child_rect.h + spacing.y;
                 if (child_rect.w > stack_widest) stack_widest = child_rect.w;
             }
 
-            if (!xanchored) child_rect.x += rect.x;
-            if (!yanchored) child_rect.y += rect.y;
+            if (!xanchored) child_rect.x += widget_rect.x;
+            if (!yanchored) child_rect.y += widget_rect.y;
 
             // --- stretch ---
 
-            if (child->Layout.stretch & SAT_WIDGET_LAYOUT_STRETCH_LEFT)        { child_rect.setX1( layout_rect.x   ); }
-            if (child->Layout.stretch & SAT_WIDGET_LAYOUT_STRETCH_TOP)         { child_rect.setY1( layout_rect.y   ); }
-            if (child->Layout.stretch & SAT_WIDGET_LAYOUT_STRETCH_RIGHT)       { child_rect.setX2( layout_rect.x2()); }
-            if (child->Layout.stretch & SAT_WIDGET_LAYOUT_STRETCH_BOTTOM)      { child_rect.setY2( layout_rect.y2()); }
+            SAT_Rect stretch_rect;
+            switch (child->Layout.stretch & 0xff000000)
+            {
+                case SAT_WIDGET_LAYOUT_STRETCH_CURRENT:
+                    stretch_rect = current_rect;
+                    break;
+                case SAT_WIDGET_LAYOUT_STRETCH_PARENT:
+                    stretch_rect = parent_rect;
+                    break;
+                //case SAT_WIDGET_LAYOUT_STRETCH_ROOT:
+                //    stretch_rect = root_rect;
+                //    break;
+                default:
+                    SAT_PRINT("Error: unknown layout stretch mode: %i\n",child->Layout.stretch & 0xff000000);
+                    break;
+            };
+            if (child->Layout.stretch & SAT_WIDGET_LAYOUT_STRETCH_LEFT)     { child_rect.setX1( stretch_rect.x   ); }
+            if (child->Layout.stretch & SAT_WIDGET_LAYOUT_STRETCH_TOP)      { child_rect.setY1( stretch_rect.y   ); }
+            if (child->Layout.stretch & SAT_WIDGET_LAYOUT_STRETCH_RIGHT)    { child_rect.setX2( stretch_rect.x2()); }
+            if (child->Layout.stretch & SAT_WIDGET_LAYOUT_STRETCH_BOTTOM)   { child_rect.setY2( stretch_rect.y2()); }
 
             // --- crop ---
 
-            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_LEFT)           { layout_rect.setX1( child_rect.x2()); layout_rect.x += spacing.x; layout_rect.w -= spacing.x; }
-            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_TOP)            { layout_rect.setY1( child_rect.y2()); layout_rect.y += spacing.y; layout_rect.h -= spacing.y; }
-            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_RIGHT)          { layout_rect.setX2( child_rect.x   ); layout_rect.w -= spacing.x; }
-            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_BOTTOM)         { layout_rect.setY2( child_rect.y   ); layout_rect.h -= spacing.y; }
+            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_LEFT)           { current_rect.setX1( child_rect.x2()); current_rect.x += spacing.x; current_rect.w -= spacing.x; }
+            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_TOP)            { current_rect.setY1( child_rect.y2()); current_rect.y += spacing.y; current_rect.h -= spacing.y; }
+            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_RIGHT)          { current_rect.setX2( child_rect.x   ); current_rect.w -= spacing.x; }
+            if (child->Layout.crop & SAT_WIDGET_LAYOUT_CROP_BOTTOM)         { current_rect.setY2( child_rect.y   ); current_rect.h -= spacing.y; }
 
             // --- stack end ---
 
@@ -870,36 +879,70 @@ void SAT_Widget::realignChildren()
                 if (child->Layout.stack & SAT_WIDGET_LAYOUT_STACK_VERTICAL)
                 {
                     float w = (stackx + stack_widest + spacing.x);
-                    layout_rect.x += w;
-                    layout_rect.w -= w;
+                    current_rect.x += w;
+                    current_rect.w -= w;
                 }
                 if (child->Layout.stack & SAT_WIDGET_LAYOUT_STACK_HORIZONTAL)
                 {
                     float h = (stacky + stack_highest + spacing.y);
-                    layout_rect.y += h;
-                    layout_rect.h -= h;
+                    current_rect.y += h;
+                    current_rect.h -= h;
                 }
             }
 
-            // --- min/max size ---
+            // --- pos/size limit ---
+            // (percentages, unless _pixels)
 
-            double min_width  = child->Layout.minSize.w * scale;
-            double min_height = child->Layout.minSize.h * scale;
-            double max_width  = child->Layout.maxSize.w * scale;
-            double max_height = child->Layout.maxSize.h * scale;
 
-            if ((min_width  >= 0) && (child_rect.w < min_width )) child_rect.w = min_width;
-            if ((min_height >= 0) && (child_rect.h < min_height)) child_rect.h = min_height;
-            if ((max_width  >= 0) && (child_rect.w > max_width )) child_rect.w = max_width;
-            if ((max_height >= 0) && (child_rect.h > max_height)) child_rect.h = max_height;
-
+            SAT_Rect limit_scale;
+            switch (child->Layout.limit)
+            {
+                case SAT_WIDGET_LAYOUT_LIMIT_NONE:
+                    limit_scale.set(1.0);
+                    break;
+                case SAT_WIDGET_LAYOUT_LIMIT_PIXELS:
+                    limit_scale.set(scale);
+                    break;
+                case SAT_WIDGET_LAYOUT_LIMIT_BASE:
+                    limit_scale = MBaseRect;
+                    limit_scale.scale(scale * 0.01);
+                    break;
+                case SAT_WIDGET_LAYOUT_LIMIT_PARENT:
+                    limit_scale = parent_rect;
+                    limit_scale.scale(scale * 0.01);
+                    break;
+                case SAT_WIDGET_LAYOUT_LIMIT_CURRENT:
+                    limit_scale = current_rect;
+                    limit_scale.scale(scale * 0.01);
+                    break;
+                case SAT_WIDGET_LAYOUT_LIMIT_ROOT:
+                    limit_scale = root_rect;
+                    limit_scale.scale(scale * 0.01);
+                    break;
+                default:
+                    SAT_PRINT("Error: unknown layout limit mode: %i\n",child->Layout.limit);
+                    break;
+            }
+            SAT_Rect limit_min = child->Layout.minimum;
+            SAT_Rect limit_max = child->Layout.maximum;
+            limit_min.scale(limit_scale);
+            limit_max.scale(limit_scale);
+            if ((limit_min.x >= 0) && (child_rect.x < limit_min.x)) child_rect.x = limit_min.x;
+            if ((limit_min.y >= 0) && (child_rect.y < limit_min.y)) child_rect.y = limit_min.y;
+            if ((limit_min.w >= 0) && (child_rect.w < limit_min.w)) child_rect.w = limit_min.w;
+            if ((limit_min.h >= 0) && (child_rect.h < limit_min.h)) child_rect.h = limit_min.h;
+            if ((limit_max.x >= 0) && (child_rect.x > limit_max.x)) child_rect.x = limit_max.x;
+            if ((limit_max.y >= 0) && (child_rect.y > limit_max.y)) child_rect.y = limit_max.y;
+            if ((limit_max.w >= 0) && (child_rect.w > limit_max.w)) child_rect.w = limit_max.w;
+            if ((limit_max.h >= 0) && (child_rect.h > limit_max.h)) child_rect.h = limit_max.h;
+            
             // --- content rect ---
 
             MContentRect.combine(child_rect);
 
             // --- outer border ---
 
-            SAT_Rect outer_border = child->Layout.outer_border;
+            SAT_Rect outer_border = child->Layout.outerBorder;
             outer_border.scale(scale);
             child_rect.shrink(outer_border);
 
@@ -909,23 +952,16 @@ void SAT_Widget::realignChildren()
 
             // --- set child properties ---
 
-            child->MRect       = child_rect;
-            child->MRecursiveScale      = recursive_scale;
+            //SAT_PRINT("%s : %.f,%.f, %.f,%.f\n",child->getName(),child_rect.x,child_rect.y,child_rect.w,child_rect.h);
 
-            child->MRecursiveClipRect  = child_rect;
-            //child->MRecursiveClipRect.overlap(MRect);
-            child->MRecursiveClipRect.overlap(MRecursiveClipRect);
+            child->MRect = child_rect;
+            child->MRecursiveScale = recursive_scale;
 
-            if (child->MState.opaque)
-            {
-                //SAT_PRINT("child %s = opaque\n",child->getName());
-                child->MRecursiveOpaqueParent = child;
-            }
-            else
-            {
-                //SAT_PRINT("child %s = not opaque (opaque_parent %s\n",child->getName(),Recursive.opaque_parent->getName());
-                child->MRecursiveOpaqueParent = MRecursiveOpaqueParent;
-            }
+            child->MRecursiveClipRect = child_rect;
+            child->MRecursiveClipRect.overlap(MRecursiveClipRect);  // overlap(widget_rect);
+
+            if (child->State.opaque) child->MRecursiveOpaqueParent = child;
+            else child->MRecursiveOpaqueParent = MRecursiveOpaqueParent;
 
             if (!child->MSkin) child->MSkin = MSkin;
 
@@ -946,8 +982,15 @@ void SAT_Widget::realignChildren()
 
         else
         {
-            // child->MState.visible and child->Options.realign_if_invisible is false
+
+            // set all children invisible, in case we try to draw some sub-widgets
+            // (modulated parameters, etc)..
+
+            SAT_PRINT("%s not visible, setting all childrens invisible too\n",child->getName());
             child->setChildrenVisible(false);
+
+            // we can't click an invisible widdget.. but we won't receive hover events either..
+            // child->setChildrenActive(false);
         }
 
     } // for
@@ -964,7 +1007,7 @@ void SAT_Widget::realignChildren()
 
 void SAT_Widget::setActive(bool AState)
 {
-    MState.active = AState;
+    State.active = AState;
     setChildrenActive(AState);
 }
 
@@ -980,7 +1023,7 @@ void SAT_Widget::setChildrenActive(bool AState)
 
 void SAT_Widget::setEnabled(bool AState)
 {
-    MState.enabled = AState;
+    State.enabled = AState;
     setChildrenEnabled(AState);
 }
 
@@ -998,12 +1041,12 @@ void SAT_Widget::setChildrenEnabled(bool AState)
 
 bool SAT_Widget::isActive()
 {
-    return MState.active;
+    return State.active;
 }
 
 bool SAT_Widget::isEnabled()
 {
-    return MState.enabled;
+    return State.enabled;
 }
 
 //------------------------------
@@ -1126,6 +1169,26 @@ void SAT_Widget::on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValue
 {
 }
 
+void SAT_Widget::on_widget_notify(SAT_Widget* AWidget, uint32_t AType, intptr_t AValue)
+{
+}
+
+void SAT_Widget::on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState)
+{
+}
+
+void SAT_Widget::on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState)
+{
+}
+
+void SAT_Widget::on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState)
+{
+}
+
+void SAT_Widget::on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState)
+{
+}
+
 // void SAT_Widget::on_widget_hint(uint32_t AType, const char* AHint)
 // {
 // }
@@ -1133,54 +1196,6 @@ void SAT_Widget::on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValue
 // void SAT_Widget::on_widget_tooltip(uint32_t AType, const char* ATooltip)
 // {
 // }
-
-void SAT_Widget::on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
-{
-}
-
-void SAT_Widget::on_widget_mouse_double_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
-{
-}
-
-void SAT_Widget::on_widget_mouse_longpress(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
-{
-}
-
-void SAT_Widget::on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
-{
-}
-
-void SAT_Widget::on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
-{
-}
-
-void SAT_Widget::on_widget_mouse_start_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
-{
-}
-
-void SAT_Widget::on_widget_mouse_end_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
-{
-}
-
-void SAT_Widget::on_widget_mouse_enter(SAT_Widget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime)
-{
-    if (Options.autoMouseCursor) do_widget_cursor(this,MCursor);
-    if (Options.autoHint) do_widget_hint(this,SAT_HINT_NORMAL,MHint);
-}
-
-void SAT_Widget::on_widget_mouse_leave(SAT_Widget* ATo, int32_t AXpos, int32_t AYpos, uint32_t ATime)
-{
-    // if (Options.auto_mouse_cursor) do_widget_cursor(this,MCursor);
-    // if (Options.auto_hint) do_widget_hint(this,SAT_HINT_CLEAR,"");
-}
-
-void SAT_Widget::on_widget_key_press(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime)
-{
-}
-
-void SAT_Widget::on_widget_key_release(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime)
-{
-}
 
 //------------------------------
 //
@@ -1194,16 +1209,16 @@ void SAT_Widget::do_widget_update(SAT_Widget* AWidget, uint32_t AIndex)
     if (parent) parent->do_widget_update(AWidget,AIndex);
 }
 
-void SAT_Widget::do_widget_realign(SAT_Widget* AWidget)
+void SAT_Widget::do_widget_realign(SAT_Widget* AWidget, uint32_t AMode)
 {
     SAT_Widget* parent = getParent();
-    if (parent) parent->do_widget_realign(AWidget);
+    if (parent) parent->do_widget_realign(AWidget,AMode);
 }
 
-void SAT_Widget::do_widget_redraw(SAT_Widget* AWidget)
+void SAT_Widget::do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode)
 {
     SAT_Widget* parent = getParent();
-    if (parent) parent->do_widget_redraw(AWidget);
+    if (parent) parent->do_widget_redraw(AWidget,AMode);
 }
 
 void SAT_Widget::do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain)

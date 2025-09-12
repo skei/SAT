@@ -65,7 +65,7 @@ void myWindow::on_window_paint(SAT_PaintContext* AContext)
     painter->drawRect(rect4);
 
     //----------
-    SAT_WidgetWindow::on_window_paint(AContext);
+    SAT_Window::on_window_paint(AContext);
 }
 
 //----------------------------------------------------------------------

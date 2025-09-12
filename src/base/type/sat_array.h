@@ -44,6 +44,7 @@ class SAT_Array
         int32_t         find(const _T& AItem);
         bool            hasItem(const _T& AItem);
         void            append(_T& AItem);
+      //void            append(_T* AItem);
         void            push_back(_T& AItem);
         _T&             head(void);
         _T&             tail(void);
@@ -308,6 +309,12 @@ void SAT_Array<_T>::append(_T& AItem)
 {
     insertTail(AItem);
 }
+
+// template<class _T>
+// void SAT_Array<_T>::append(_T* AItem)
+// {
+//     insertTail(AItem);
+// }
 
 template<class _T>
 void SAT_Array<_T>::push_back(_T& AItem)

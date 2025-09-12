@@ -28,20 +28,14 @@ class SAT_TextWidget
 
         SAT_TextWidget(SAT_Rect ARect);
         virtual ~SAT_TextWidget();
-
     public:
-
         virtual void setText(const char* AText);
-        virtual void drawText(SAT_PaintContext* AContext);
-
-    public:
-
-        void on_widget_paint(SAT_PaintContext* AContext) override;
-
     protected:
-
+        virtual void drawText(SAT_PaintContext* AContext);
+    public:
+        void on_widget_paint(SAT_PaintContext* AContext) override;
+    protected:
         const char* MText = "Text";
-
 };
 
 //------------------------------
@@ -63,22 +57,14 @@ SAT_TextWidget::~SAT_TextWidget()
 //
 //------------------------------
 
-// void SAT_TextWidget::setDrawText(bool ADraw)
-// {
-//     MDrawText = ADraw;
-// }
-
 void SAT_TextWidget::setText(const char* AText)
 {
     MText = AText;
 }
 
-// void SAT_TextWidget::setTextAlignment(uint32_t AAlignment)
-// {
-//     MTextAlignment = AAlignment;
-// }
-
-//----------
+//------------------------------
+//
+//------------------------------
 
 void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
 {

@@ -43,10 +43,10 @@ class SAT_BaseWindow
         virtual void        on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) {}
         virtual void        on_window_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime) {}
         virtual void        on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime) {}
-        virtual void        on_window_key_press(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) {}
-        virtual void        on_window_key_release(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) {}
         virtual void        on_window_mouse_enter(int32_t AXpos, int32_t AYpos, uint32_t ATime) {}
         virtual void        on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint32_t ATime) {}
+        virtual void        on_window_key_press(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) {}
+        virtual void        on_window_key_release(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime) {}
         virtual void        on_window_client_message(uint32_t AData) {}  
         virtual void        on_window_timer(uint32_t ATimerId, double ADelta) {}
 };

@@ -87,15 +87,6 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 //
 //----------------------------------------------------------------------
 
-#define SAT_BUTTON_NONE                             0
-#define SAT_BUTTON_LEFT                             1
-#define SAT_BUTTON_MIDDLE                           2
-#define SAT_BUTTON_RIGHT                            3
-#define SAT_BUTTON_SCROLL_UP                        4
-#define SAT_BUTTON_SCROLL_DOWN                      5
-#define SAT_BUTTON_SIDE_BACKWARD                    8
-#define SAT_BUTTON_SIDE_FORWARD                     9
-
 #define SAT_CORNER_NONE                             0
 #define SAT_CORNER_UPPER_LEFT                       0x01
 #define SAT_CORNER_UPPER_RIGHT                      0x02
@@ -130,10 +121,9 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_FILE_APPEND_BINARY                      (char*)"ab"
 #define SAT_FILE_APPEND_TEXT                        (char*)"a"
 
-#define SAT_HINT_NORMAL                             0
-#define SAT_HINT_CLEAR                              1
-// #define SAT_HINT_SHOW                            2
-// #define SAT_HINT_HIDE                            3
+//#define SAT_WIDGET_HINT_DEFAULT                     0
+#define SAT_WIDGET_HINT_NORMAL                      0
+#define SAT_WIDGET_HINT_CLEAR                       1
 
 #define SAT_KEY_NONE                                0
 #define SAT_KEY_BACKSPACE                           8
@@ -146,12 +136,55 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_KEY_RIGHT                               39
 #define SAT_KEY_DELETE                              46
 
-#define SAT_KEY_STATE_NONE                          0
-#define SAT_KEY_STATE_SHIFT                         0x01
-#define SAT_KEY_STATE_CAPS                          0x02
-#define SAT_KEY_STATE_CTRL                          0x04
-#define SAT_KEY_STATE_ALT                           0x08
-#define SAT_KEY_STATE_ALTGR                         0x10
+#define SAT_KEYBOARD_EVENT_NONE                     0
+#define SAT_KEYBOARD_EVENT_PRESS                    0x0001
+#define SAT_KEYBOARD_EVENT_RELEASE                  0x0002
+#define SAT_KEYBOARD_EVENT_ALL                      0xFFFF
+
+#define SAT_KEYBOARD_GESTURE_NONE                   0
+#define SAT_KEYBOARD_GESTURE_PRESS                  0x0001
+#define SAT_KEYBOARD_GESTURE_RELEASE                0x0002
+#define SAT_KEYBOARD_GESTURE_ALL                    0xFFFF
+
+#define SAT_KEYBOARD_STATE_NO_CHANGE                -1
+#define SAT_KEYBOARD_STATE_IDLE                     0
+#define SAT_KEYBOARD_STATE_COUNT                    1
+
+#define SAT_STATE_KEY_NONE                          0
+#define SAT_STATE_KEY_SHIFT                         0x01
+#define SAT_STATE_KEY_CAPS                          0x02
+#define SAT_STATE_KEY_CTRL                          0x04
+#define SAT_STATE_KEY_ALT                           0x08
+#define SAT_STATE_KEY_ALTGR                         0x10
+
+#define SAT_MOUSE_BUTTON_NONE                       0
+#define SAT_MOUSE_BUTTON_LEFT                       1
+#define SAT_MOUSE_BUTTON_MIDDLE                     2
+#define SAT_MOUSE_BUTTON_RIGHT                      3
+#define SAT_MOUSE_BUTTON_SCROLL_UP                  4
+#define SAT_MOUSE_BUTTON_SCROLL_DOWN                5
+#define SAT_MOUSE_BUTTON_SIDE_BACKWARD              8
+#define SAT_MOUSE_BUTTON_SIDE_FORWARD               9
+
+#define SAT_MOUSE_EVENT_NONE                        0
+#define SAT_MOUSE_EVENT_CLICK                       0x0001
+#define SAT_MOUSE_EVENT_RELEASE                     0x0002
+#define SAT_MOUSE_EVENT_MOVE                        0x0004
+#define SAT_MOUSE_EVENT_ENTER                       0x0008
+#define SAT_MOUSE_EVENT_LEAVE                       0x0010
+#define SAT_MOUSE_EVENT_ALL                         0xFFFF
+
+#define SAT_MOUSE_GESTURE_NONE                      0
+#define SAT_MOUSE_GESTURE_CLICK                     0x0001
+#define SAT_MOUSE_GESTURE_DOUBLE_CLICK              0x0002
+#define SAT_MOUSE_GESTURE_LONG_PRESS                0x0004
+#define SAT_MOUSE_GESTURE_DRAG                      0x0100
+#define SAT_MOUSE_GESTURE_ALL                       0xFFFF
+
+#define SAT_MOUSE_STATE_NO_CHANGE                   -1
+#define SAT_MOUSE_STATE_IDLE                        0
+#define SAT_MOUSE_STATE_HOVER                       1
+#define SAT_MOUSE_STATE_COUNT                       2
 
 #define SAT_OBSERVE_NONE                            0
 #define SAT_OBSERVE_FLOAT                           1
@@ -211,6 +244,9 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_WIDGET_DRAG_SELECTION                  -1
 #define SAT_WIDGET_DRAG_VALUE                      -2
 
+#define SAT_WIDGET_LAYOUT_ANCHOR_CURRENT            0x00000000
+#define SAT_WIDGET_LAYOUT_ANCHOR_PARENT             0x01000000
+
 #define SAT_WIDGET_LAYOUT_ANCHOR_NONE               0
 #define SAT_WIDGET_LAYOUT_ANCHOR_LEFT               0x01
 #define SAT_WIDGET_LAYOUT_ANCHOR_TOP                0x02
@@ -224,15 +260,6 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_WIDGET_LAYOUT_ANCHOR_CENTER_VERTICAL    0x20
 #define SAT_WIDGET_LAYOUT_ANCHOR_CENTER             (SAT_WIDGET_LAYOUT_ANCHOR_CENTER_HORIZONTAL | SAT_WIDGET_LAYOUT_ANCHOR_CENTER_VERTICAL)
 
-#define SAT_WIDGET_LAYOUT_STRETCH_NONE              0
-#define SAT_WIDGET_LAYOUT_STRETCH_LEFT              0x01
-#define SAT_WIDGET_LAYOUT_STRETCH_TOP               0x02
-#define SAT_WIDGET_LAYOUT_STRETCH_RIGHT             0x04
-#define SAT_WIDGET_LAYOUT_STRETCH_BOTTOM            0x08
-#define SAT_WIDGET_LAYOUT_STRETCH_HORIZONTAL        (SAT_WIDGET_LAYOUT_STRETCH_LEFT | SAT_WIDGET_LAYOUT_STRETCH_RIGHT)
-#define SAT_WIDGET_LAYOUT_STRETCH_VERTICAL          (SAT_WIDGET_LAYOUT_STRETCH_TOP | SAT_WIDGET_LAYOUT_STRETCH_BOTTOM)
-#define SAT_WIDGET_LAYOUT_STRETCH_ALL               (SAT_WIDGET_LAYOUT_STRETCH_HORIZONTAL | SAT_WIDGET_LAYOUT_STRETCH_VERTICAL)
-
 #define SAT_WIDGET_LAYOUT_CROP_NONE                 0
 #define SAT_WIDGET_LAYOUT_CROP_LEFT                 0x01
 #define SAT_WIDGET_LAYOUT_CROP_TOP                  0x02
@@ -242,16 +269,37 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_WIDGET_LAYOUT_CROP_VERTICAL             (SAT_WIDGET_LAYOUT_CROP_TOP | SAT_WIDGET_LAYOUT_CROP_BOTTOM)
 #define SAT_WIDGET_LAYOUT_CROP_ALL                  (SAT_WIDGET_LAYOUT_CROP_HORIZONTAL | SAT_WIDGET_LAYOUT_CROP_VERTICAL)
 
+#define SAT_WIDGET_LAYOUT_LIMIT_NONE                0
+#define SAT_WIDGET_LAYOUT_LIMIT_PIXELS              1
+#define SAT_WIDGET_LAYOUT_LIMIT_BASE                2
+#define SAT_WIDGET_LAYOUT_LIMIT_PARENT              3
+#define SAT_WIDGET_LAYOUT_LIMIT_CURRENT             4
+#define SAT_WIDGET_LAYOUT_LIMIT_ROOT                5
+
 #define SAT_WIDGET_LAYOUT_RELATIVE_NONE             0
-// #define SAT_WIDGET_LAYOUT_RELATIVE_PERCENT       0x01
-#define SAT_WIDGET_LAYOUT_RELATIVE_PARENT           1 // 0x01
-#define SAT_WIDGET_LAYOUT_RELATIVE_LAYOUT           2 // 0x02
-#define SAT_WIDGET_LAYOUT_RELATIVE_ROOT             3 // 0x04
+#define SAT_WIDGET_LAYOUT_RELATIVE_PARENT           1
+#define SAT_WIDGET_LAYOUT_RELATIVE_CURRENT          2
+#define SAT_WIDGET_LAYOUT_RELATIVE_ROOT             3
+
+#define SAT_WIDGET_LAYOUT_STACK_CURRENT             0x00000000
+#define SAT_WIDGET_LAYOUT_STACK_PARENT              0x01000000
 
 #define SAT_WIDGET_LAYOUT_STACK_NONE                0
 #define SAT_WIDGET_LAYOUT_STACK_HORIZONTAL          0x01
 #define SAT_WIDGET_LAYOUT_STACK_VERTICAL            0x02
 #define SAT_WIDGET_LAYOUT_STACK_END                 0x04
+
+#define SAT_WIDGET_LAYOUT_STRETCH_CURRENT           0x00000000
+#define SAT_WIDGET_LAYOUT_STRETCH_PARENT            0x01000000
+
+#define SAT_WIDGET_LAYOUT_STRETCH_NONE              0
+#define SAT_WIDGET_LAYOUT_STRETCH_LEFT              0x01
+#define SAT_WIDGET_LAYOUT_STRETCH_TOP               0x02
+#define SAT_WIDGET_LAYOUT_STRETCH_RIGHT             0x04
+#define SAT_WIDGET_LAYOUT_STRETCH_BOTTOM            0x08
+#define SAT_WIDGET_LAYOUT_STRETCH_HORIZONTAL        (SAT_WIDGET_LAYOUT_STRETCH_LEFT | SAT_WIDGET_LAYOUT_STRETCH_RIGHT)
+#define SAT_WIDGET_LAYOUT_STRETCH_VERTICAL          (SAT_WIDGET_LAYOUT_STRETCH_TOP | SAT_WIDGET_LAYOUT_STRETCH_BOTTOM)
+#define SAT_WIDGET_LAYOUT_STRETCH_ALL               (SAT_WIDGET_LAYOUT_STRETCH_HORIZONTAL | SAT_WIDGET_LAYOUT_STRETCH_VERTICAL)
 
 #define SAT_WIDGET_NOTIFY_NONE                      0
 #define SAT_WIDGET_NOTIFY_SELECT                    1
@@ -259,6 +307,7 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_WIDGET_NOTIFY_TOGGLE                    3
 #define SAT_WIDGET_NOTIFY_OPEN                      4
 #define SAT_WIDGET_NOTIFY_CLOSE                     5
+#define SAT_WIDGET_NOTIFY_HINT                      6
 
 #define SAT_WIDGET_PAINT_NORMAL                     0
 #define SAT_WIDGET_PAINT_VALUE                      1
@@ -276,8 +325,9 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_WIDGET_REDRAW_NORMAL                    0
 #define SAT_WIDGET_REDRAW_SELF                      0x01
 #define SAT_WIDGET_REDRAW_PARENT                    0x02
-#define SAT_WIDGET_REDRAW_ROOT                      0x04
-#define SAT_WIDGET_REDRAW_CHILDREN                  0x08
+// #define SAT_WIDGET_REDRAW_OPAQUE_PARENT             0x04
+// #define SAT_WIDGET_REDRAW_ROOT                      0x08
+// #define SAT_WIDGET_REDRAW_CHILDREN                  0x10
 
 #define SAT_WIDGET_UPDATE_VALUE                     0
 

@@ -41,7 +41,7 @@ void myWindow::on_window_paint(SAT_PaintContext* AContext)
     painter->setTextColor(SAT_White);
     painter->drawText(SAT_Rect(getWidth(),getHeight()),"Hello world",SAT_TEXT_ALIGN_CENTER);
     // handle widgets..
-    SAT_WidgetWindow::on_window_paint(AContext);
+    SAT_Window::on_window_paint(AContext);
 }
 
 //----------------------------------------------------------------------

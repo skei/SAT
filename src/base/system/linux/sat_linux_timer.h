@@ -100,6 +100,7 @@ SAT_Timer::SAT_Timer(SAT_TimerListener* AListener)
 
 SAT_Timer::~SAT_Timer()
 {
+    if (MIsRunning) stop();
     if (MIsInitialized) timer_delete(MTimer);
 }
 

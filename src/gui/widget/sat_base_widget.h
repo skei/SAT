@@ -6,6 +6,8 @@
 #include "gui/widget/sat_widget_owner.h"
 
 class SAT_AnimChain;
+class SAT_KeyboardState;
+class SAT_MouseState;
 class SAT_Parameter;
 class SAT_Widget;
 
@@ -17,8 +19,6 @@ class SAT_Widget;
 
 class SAT_BaseWidget
 {
-
-    friend class SAT_WidgetWindow;
 
     public:
 
@@ -59,8 +59,8 @@ class SAT_BaseWidget
         virtual void                setScale(sat_coord_t AScale)                                    { }
         virtual void                setSkin(SAT_Skin* ASkin, bool AReplace=true)                    { }
         virtual void                setChildrenSkin(SAT_Skin* ASkin, bool AReplace=true)            { }
-     // virtual void                setRect(SAT_Rect ARect)                                         { }
-     // virtual void                setBaseRect(SAT_Rect ARect)                                     { }
+        //virtual void              setRect(SAT_Rect ARect)                                         { }
+        //virtual void              setBaseRect(SAT_Rect ARect)                                     { }
         virtual bool                isOpaque()                                                      { return false; }
         virtual bool                isVisible()                                                     { return false; }
         virtual sat_coord_t         getScale()                                                      { return 1.0; }
@@ -90,8 +90,8 @@ class SAT_BaseWidget
         virtual void                setChildrenEnabled(bool AState=true)                            { }
         virtual bool                isActive()                                                      { return false; }
         virtual bool                isEnabled()                                                     { return false; }
-     // virtual void                activateVisibleChildren()                                       { }
-     // virtual void                deactivateInvisibleChildren()                                   { }
+        //virtual void              activateVisibleChildren()                                       { }
+        //virtual void              deactivateInvisibleChildren()                                   { }
 
     public: // value
 
@@ -108,41 +108,35 @@ class SAT_BaseWidget
 
     public: // on_
 
-        virtual void                on_widget_show(SAT_WidgetOwner* AOwner)                                                                         { }
-        virtual void                on_widget_hide(SAT_WidgetOwner* AOwner)                                                                         { }
-        virtual void                on_widget_paint(SAT_PaintContext* AContext)                                                                     { }
-        virtual void                on_widget_pre_paint(SAT_PaintContext* AContext)                                                                 { }
-        virtual void                on_widget_post_paint(SAT_PaintContext* AContext)                                                                { }
-        virtual void                on_widget_realign()                                                                                             { }
-        virtual SAT_Rect            on_widget_pre_align(SAT_Rect ARect)                                                                             { return SAT_Rect(); }
-        virtual SAT_Rect            on_widget_post_align(SAT_Rect ARect)                                                                            { return SAT_Rect(); }
-        virtual void                on_widget_timer(uint32_t ATimerId, double ADelta)                                                               { }
-        virtual void                on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues)                              { }
-     // virtual void                on_widget_hint(uint32_t AType, const char* AHint)                                                               { }
-     // virtual void                on_widget_tooltip(uint32_t AType, const char* ATooltip)                                                         { }
-        virtual void                on_widget_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)          { }
-        virtual void                on_widget_mouse_double_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)   { }
-        virtual void                on_widget_mouse_longpress(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)      { }
-        virtual void                on_widget_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)        { }
-        virtual void                on_widget_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)                             { }
-        virtual void                on_widget_mouse_start_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)                       { }
-        virtual void                on_widget_mouse_end_drag(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)                         { }
-        virtual void                on_widget_mouse_enter(SAT_Widget* AFrom, int32_t AXpos, int32_t AYpos, uint32_t ATime)                          { }
-        virtual void                on_widget_mouse_leave(SAT_Widget* ATo, int32_t AXpos, int32_t AYpos, uint32_t ATime)                            { }
-        virtual void                on_widget_key_press(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime)                             { }
-        virtual void                on_widget_key_release(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime)                           { }
+        virtual void                on_widget_show(SAT_WidgetOwner* AOwner)                                                         { }
+        virtual void                on_widget_hide(SAT_WidgetOwner* AOwner)                                                         { }
+        virtual void                on_widget_paint(SAT_PaintContext* AContext)                                                     { }
+        virtual void                on_widget_pre_paint(SAT_PaintContext* AContext)                                                 { }
+        virtual void                on_widget_post_paint(SAT_PaintContext* AContext)                                                { }
+        virtual void                on_widget_realign()                                                                             { }
+        virtual SAT_Rect            on_widget_pre_align(SAT_Rect ARect)                                                             { return SAT_Rect(); }
+        virtual SAT_Rect            on_widget_post_align(SAT_Rect ARect)                                                            { return SAT_Rect(); }
+        virtual void                on_widget_timer(uint32_t ATimerId, double ADelta)                                               { }
+        virtual void                on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues)              { }
+        virtual void                on_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, intptr_t AValue=0) { }
+        virtual void                on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState)                                  { }
+        virtual void                on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState)                              { }
+        virtual void                on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState)                            { }
+        virtual void                on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState)                        { }
+        //virtual void              on_widget_hint(uint32_t AType, const char* AHint)                                               { }
+        //virtual void              on_widget_tooltip(uint32_t AType, const char* ATooltip)                                         { }
 
     public: // do_
 
-        virtual void                do_widget_update(SAT_Widget* AWidget, uint32_t AIndex=0)                                                        { }
-        virtual void                do_widget_realign(SAT_Widget* AWidget)                                                                          { }
-        virtual void                do_widget_redraw(SAT_Widget* AWidget)                                                                           { }
-        virtual void                do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain)                                                      { }
-        virtual void                do_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, int32_t AValue=0)                  { }
-        virtual void                do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint)                                          { }
-        virtual void                do_widget_modal(SAT_Widget* AWidget)                                                                            { }
-        virtual void                do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor)                                                          { }
-        virtual void                do_widget_capture_mouse(SAT_Widget* AWidget)                                                                    { }
-        virtual void                do_widget_capture_keyboard(SAT_Widget* AWidget)                                                                 { }
+        virtual void                do_widget_update(SAT_Widget* AWidget, uint32_t AIndex=0)                                        { }
+        virtual void                do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT)                { }
+        virtual void                do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF)                    { }
+        virtual void                do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain)                                      { }
+        virtual void                do_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, int32_t AValue=0)  { }
+        virtual void                do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint)                          { }
+        virtual void                do_widget_modal(SAT_Widget* AWidget)                                                            { }
+        virtual void                do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor)                                          { }
+        virtual void                do_widget_capture_mouse(SAT_Widget* AWidget)                                                    { }
+        virtual void                do_widget_capture_keyboard(SAT_Widget* AWidget)                                                 { }
 
 };
