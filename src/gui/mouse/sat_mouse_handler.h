@@ -6,6 +6,11 @@
 #include "gui/window/sat_widget_window.h"
 #include "gui/sat_widget.h"
 
+// #define SAT_DEBUG_MOUSE_HANDLER
+
+#define SAT_MOUSE_CURSOR_STACK_SIZE 256
+typedef SAT_Stack<int32_t,SAT_MOUSE_CURSOR_STACK_SIZE> SAT_CursorStack;
+
 //----------------------------------------------------------------------
 //
 //
@@ -16,7 +21,7 @@ class SAT_MouseHandler
 : public SAT_BaseMouseHandler
 {
 
-    friend class SAT_Window;
+    //friend class SAT_Window;
 
     public:
 
@@ -25,18 +30,21 @@ class SAT_MouseHandler
 
     public:
 
+        void                reset() override;
         SAT_WidgetWindow*   getWindow() override;
+        SAT_MouseState*     getState() override;
 
-    private:
+    public:
 
-        void                setupStates();
-        void                handleState(int32_t AState);
-
-        void                captureWidget(SAT_Widget* AWidget);
-
-        void                lockCursor(SAT_Widget* AWidget);
-        void                unlockCursor();
-        SAT_MouseCoords     adjustPos(SAT_MouseCoords APos);
+        void                captureWidget(SAT_Widget* AWidget) override;
+        void                setCursor(int32_t ACursor) override;
+        void                resetCursor() override;
+        void                showCursor() override;
+        void                hideCursor() override;
+        void                pushCursor(int32_t ACursor) override;
+        void                popCursor() override;
+        void                lockCursor(SAT_Widget* AWidget) override;
+        void                unlockCursor() override;
 
     public:
     
@@ -49,10 +57,16 @@ class SAT_MouseHandler
 
     private:
 
+        void                setupStates();
+        void                changeState(int32_t AState);
+        SAT_MouseCoords     adjustPos(SAT_MouseCoords APos);
+
+    private:
+
         SAT_WidgetWindow*   MWindow                             = nullptr;
-        SAT_MouseState*     MMouseStates[SAT_MOUSE_STATE_COUNT] = {};
         SAT_MouseState*     MCurrentState                       = nullptr;
-        uint32_t            MCurrentStateId                     = SAT_MOUSE_STATE_IDLE;
+        SAT_MouseState*     MMouseStates[SAT_MOUSE_STATE_COUNT] = {};
+        SAT_CursorStack     MCursorStack                        = {};
 
 };
 
@@ -67,7 +81,7 @@ SAT_MouseHandler::SAT_MouseHandler(SAT_WidgetWindow* AWindow)
 {
     MWindow = AWindow;
     setupStates();
-    MCurrentState = MMouseStates[SAT_MOUSE_STATE_IDLE];
+    reset();
 }
 
 SAT_MouseHandler::~SAT_MouseHandler()
@@ -75,6 +89,48 @@ SAT_MouseHandler::~SAT_MouseHandler()
     #ifndef SAT_NO_AUTODELETE
         for (uint32_t i=0; i<SAT_MOUSE_STATE_COUNT; i++) delete MMouseStates[i];
     #endif
+    // SAT_Assert(MCursorStack.isEmpty());
+}
+
+//------------------------------
+//
+//------------------------------
+
+void SAT_MouseHandler::reset()
+{
+    MActiveButton       = SAT_MOUSE_BUTTON_NONE;
+    MActivePos          = {0,0};
+    MActiveTime         = 0.0;;
+
+    MCapturedWidget     = nullptr;
+    MClickedPos         = {0,0};
+    MClickedButton      = SAT_MOUSE_BUTTON_NONE;
+    MClickedModKeys     = SAT_STATE_KEY_NONE;
+    MClickedTime        = 0.0;
+    MClickedWidget      = nullptr;
+    MCurrentTime        = 0.0;
+    MCurrentPos         = {0,0};
+    MCurrentButtons     = SAT_MOUSE_BUTTON_NONE;
+    MCurrentModKeys     = SAT_STATE_KEY_NONE;
+    MCurrentWidget      = MWindow;
+    MCurrentCursor      = SAT_CURSOR_DEFAULT;
+    MLocked             = false;
+    MLockedPos          = {0,0};
+    MLockedVirtualPos   = {0,0};
+    MLockedWidget       = nullptr;
+    MPrevPos            = {0,0};
+    MPrevTimeMoved      = 0.0;
+    MPrevWidget         = MWindow;
+    MPrevCursor         = SAT_CURSOR_DEFAULT;
+    MReleasedPos        = {0,0};
+    MReleasedButton     = SAT_MOUSE_BUTTON_NONE;
+    MReleasedModKeys    = SAT_STATE_KEY_NONE;
+    MReleasedTime       = 0.0;
+    MReleasedWidget     = nullptr;
+    
+    // MCursorStack.reset();
+    // setCursor(SAT_CURSOR_DEFAULT);
+    changeState(SAT_MOUSE_STATE_IDLE);
 }
 
 SAT_WidgetWindow* SAT_MouseHandler::getWindow()
@@ -82,42 +138,77 @@ SAT_WidgetWindow* SAT_MouseHandler::getWindow()
     return MWindow;
 }
 
+SAT_MouseState*SAT_MouseHandler::getState()
+{
+    return MCurrentState;
+}
+
 //------------------------------
 //
 //------------------------------
 
-void SAT_MouseHandler::setupStates()
+void SAT_MouseHandler::captureWidget(SAT_Widget* AWidget)
 {
-    MMouseStates[SAT_MOUSE_STATE_IDLE]      = new SAT_IdleMouseState(this);
-    MMouseStates[SAT_MOUSE_STATE_HOVER]  = new SAT_HoverMouseState(this);
+    if (AWidget) { SAT_PRINT("%s\n",AWidget->getName()); }
+    MCapturedWidget = AWidget;
 }
 
-void SAT_MouseHandler::handleState(int32_t AState)
+void SAT_MouseHandler::setCursor(int32_t ACursor)
 {
-    SAT_Assert(AState < SAT_MOUSE_STATE_COUNT);
-    if (AState >= 0)
+    SAT_PRINT("%i\n",ACursor);
+    if (ACursor != MCurrentCursor)
     {
-        SAT_PRINT("%i\n",AState);
-        MWindow->handleMouseStateChange(MCurrentState,AState);
-        int32_t current_state_id = MCurrentState->id();
-        int32_t new_state_id = AState;
-        if (new_state_id != current_state_id)
-        {
-            new_state_id = MCurrentState->leaveState(new_state_id);
-            SAT_MouseState* new_state = MMouseStates[new_state_id];
-            new_state_id = new_state->enterState(current_state_id);
-            MCurrentState = MMouseStates[new_state_id];
-        }
+        if (MWindow) MWindow->setMouseCursorShape(ACursor);
+        MCurrentCursor = ACursor;
     }
 }
 
-void SAT_MouseHandler::captureWidget(SAT_Widget* AWidget)
+void SAT_MouseHandler::resetCursor()
 {
-    MCapturedWidget = AWidget;
+    SAT_TRACE;
+    if (MCurrentCursor != SAT_CURSOR_DEFAULT)
+    {
+        if (MWindow) MWindow->setMouseCursorShape(SAT_CURSOR_DEFAULT);
+        MCurrentCursor = SAT_CURSOR_DEFAULT;
+    }
+}
+
+void SAT_MouseHandler::showCursor()
+{
+    SAT_TRACE;
+    if (MWindow)
+    {
+        MWindow->showMouseCursor();
+        MWindow->setMouseCursorShape(MCurrentCursor);
+    }
+}
+
+void SAT_MouseHandler::hideCursor()
+{
+    SAT_TRACE;
+    if (MWindow) MWindow->hideMouseCursor();
+
+}
+
+void SAT_MouseHandler::pushCursor(int32_t ACursor)
+{
+    SAT_PRINT("%i\n",ACursor);
+    MCursorStack.push(MCurrentCursor);
+    setCursor(ACursor);
+}
+
+void SAT_MouseHandler::popCursor()
+{
+    SAT_TRACE;
+    int32_t cursor = MCursorStack.pop();
+    setCursor(cursor);
 }
 
 void SAT_MouseHandler::lockCursor(SAT_Widget* AWidget)
 {
+    
+    if (AWidget) { SAT_PRINT("%s\n",AWidget->getName()); }
+    else { SAT_TRACE; }
     MLocked = true;
     MLockedPos = MCurrentPos;
     MLockedVirtualPos = MCurrentPos;
@@ -126,24 +217,9 @@ void SAT_MouseHandler::lockCursor(SAT_Widget* AWidget)
 
 void SAT_MouseHandler::unlockCursor()
 {
+    SAT_TRACE;
     MLocked = false;
-}
-
-SAT_MouseCoords SAT_MouseHandler::adjustPos(SAT_MouseCoords APos)
-{
-    if (MLocked)
-    {
-        if ((APos.x != MLockedPos.x) || (APos.y != MLockedPos.y))
-        {
-            int32_t xdiff = APos.x - MLockedPos.x;
-            int32_t ydiff = APos.y - MLockedPos.y;
-            MLockedVirtualPos.x += xdiff;
-            MLockedVirtualPos.y += ydiff;
-            MWindow->setMouseCursorPos(MLockedPos.x,MLockedPos.y);
-            return MLockedVirtualPos;
-        }
-    }
-    return APos;
+    MLockedWidget = nullptr;
 }
 
 //------------------------------
@@ -154,8 +230,9 @@ void SAT_MouseHandler::timer(double ADelta)
 {
     MCurrentTime += ADelta;
     // SAT_PRINT("MCurrentTime %.3f MPrevTimeMoved %.3f\n",MCurrentTime,MPrevTimeMoved);
+    if (!MCurrentState) return;
     int32_t state = MCurrentState->timer(ADelta);
-    handleState(state);
+    changeState(state);
 
     /*
     if (MMouse.waitingForLongpress)
@@ -194,15 +271,28 @@ void SAT_MouseHandler::timer(double ADelta)
 
 void SAT_MouseHandler::click(SAT_MouseCoords APos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
+
+    MPrevClickedPos = MClickedPos;
+    MPrevClickedButton = MClickedButton;
+    MPrevClickedTime = MClickedTime;
+    MPrevClickedWidget = MClickedWidget;
+
     MClickedPos = APos;
     MClickedButton = AButton;
     MClickedModKeys = AState;
     MClickedTime = MCurrentTime;
     MClickedWidget = MCurrentWidget;
     MCurrentButtons |= (uint32_t)(1 << (AButton - 1));
-    if (MCurrentWidget && MCurrentWidget->Options.wantMouseEvent & SAT_MOUSE_EVENT_CLICK) MCurrentWidget->on_widget_mouse_event(SAT_MOUSE_EVENT_CLICK,MCurrentState);
-    int32_t state = MCurrentState->click(APos,AButton,AState,ATime);
-    handleState(state);
+    #ifdef SAT_DEBUG_MOUSE_HANDLER
+        SAT_PRINT("click: %i,%i : %i %i = %s\n",APos.x,APos.y,AButton,AState,MClickedWidget->getName());
+    #endif
+    if (!MCurrentState) return;
+    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_CLICK);
+    //if (event_response != SAT_MOUSE_EVENT_RESPONSE_IGNORE)
+    //{
+        int32_t state = MCurrentState->click(APos,AButton,AState,ATime);
+        changeState(state);
+    //}
 }
 
 void SAT_MouseHandler::release(SAT_MouseCoords APos, uint32_t AButton, uint32_t AState, uint32_t ATime)
@@ -213,9 +303,16 @@ void SAT_MouseHandler::release(SAT_MouseCoords APos, uint32_t AButton, uint32_t 
     MReleasedTime = MCurrentTime;
     MReleasedWidget = MCurrentWidget;
     MCurrentButtons &= ~(uint32_t)(1 << (AButton - 1));
-    if (MCurrentWidget && MCurrentWidget->Options.wantMouseEvent & SAT_MOUSE_EVENT_RELEASE) MCurrentWidget->on_widget_mouse_event(SAT_MOUSE_EVENT_RELEASE,MCurrentState);
-    int32_t state = MCurrentState->release(APos,AButton,AState,ATime);
-    handleState(state);
+    #ifdef SAT_DEBUG_MOUSE_HANDLER
+        SAT_PRINT("release: %i,%i : %i %i = %s\n",APos.x,APos.y,AButton,AState,MReleasedWidget->getName());
+    #endif
+    if (!MCurrentState) return;
+    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_RELEASE);
+    //if (event_response != SAT_MOUSE_EVENT_RESPONSE_IGNORE)
+    //{
+        int32_t state = MCurrentState->release(APos,AButton,AState,ATime);
+        changeState(state);
+    //}
 }
 
 void SAT_MouseHandler::move(SAT_MouseCoords APos, uint32_t AState, uint32_t ATime)
@@ -227,24 +324,133 @@ void SAT_MouseHandler::move(SAT_MouseCoords APos, uint32_t AState, uint32_t ATim
     MCurrentModKeys = AState;
     MPrevWidget = MCurrentWidget;
     MCurrentWidget = MWindow->findChildAt(APos.x,APos.y);
-    if (MCurrentWidget != MPrevWidget)
-    {
-        if (MPrevWidget && MPrevWidget->Options.wantMouseEvent & SAT_MOUSE_EVENT_LEAVE) MPrevWidget->on_widget_mouse_event(SAT_MOUSE_EVENT_LEAVE,MCurrentState);
-        if (MCurrentWidget && MCurrentWidget->Options.wantMouseEvent & SAT_MOUSE_EVENT_ENTER) MCurrentWidget->on_widget_mouse_event(SAT_MOUSE_EVENT_ENTER,MCurrentState);
-    }
-    if (MCurrentWidget && MCurrentWidget->Options.wantMouseEvent & SAT_MOUSE_EVENT_MOVE) MCurrentWidget->on_widget_mouse_event(SAT_MOUSE_EVENT_MOVE,MCurrentState);
-    int32_t state = MCurrentState->move(APos,AState,ATime);
-    handleState(state);
+    #ifdef SAT_DEBUG_MOUSE_HANDLER
+        SAT_PRINT("move: %i,%i : %i = %s\n",APos.x,APos.y,AState,MCurrentWidget->getName());
+    #endif
+    if (!MCurrentState) return;
+    //if (MCurrentWidget != MPrevWidget)
+    //{
+    //    sendEvent(MPrevWidget,SAT_MOUSE_EVENT_LEAVE);
+    //    sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_ENTER);
+    //}
+    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_MOVE);
+    //if (event_response != SAT_MOUSE_EVENT_RESPONSE_IGNORE)
+    //{
+        int32_t state = MCurrentState->move(APos,AState,ATime);
+        changeState(state);
+    //}
 }
 
 void SAT_MouseHandler::enter(SAT_MouseCoords APos, uint32_t ATime)
 {
+    MPrevWidget = MWindow; // nullptr;
+    MCurrentPos = APos;
+    MCurrentWidget = MWindow->findChildAt(APos.x,APos.y);
+    #ifdef SAT_DEBUG_MOUSE_HANDLER
+        SAT_PRINT("enter: %i,%i = %s\n",APos.x,APos.y,MCurrentWidget->getName());
+    #endif
+    if (!MCurrentState) return;
+    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_ENTER);
+    //if (event_response != SAT_MOUSE_EVENT_RESPONSE_IGNORE)
+    //{
+    //}
 }
 
 void SAT_MouseHandler::leave(SAT_MouseCoords APos, uint32_t ATime)
 {
-    MCurrentWidget = nullptr;
+    MPrevWidget = MCurrentWidget;
+    MCurrentWidget = MWindow; // nullptr;
+    #ifdef SAT_DEBUG_MOUSE_HANDLER
+        SAT_PRINT("leave: %i,%i\n",APos.x,APos.y);
+    #endif
+    if (!MCurrentState) return;
+    //int32_t event_response = sendEvent(MPrevWidget,SAT_MOUSE_EVENT_LEAVE);
+    //if (event_response != SAT_MOUSE_EVENT_RESPONSE_IGNORE)
+    //{
+    //}
 }
+
+//------------------------------
+//
+//------------------------------
+
+void SAT_MouseHandler::setupStates()
+{
+    MMouseStates[SAT_MOUSE_STATE_IDLE]              = new SAT_IdleMouseState(this);
+    MMouseStates[SAT_MOUSE_STATE_CLICKED]           = new SAT_ClickedMouseState(this);
+    MMouseStates[SAT_MOUSE_STATE_DRAGGING]          = new SAT_DraggingMouseState(this);
+    MMouseStates[SAT_MOUSE_STATE_RELEASED]          = new SAT_ReleasedMouseState(this);
+    MMouseStates[SAT_MOUSE_STATE_DOUBLE_CLICKED]    = new SAT_DoubleClickedMouseState(this);
+    MMouseStates[SAT_MOUSE_STATE_DOUBLE_DRAGGING]   = new SAT_DoubleDraggingMouseState(this);
+    MMouseStates[SAT_MOUSE_STATE_DOUBLE_RELEASED]   = new SAT_DoubleReleasedMouseState(this);
+    MMouseStates[SAT_MOUSE_STATE_LONG_CLICKED]      = new SAT_LongClickedMouseState(this);
+    MMouseStates[SAT_MOUSE_STATE_LONG_DRAGGING]     = new SAT_LongDraggingMouseState(this);
+    MMouseStates[SAT_MOUSE_STATE_LONG_RELEASED]     = new SAT_LongReleasedMouseState(this);
+}
+
+void SAT_MouseHandler::changeState(int32_t AState)
+{
+    SAT_Assert(AState < SAT_MOUSE_STATE_COUNT);
+    if (AState >= 0)
+    {
+        if (MCurrentState)
+        {
+            int32_t prev_state = MCurrentState->id();
+            if (AState != prev_state)
+            {
+                MCurrentState->leaveState(AState);
+                MCurrentState = MMouseStates[AState];
+                MCurrentState->enterState(prev_state);
+                MWindow->changeMouseState(MCurrentState);
+            }
+        }
+        else
+        {
+            MCurrentState = MMouseStates[AState];
+            MCurrentState->enterState(SAT_MOUSE_STATE_NONE);
+            MWindow->changeMouseState(MCurrentState);
+        }
+    }
+}
+
+SAT_MouseCoords SAT_MouseHandler::adjustPos(SAT_MouseCoords APos)
+{
+    if (MLocked)
+    {
+        if ((APos.x != MLockedPos.x) || (APos.y != MLockedPos.y))
+        {
+            int32_t xdiff = APos.x - MLockedPos.x;
+            int32_t ydiff = APos.y - MLockedPos.y;
+            MLockedVirtualPos.x += xdiff;
+            MLockedVirtualPos.y += ydiff;
+            MWindow->setMouseCursorPos(MLockedPos.x,MLockedPos.y);
+            return MLockedVirtualPos;
+        }
+    }
+    return APos;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //----------------------------------------------------------------------
 //

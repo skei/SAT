@@ -51,7 +51,6 @@ int main(void)
             //panel->Options.auto_redraw_hover = true;
             panel->setScale(1.0);
 
-
                 SAT_TestWidget* widget1 = new SAT_TestWidget(SAT_Rect(50,10,200,100));
                 panel->appendChild(widget1);
                 widget1->setName("widget1");
@@ -59,8 +58,7 @@ int main(void)
                 // widget1->Layout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
                 // widget1->Layout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
 
-                widget1->Options.wantMouseEvent = SAT_MOUSE_EVENT_ALL;
-                widget1->Options.wantMouseGesture = SAT_MOUSE_GESTURE_ALL;
+                widget1->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
 
                 //----------
 
@@ -71,8 +69,7 @@ int main(void)
                 // widget2->Layout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
                 // widget2->Layout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
 
-                widget2->Options.wantKeyboardEvent = SAT_KEYBOARD_EVENT_ALL;
-                widget2->Options.wantKeyboardGesture = SAT_KEYBOARD_GESTURE_ALL;
+                widget2->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
 
                 //----------
 
@@ -83,6 +80,8 @@ int main(void)
 
                 widget3->State.active = false;
                 widget3->State.visible = false;
+                widget3->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
+
 
     window->show();
     window->eventLoop();

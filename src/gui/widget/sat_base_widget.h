@@ -86,10 +86,10 @@ class SAT_BaseWidget
 
         virtual void                setActive(bool AState=true)                                     { }
         virtual void                setChildrenActive(bool AState=true)                             { }
-        virtual void                setEnabled(bool AState=true)                                    { }
-        virtual void                setChildrenEnabled(bool AState=true)                            { }
+//        virtual void                setEnabled(bool AState=true)                                    { }
+//        virtual void                setChildrenEnabled(bool AState=true)                            { }
         virtual bool                isActive()                                                      { return false; }
-        virtual bool                isEnabled()                                                     { return false; }
+//        virtual bool                isEnabled()                                                     { return false; }
         //virtual void              activateVisibleChildren()                                       { }
         //virtual void              deactivateInvisibleChildren()                                   { }
 
@@ -119,12 +119,12 @@ class SAT_BaseWidget
         virtual void                on_widget_timer(uint32_t ATimerId, double ADelta)                                               { }
         virtual void                on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues)              { }
         virtual void                on_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, intptr_t AValue=0) { }
-        virtual void                on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState)                                  { }
-        virtual void                on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState)                              { }
-        virtual void                on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState)                            { }
-        virtual void                on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState)                        { }
-        //virtual void              on_widget_hint(uint32_t AType, const char* AHint)                                               { }
-        //virtual void              on_widget_tooltip(uint32_t AType, const char* ATooltip)                                         { }
+
+        virtual uint32_t            on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState)                                  { return SAT_MOUSE_EVENT_RESPONSE_NONE;  }
+        virtual uint32_t            on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState)                            { return SAT_MOUSE_EVENT_RESPONSE_NONE; }
+        
+        // virtual uint32_t            on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState)                              { return SAT_MOUSE_GESTURE_RESPONSE_NONE; }
+        // virtual uint32_t            on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState)                        { return SAT_MOUSE_GESTURE_RESPONSE_NONE; }
 
     public: // do_
 

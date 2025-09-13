@@ -15,6 +15,9 @@
 // widget already knows..
 // class SAT_MouseState;
 
+class SAT_KeyboardHandler;
+class SAT_MouseHandler;
+
 //------------------------------
 // queues
 //------------------------------
@@ -52,8 +55,10 @@ class SAT_WidgetWindow
 
     public: // mouse
 
-        virtual void        handleMouseStateChange(SAT_MouseState* AState, uint32_t ANewState);
-        virtual void        handleKeyboardStateChange(SAT_KeyboardState* AState, uint32_t ANewState);
+        virtual void        changeMouseState(SAT_MouseState* AState);
+        virtual void        changeKeyboardState(SAT_KeyboardState* AState);
+        virtual SAT_MouseHandler*       getMouseHandler();
+        virtual SAT_KeyboardHandler*    getKeyboardHandler();
 
     public: // timer
 
@@ -219,14 +224,24 @@ SAT_Widget* SAT_WidgetWindow::findWidget(int32_t AXpos, int32_t AYpos)
     return findChildAt(AXpos,AYpos);
 }
 
-void SAT_WidgetWindow::handleMouseStateChange(SAT_MouseState* AState, uint32_t ANewState)
+void SAT_WidgetWindow::changeMouseState(SAT_MouseState* AState)
 {
     SAT_PRINT("state change\n");
 }
 
-void SAT_WidgetWindow::handleKeyboardStateChange(SAT_KeyboardState* AState, uint32_t ANewState)
+void SAT_WidgetWindow::changeKeyboardState(SAT_KeyboardState* AState)
 {
     SAT_PRINT("state change\n");
+}
+
+SAT_MouseHandler* SAT_WidgetWindow::getMouseHandler()
+{
+    return nullptr;
+}
+
+SAT_KeyboardHandler* SAT_WidgetWindow::getKeyboardHandler()
+{
+    return nullptr;
 }
 
 //------------------------------
@@ -307,7 +322,7 @@ void SAT_WidgetWindow::paintWidgets(SAT_PaintContext* AContext)
     SAT_Widget* widget = nullptr;
     if (MNeedFullRepaint)
     {
-        SAT_PRINT("full repaint\n");
+        //SAT_PRINT("full repaint\n");
         while (MPaintQueue.read(&widget))
         {
             paint_count += 1;

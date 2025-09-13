@@ -38,7 +38,7 @@
 // gui
 //----------------------------------------
 
-#define SAT_MOUSE_DOUBLE_CLICK_SEC                  0.2
+#define SAT_MOUSE_DOUBLE_CLICK_SEC                  0.25
 #define SAT_MOUSE_LONGPRESS_SEC                     1.0
 #define SAT_MOUSE_TOOLTIP_SEC                       0.5
 #define SAT_PAINTER_CLIP_RECT_STACK_SIZE            256

@@ -35,8 +35,8 @@ class SAT_KeyboardState
     public:
 
         virtual uint32_t        id();
-        virtual int32_t         enterState(int32_t AFromState);
-        virtual int32_t         leaveState(int32_t AToState);
+        virtual void            enterState(int32_t AFromState);
+        virtual void            leaveState(int32_t AToState);
 
         virtual int32_t         timer(double ADelta);
         virtual int32_t         press(uint32_t AKey, uint32_t AState, uint32_t ATime);
@@ -59,6 +59,10 @@ class SAT_KeyboardState
         double                  releasedTime()      { return MHandler->MReleasedTime; }
 
         SAT_Widget*             capturedWidget()    { return MHandler->MCapturedWidget; }
+
+    protected:
+
+        uint32_t                sendEvent(SAT_Widget* AWidget, uint32_t AEvent);
 
     protected:
 
@@ -91,16 +95,14 @@ uint32_t SAT_KeyboardState::id()
     return SAT_KEYBOARD_STATE_IDLE;
 }
 
-int32_t SAT_KeyboardState::enterState(int32_t AFromState)
+void SAT_KeyboardState::enterState(int32_t AFromState)
 {
     // SAT_PRINT("enterState from %i -> return %i\n",AFromState,id());
-    return id();
 }
 
-int32_t SAT_KeyboardState::leaveState(int32_t AToState)
+void SAT_KeyboardState::leaveState(int32_t AToState)
 {
     // SAT_PRINT("leaveState to %i -> return %i\n",AToState,AToState);
-    return AToState;
 }
 
 //------------------------------
@@ -109,15 +111,29 @@ int32_t SAT_KeyboardState::leaveState(int32_t AToState)
 
 int32_t SAT_KeyboardState::timer(double ADelta)
 {
-    return SAT_KEYBOARD_STATE_NO_CHANGE;
+    return SAT_KEYBOARD_STATE_NONE;
 }
 
 int32_t SAT_KeyboardState::press(uint32_t AKey, uint32_t AState, uint32_t ATime)
 {
-    return SAT_KEYBOARD_STATE_NO_CHANGE;
+    return SAT_KEYBOARD_STATE_NONE;
 }
 
 int32_t SAT_KeyboardState::release(uint32_t AKey, uint32_t AState, uint32_t ATime)
 {
-    return SAT_KEYBOARD_STATE_NO_CHANGE;
+    return SAT_KEYBOARD_STATE_NONE;
+}
+
+//------------------------------
+//
+//------------------------------
+
+uint32_t SAT_KeyboardState::sendEvent(SAT_Widget* AWidget, uint32_t AEvent)
+{
+    if (AWidget && (AWidget->Options.wantKeyboardEvents & AEvent))
+    {
+        uint32_t retval = AWidget->on_widget_keyboard_event(AEvent,this);
+        return retval;
+    }
+    return SAT_KEYBOARD_EVENT_RESPONSE_NONE;
 }

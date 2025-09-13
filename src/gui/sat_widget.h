@@ -38,23 +38,23 @@ struct SAT_Widget__Layout
 
 struct SAT_Widget__Options
 {
-    bool        clip                = true;                                 // clip child widgets
-    bool        realignIfInvisible  = false;                                // realign (child) widgets, even if not visible (menus, etc)
-    uint32_t    wantMouseEvent      = SAT_MOUSE_EVENT_NONE;
-    uint32_t    wantMouseGesture    = SAT_MOUSE_GESTURE_NONE;
-    uint32_t    wantKeyboardEvent   = SAT_KEYBOARD_EVENT_NONE;
-    uint32_t    wantKeyboardGesture = SAT_KEYBOARD_GESTURE_NONE;
+    bool        clip                = true;
+    bool        realignIfInvisible  = false;
+    uint32_t    wantMouseEvents     = SAT_MOUSE_EVENT_NONE;
+    uint32_t    wantKeyboardEvents  = SAT_KEYBOARD_EVENT_NONE;
+    // uint32_t    wantMouseGestures    = SAT_MOUSE_GESTURE_NONE;
+    // uint32_t    wantKeyboardGestures = SAT_KEYBOARD_GESTURE_NONE;
 };
 
 struct SAT_Widget__State
 {
-    bool        active              = true;                                 // handles events
-    bool        visible             = true;                                 // drawing/alignment
-    bool        opaque              = true;                                 // set to true if widget fills it's entire rect
-    bool        hovering            = false;                                // mouse cursor is hovering over widget
-    bool        enabled             = true;                                 // if false, draw 'disabled'state (greyed out)
-    bool        interact            = false;                                // interacting with widget
-    bool        highlighted         = false;                                // selected, on, ..
+    bool        active              = true;     //
+    bool        visible             = true;     // findChildAt (todo mask), paintWidget, realignChildren
+    bool        opaque              = true;     // realignChildren
+    // bool        hovering            = false;    // getPaintState
+    // bool        enabled             = true;     // getPaintState
+    // bool        interact            = false;    // getPaintState
+    // bool        highlighted         = false;    // getPaintState
 };
 
 //----------------------------------------------------------------------
@@ -73,6 +73,8 @@ class SAT_Widget
 
         SAT_Widget(SAT_Rect ARect);
         virtual ~SAT_Widget();
+
+    public: // base
 
     public: // base
 
@@ -137,10 +139,11 @@ class SAT_Widget
 
         void                setActive(bool AState=true) override;
         void                setChildrenActive(bool AState=true) override;
-        void                setEnabled(bool AState=true) override;
-        void                setChildrenEnabled(bool AState=true) override;
+//        void                setEnabled(bool AState=true) override;
+//        void                setChildrenEnabled(bool AState=true) override;
         bool                isActive() override;
-        bool                isEnabled() override;
+//        bool                isEnabled() override;
+
      // void                activateVisibleChildren() override;
      // void                deactivateInvisibleChildren() override;
 
@@ -170,12 +173,12 @@ class SAT_Widget
         void                on_widget_timer(uint32_t ATimerId, double ADelta) override;
         void                on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues) override;
         void                on_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, intptr_t AValue=0) override;
-        void                on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState) override;
-        void                on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState) override;
-        void                on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState) override;
-        void                on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState) override;
-     // void                on_widget_hint(uint32_t AType, const char* AHint) override;
-     // void                on_widget_tooltip(uint32_t AType, const char* ATooltip) override;
+
+        uint32_t            on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState) override;
+        uint32_t            on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState) override;
+
+        // uint32_t            on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState) override;
+        // uint32_t            on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState) override;
 
     public: // do_
 
@@ -542,7 +545,14 @@ SAT_Widget* SAT_Widget::getOpaqueParent()
 
 /*
     returns this if no child widgets at x,y
+    for a window, no widgets means the window itself
+    (also when outside of the window)
 */
+
+// todo:
+// findVisibleChildAt?
+// findActiveChildAt
+// arg uint32_t AMask.. switch, check Options, etc..
 
 SAT_Widget* SAT_Widget::findChildAt(int32_t AXpos, int32_t AYpos)
 {
@@ -555,6 +565,7 @@ SAT_Widget* SAT_Widget::findChildAt(int32_t AXpos, int32_t AYpos)
             SAT_Rect widget_rect = widget->MRect;
             if (widget_rect.contains(AXpos,AYpos))
             {
+                // TODO: argument: uint32_t AMask?
                 bool widget_is_visible = widget->State.visible;
                 // widget_is_visible |= widget->Options.visibleIfHovering;
                 if (widget_is_visible)
@@ -613,13 +624,10 @@ sat_coord_t SAT_Widget::getPaintScale()
 uint32_t SAT_Widget::getPaintState()
 {
     uint32_t state = SAT_SKIN_STATE_NORMAL;
-    //if (Options.autoHoverRedraw)
-    //{
-        if (State.hovering) state |= SAT_SKIN_STATE_HOVERING;
-    //}
-    if (State.highlighted) state |= SAT_SKIN_STATE_HIGHLIGHTED;
-    if (!State.enabled) state |= SAT_SKIN_STATE_DISABLED;
-    if (State.interact) state |= SAT_SKIN_STATE_INTERACT;
+    // if (State.hovering) state |= SAT_SKIN_STATE_HOVERING;
+    // if (!State.enabled) state |= SAT_SKIN_STATE_DISABLED;
+    // if (State.highlighted) state |= SAT_SKIN_STATE_HIGHLIGHTED;
+    // if (State.interact) state |= SAT_SKIN_STATE_INTERACT;
     return state;
 }
 
@@ -648,7 +656,7 @@ void SAT_Widget::paintChildren(SAT_PaintContext* AContext)
 
 void SAT_Widget::paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidget)
 {
-    SAT_PRINT("painting: %s\n",AWidget->getName());
+    //SAT_PRINT("painting: %s\n",AWidget->getName());
     // skip if widget doesn't intersect update_rect..
     if (!AWidget->MRect.intersects(AContext->update_rect)) return;
 
@@ -986,7 +994,7 @@ void SAT_Widget::realignChildren()
             // set all children invisible, in case we try to draw some sub-widgets
             // (modulated parameters, etc)..
 
-            SAT_PRINT("%s not visible, setting all childrens invisible too\n",child->getName());
+            //SAT_PRINT("%s not visible, setting all childrens invisible too\n",child->getName());
             child->setChildrenVisible(false);
 
             // we can't click an invisible widdget.. but we won't receive hover events either..
@@ -1021,21 +1029,21 @@ void SAT_Widget::setChildrenActive(bool AState)
     }
 }
 
-void SAT_Widget::setEnabled(bool AState)
-{
-    State.enabled = AState;
-    setChildrenEnabled(AState);
-}
+// void SAT_Widget::setEnabled(bool AState)
+// {
+//     State.enabled = AState;
+//     setChildrenEnabled(AState);
+// }
 
-void SAT_Widget::setChildrenEnabled(bool AState)
-{
-    uint32_t num = getNumChildren();
-    for (uint32_t i=0; i<num; i++)
-    {
-        SAT_Widget* widget = getChild(i);
-        widget->setEnabled(AState);
-    }
-}
+// void SAT_Widget::setChildrenEnabled(bool AState)
+// {
+//     uint32_t num = getNumChildren();
+//     for (uint32_t i=0; i<num; i++)
+//     {
+//         SAT_Widget* widget = getChild(i);
+//         widget->setEnabled(AState);
+//     }
+// }
 
 //----------
 
@@ -1044,10 +1052,10 @@ bool SAT_Widget::isActive()
     return State.active;
 }
 
-bool SAT_Widget::isEnabled()
-{
-    return State.enabled;
-}
+// bool SAT_Widget::isEnabled()
+// {
+//     return State.enabled;
+// }
 
 //------------------------------
 //
@@ -1173,28 +1181,24 @@ void SAT_Widget::on_widget_notify(SAT_Widget* AWidget, uint32_t AType, intptr_t 
 {
 }
 
-void SAT_Widget::on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState)
+uint32_t SAT_Widget::on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState)
 {
+    return SAT_MOUSE_EVENT_RESPONSE_NONE;
 }
 
-void SAT_Widget::on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState)
+uint32_t SAT_Widget::on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState)
 {
+    return SAT_KEYBOARD_EVENT_RESPONSE_NONE;    
 }
 
-void SAT_Widget::on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState)
-{
-}
-
-void SAT_Widget::on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState)
-{
-}
-
-// void SAT_Widget::on_widget_hint(uint32_t AType, const char* AHint)
+// uint32_t SAT_Widget::on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState)
 // {
+//     return SAT_MOUSE_GESTURE_RESPONSE_NONE;
 // }
 
-// void SAT_Widget::on_widget_tooltip(uint32_t AType, const char* ATooltip)
+// uint32_t SAT_Widget::on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState)
 // {
+//     return SAT_KEYBOARD_GESTURE_RESPONSE_NONE;    
 // }
 
 //------------------------------

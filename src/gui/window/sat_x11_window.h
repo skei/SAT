@@ -716,7 +716,16 @@ uint32_t SAT_X11Window::remapKey(uint32_t AKey, uint32_t AState)
 uint32_t SAT_X11Window::remapButton(uint32_t AButton, uint32_t AState)
 {
     uint32_t b = AButton;
-    // TODO
+    switch (AButton)
+    {
+        case 1: b = SAT_MOUSE_BUTTON_LEFT;          break;        
+        case 2: b = SAT_MOUSE_BUTTON_MIDDLE;        break;        
+        case 3: b = SAT_MOUSE_BUTTON_RIGHT;         break;        
+        case 4: b = SAT_MOUSE_BUTTON_SCROLL_UP;     break;        
+        case 5: b = SAT_MOUSE_BUTTON_SCROLL_DOWN;   break;        
+        case 8: b = SAT_MOUSE_BUTTON_SIDE_BACKWARD; break;        
+        case 9: b = SAT_MOUSE_BUTTON_SIDE_FORWARD;  break;        
+    }
     return b;
 }
 

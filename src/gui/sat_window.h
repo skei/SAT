@@ -20,8 +20,11 @@ class SAT_Window
         virtual ~SAT_Window();
      public:
         void    handleTimer(uint32_t ATimerId, double ADelta, bool AInTimerThread=false) override;
-        void    handleMouseStateChange(SAT_MouseState* AState, uint32_t ANewState) override;
-        void    handleKeyboardStateChange(SAT_KeyboardState* AState, uint32_t ANewState) override;
+        void    changeMouseState(SAT_MouseState* AState) override;
+        void    changeKeyboardState(SAT_KeyboardState* AState) override;
+        SAT_MouseHandler*       getMouseHandler() override;
+        SAT_KeyboardHandler*    getKeyboardHandler() override;
+
     public:
         void    on_window_show() override;
         // void    on_window_hide() override;
@@ -57,7 +60,7 @@ class SAT_Window
         SAT_Animator        MAnimator               = {};
         SAT_KeyboardHandler MKeyboard               = SAT_KeyboardHandler(this);
         SAT_MouseHandler    MMouse                  = SAT_MouseHandler(this);
-        SAT_Widget*         MKeyCapturedWidget      = nullptr;
+     // SAT_Widget*         MKeyCapturedWidget      = nullptr;
         int32_t             MCurrentMouseCursor     = SAT_CURSOR_DEFAULT;
 
 };
@@ -91,14 +94,24 @@ void SAT_Window::handleTimer(uint32_t ATimerId, double ADelta, bool AInTimerThre
     SAT_WidgetWindow::handleTimer(ATimerId,ADelta,AInTimerThread);
 }
 
-void SAT_Window::handleMouseStateChange(SAT_MouseState* AState, uint32_t ANewState)
+void SAT_Window::changeMouseState(SAT_MouseState* AState)
 {
-    SAT_PRINT("state change from %i to %i\n",AState->id(),ANewState);
+    //SAT_PRINT("state change %i\n",AState->id());
 }
 
-void SAT_Window::handleKeyboardStateChange(SAT_KeyboardState* AState, uint32_t ANewState)
+void SAT_Window::changeKeyboardState(SAT_KeyboardState* AState)
 {
-    SAT_PRINT("state change from %i to %i\n",AState->id(),ANewState);
+    //SAT_PRINT("state change %i\n",AState->id());
+}
+
+SAT_MouseHandler* SAT_Window::getMouseHandler()
+{
+    return &MMouse;
+}
+
+SAT_KeyboardHandler* SAT_Window::getKeyboardHandler()
+{
+    return &MKeyboard;
 }
 
 //------------------------------
@@ -129,29 +142,36 @@ void SAT_Window::on_window_show()
 
 void SAT_Window::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
-    MMouse.click(SAT_MouseCoords(AXpos,AYpos),AButton,AState,ATime);
+    SAT_MouseCoords pos = {AXpos,AYpos};
+    MMouse.click(pos,AButton,AState,ATime);
     SAT_WidgetWindow::on_window_mouse_click(AXpos,AYpos,AButton,AState,ATime);
 }
 
 void SAT_Window::on_window_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
-    MMouse.release(SAT_MouseCoords(AXpos,AYpos),AButton,AState,ATime);
+    SAT_MouseCoords pos = {AXpos,AYpos};
+    MMouse.release(pos,AButton,AState,ATime);
     SAT_WidgetWindow::on_window_mouse_release(AXpos,AYpos,AButton,AState,ATime);
 }
 
 void SAT_Window::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
 {
-    MMouse.move(SAT_MouseCoords(AXpos,AYpos),AState,ATime);
+    SAT_MouseCoords pos = {AXpos,AYpos};
+    MMouse.move(pos,AState,ATime);
     SAT_WidgetWindow::on_window_mouse_move(AXpos,AYpos,AState,ATime);
 }
 
 void SAT_Window::on_window_mouse_enter(int32_t AXpos, int32_t AYpos, uint32_t ATime)
 {
+    SAT_MouseCoords pos = {AXpos,AYpos};
+    MMouse.enter(pos,ATime);
     SAT_WidgetWindow::on_window_mouse_enter(AXpos,AYpos,ATime);
 }
 
 void SAT_Window::on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint32_t ATime)
 {
+    SAT_MouseCoords pos = {AXpos,AYpos};
+    MMouse.leave(pos,ATime);
     SAT_WidgetWindow::on_window_mouse_leave(AXpos,AYpos,ATime);
 }
 
@@ -159,20 +179,12 @@ void SAT_Window::on_window_key_press(uint32_t AKey, uint32_t AChar, uint32_t ASt
 {
     MKeyboard.press(AKey,AState,ATime);
     SAT_WidgetWindow::on_window_key_press(AKey,AChar,AState,ATime);
-    // if (MKeyCapturedWidget)
-    // {
-    //     MKeyCapturedWidget->on_widget_key_press(AKey,AChar,AState,ATime);
-    // }
 }
 
 void SAT_Window::on_window_key_release(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime)
 {
     MKeyboard.release(AKey,AState,ATime);
     SAT_WidgetWindow::on_window_key_release(AKey,AChar,AState,ATime);
-    // if (MKeyCapturedWidget)
-    // {
-    //     MKeyCapturedWidget->on_widget_key_release(AKey,AChar,AState,ATime);
-    // }
 }
 
 // void SAT_Window::on_window_client_message(uint32_t AData)  
@@ -250,11 +262,10 @@ void SAT_Window::do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor)
     switch(ACursor)
     {
         case SAT_CURSOR_SHOW:  
-            showMouseCursor();
-            setMouseCursorShape(MCurrentMouseCursor);
+            MMouse.showCursor();
             break;
         case SAT_CURSOR_HIDE:
-            hideMouseCursor();
+            MMouse.hideCursor();
             break;
         case SAT_CURSOR_LOCK:
             MMouse.lockCursor(AWidget);
@@ -263,17 +274,13 @@ void SAT_Window::do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor)
             MMouse.unlockCursor();
             break;
         case SAT_CURSOR_RESET:
-            if (MCurrentMouseCursor != SAT_CURSOR_DEFAULT)
-            {
-                setMouseCursorShape(SAT_CURSOR_DEFAULT);
-                MCurrentMouseCursor = SAT_CURSOR_DEFAULT;
-            }
+            //MMouse.popCursor();
+            MMouse.resetCursor();
+            break;
         default:
-            if (ACursor != MCurrentMouseCursor)
-            {
-                setMouseCursorShape(ACursor);
-                MCurrentMouseCursor = ACursor;
-            }
+            //MMouse.pushCursor(ACursor);
+            MMouse.setCursor(ACursor);
+            break;
     }
 
 }

@@ -24,7 +24,13 @@ class SAT_BaseKeyboardHandler
 
     public:
 
+        virtual void                reset() {}
         virtual SAT_WidgetWindow*   getWindow() { return nullptr; }
+        virtual SAT_KeyboardState*  getState() { return nullptr; }
+
+    public:
+
+        virtual void                captureWidget(SAT_Widget* AWidget) {}
 
     public:
 
@@ -34,21 +40,17 @@ class SAT_BaseKeyboardHandler
 
     protected:
     
+        SAT_Widget*                 MCapturedWidget         = nullptr;
         double                      MCurrentTime            = 0.0;
         uint32_t                    MCurrentKeys            = 0;
         uint32_t                    MCurrentModKeys         = SAT_STATE_KEY_NONE;
-
         SAT_Widget*                 MPrevWidget             = nullptr;
-        
         uint32_t                    MPressedKey             = SAT_KEY_NONE;
         uint32_t                    MPressedModKeys         = SAT_STATE_KEY_NONE;
         double                      MPressedTime            = 0.0;
-
         uint32_t                    MReleasedKey            = SAT_KEY_NONE;
         uint32_t                    MReleasedModKeys        = SAT_STATE_KEY_NONE;
         double                      MReleasedTime           = 0.0;
-
-        SAT_Widget*                 MCapturedWidget         = nullptr;
      
 };
 

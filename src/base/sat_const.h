@@ -98,11 +98,11 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_CORNER_RIGHT                            (SAT_CORNER_UPPER_RIGHT | SAT_CORNER_LOWER_RIGHT)
 #define SAT_CORNER_ALL                              (SAT_CORNER_UPPER       | SAT_CORNER_LOWER)
 
-#define SAT_CURSOR_RESET                            -5
+#define SAT_CURSOR_UNLOCK                           -5
 #define SAT_CURSOR_LOCK                             -4
-#define SAT_CURSOR_UNLOCK                           -3
+#define SAT_CURSOR_HIDE                             -3
 #define SAT_CURSOR_SHOW                             -2
-#define SAT_CURSOR_HIDE                             -1
+#define SAT_CURSOR_RESET                            -1
 #define SAT_CURSOR_DEFAULT                          0
 
 #define SAT_EDGE_NONE                               0
@@ -141,12 +141,26 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_KEYBOARD_EVENT_RELEASE                  0x0002
 #define SAT_KEYBOARD_EVENT_ALL                      0xFFFF
 
+#define SAT_KEYBOARD_EVENT_RESPONSE_NONE            0
+#define SAT_KEYBOARD_EVENT_RESPONSE_IGNORE          1
+// #define SAT_KEYBOARD_EVENT_RESPONSE_HANDLE          2
+// #define SAT_KEYBOARD_EVENT_RESPONSE_ACCEPT          3
+
+/*
+
 #define SAT_KEYBOARD_GESTURE_NONE                   0
 #define SAT_KEYBOARD_GESTURE_PRESS                  0x0001
 #define SAT_KEYBOARD_GESTURE_RELEASE                0x0002
 #define SAT_KEYBOARD_GESTURE_ALL                    0xFFFF
 
-#define SAT_KEYBOARD_STATE_NO_CHANGE                -1
+#define SAT_KEYBOARD_GESTURE_RESPONSE_NONE          0
+#define SAT_KEYBOARD_GESTURE_RESPONSE_IGNORE        1
+// #define SAT_KEYBOARD_GESTURE_RESPONSE_HANDLE        2
+// #define SAT_KEYBOARD_GESTURE_RESPONSE_ACCEPT        3
+
+*/
+
+#define SAT_KEYBOARD_STATE_NONE                     -1
 #define SAT_KEYBOARD_STATE_IDLE                     0
 #define SAT_KEYBOARD_STATE_COUNT                    1
 
@@ -174,17 +188,41 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_MOUSE_EVENT_LEAVE                       0x0010
 #define SAT_MOUSE_EVENT_ALL                         0xFFFF
 
+#define SAT_MOUSE_EVENT_RESPONSE_NONE               0
+#define SAT_MOUSE_EVENT_RESPONSE_IGNORE             1
+//#define SAT_MOUSE_EVENT_RESPONSE_HANDLE             2
+//#define SAT_MOUSE_EVENT_RESPONSE_ACCEPT             3
+
+/*
+
 #define SAT_MOUSE_GESTURE_NONE                      0
-#define SAT_MOUSE_GESTURE_CLICK                     0x0001
-#define SAT_MOUSE_GESTURE_DOUBLE_CLICK              0x0002
-#define SAT_MOUSE_GESTURE_LONG_PRESS                0x0004
+#define SAT_MOUSE_GESTURE_ACTIVATE                  0x0001
+#define SAT_MOUSE_GESTURE_DEACTIVATE                0x0002
 #define SAT_MOUSE_GESTURE_DRAG                      0x0100
+// #define SAT_MOUSE_GESTURE_TOGGLE                    0x0000
+// #define SAT_MOUSE_GESTURE_SWITCH                    0x0000
+// #define SAT_MOUSE_GESTURE_SELECT                    0x0000
 #define SAT_MOUSE_GESTURE_ALL                       0xFFFF
 
-#define SAT_MOUSE_STATE_NO_CHANGE                   -1
+#define SAT_MOUSE_GESTURE_RESPONSE_NONE             0
+#define SAT_MOUSE_GESTURE_RESPONSE_IGNORE           1
+// #define SAT_MOUSE_GESTURE_RESPONSE_HANDLE           2
+// #define SAT_MOUSE_GESTURE_RESPONSE_ACCEPT           3
+
+*/
+
+#define SAT_MOUSE_STATE_NONE                        -1
 #define SAT_MOUSE_STATE_IDLE                        0
-#define SAT_MOUSE_STATE_HOVER                       1
-#define SAT_MOUSE_STATE_COUNT                       2
+#define SAT_MOUSE_STATE_CLICKED                     1
+#define SAT_MOUSE_STATE_DRAGGING                    2
+#define SAT_MOUSE_STATE_RELEASED                    3
+#define SAT_MOUSE_STATE_DOUBLE_CLICKED              4
+#define SAT_MOUSE_STATE_DOUBLE_DRAGGING             5
+#define SAT_MOUSE_STATE_DOUBLE_RELEASED             6
+#define SAT_MOUSE_STATE_LONG_CLICKED                7
+#define SAT_MOUSE_STATE_LONG_DRAGGING               8
+#define SAT_MOUSE_STATE_LONG_RELEASED               9
+#define SAT_MOUSE_STATE_COUNT                       10
 
 #define SAT_OBSERVE_NONE                            0
 #define SAT_OBSERVE_FLOAT                           1
