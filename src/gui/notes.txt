@@ -16,8 +16,14 @@ temporary notes..
         wgl needs hwnd, and dc (created from hwnd)
 
     nanovg
-        context is 'global'
-        nanovg surface & painter needs context
+        context is 'global' (we create it in painter..)
+        nanovg surface & painter needs context (painter owner = window)..
+
+        buffer for buffered window, needs surface..
+            create nanovg context in: (#ifdef NANOVG...)
+            a) SAT.GUI.. global context for all windows? 
+            b) window constructor, per window..
+        renderer/painter_owner = window..
 
         (github: "At first I used a separate NanoVG context and GLFW context per window.
         However, this leads to weird difficulties down the road. I ended up using shared context")
@@ -29,4 +35,16 @@ temporary notes..
 
     so.. everything except nanovg is per window..
     (maybe opengl context too)
+
+----------------------------------------------------------------------
+
+gui/widgets,,
+
+double baseUnitsToPixels(double units)
+double pixelsToBaseUnits(double units)
+
+widget.layout
+    SAT_Point   scrolledOffset  // scroll box
+    SAT_Point   movedOffset     // movable widgets
+    SAT_Rect    animOffset      // tweening, animation
 

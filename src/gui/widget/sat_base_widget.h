@@ -1,15 +1,33 @@
 #pragma once
 
+#if 0
+
 #include "base/sat_base.h"
 #include "gui/sat_skin.h"
 #include "gui/painter/sat_paint_context.h"
 #include "gui/widget/sat_widget_owner.h"
 
 class SAT_AnimChain;
+class SAT_KeyboardHandler;
 class SAT_KeyboardState;
+class SAT_MouseEvent;
+class SAT_MouseGesture;
+class SAT_MouseHandler;
 class SAT_MouseState;
 class SAT_Parameter;
 class SAT_Widget;
+class SAT_WidgetLayoutHandler;
+
+class SAT_BaseWidget;
+typedef SAT_Array<SAT_BaseWidget*> SAT_BaseWidgetArray;
+
+//----------------------------------------------------------------------
+//
+//
+//
+//----------------------------------------------------------------------
+
+
 
 //----------------------------------------------------------------------
 //
@@ -35,19 +53,26 @@ class SAT_BaseWidget
         virtual const char*         getTooltip()                                                    { return ""; }
         virtual const char*         getTypeName()                                                   { return ""; }
 
+        virtual SAT_WidgetState*    getState() { return nullptr; }
+        virtual SAT_WidgetOptions*  getOptions() { return nullptr; }
+
     public: // hierarchy
 
-        virtual void                setParent(SAT_Widget* AParent)                                  { }
+        virtual void                setParent(SAT_BaseWidget* AParent)                                  { }
         virtual void                setIndex(uint32_t AIndex)                                       { }
         virtual SAT_WidgetOwner*    getOwner()                                                      { return nullptr; }
-        virtual SAT_Widget*         getParent()                                                     { return nullptr; }
+
+        virtual SAT_Rect            getOwnerRect() { return SAT_Rect(); }
+        virtual sat_coord_t         getOwnerScale() { return 1.0; }
+
+        virtual SAT_BaseWidget*     getParent()                                                     { return nullptr; }
         virtual uint32_t            getIndex()                                                      { return 0; }
-        virtual SAT_Widget*         appendChild(SAT_Widget* AWidget)                                { return AWidget; }
+        virtual SAT_BaseWidget*     appendChild(SAT_BaseWidget* AWidget)                            { return AWidget; }
         virtual void                deleteChildren()                                                { }
-        virtual void                removeChild(SAT_Widget* AWidget, bool ADelete=true)             { }
+        virtual void                removeChild(SAT_BaseWidget* AWidget, bool ADelete=true)         { }
         virtual uint32_t            getNumChildren()                                                { return 0; }
-        virtual SAT_Widget*         getChild(uint32_t AIndex)                                       { return nullptr; }
-        virtual SAT_Widget*         findChild(const char* AName)                                    { return nullptr; }
+        virtual SAT_BaseWidget*     getChild(uint32_t AIndex)                                       { return nullptr; }
+        virtual SAT_BaseWidget*     findChild(const char* AName)                                    { return nullptr; }
         virtual void                showOwner(SAT_WidgetOwner* AOwner)                              { }
         virtual void                hideOwner(SAT_WidgetOwner* AOwner)                              { }
 
@@ -59,8 +84,8 @@ class SAT_BaseWidget
         virtual void                setScale(sat_coord_t AScale)                                    { }
         virtual void                setSkin(SAT_Skin* ASkin, bool AReplace=true)                    { }
         virtual void                setChildrenSkin(SAT_Skin* ASkin, bool AReplace=true)            { }
-        //virtual void              setRect(SAT_Rect ARect)                                         { }
-        //virtual void              setBaseRect(SAT_Rect ARect)                                     { }
+        virtual void                setRect(SAT_Rect ARect)                                         { }
+      //virtual void                setBaseRect(SAT_Rect ARect)                                     { }
         virtual bool                isOpaque()                                                      { return false; }
         virtual bool                isVisible()                                                     { return false; }
         virtual sat_coord_t         getScale()                                                      { return 1.0; }
@@ -68,8 +93,8 @@ class SAT_BaseWidget
         virtual SAT_Rect            getRect()                                                       { return SAT_Rect(); }
         virtual SAT_Rect            getClipRect()                                                   { return SAT_Rect(); }
         virtual SAT_Rect            getContentRect()                                                { return SAT_Rect(); }
-        virtual SAT_Widget*         getOpaqueParent()                                               { return nullptr; }
-        virtual SAT_Widget*         findChildAt(int32_t AXpos, int32_t AYpos)                       { return nullptr; }
+        virtual SAT_BaseWidget*     getOpaqueParent()                                               { return nullptr; }
+        virtual SAT_BaseWidget*     findChildAt(int32_t AXpos, int32_t AYpos)                       { return nullptr; }
         virtual void                pushClip(SAT_PaintContext* AContext)                            { }
         virtual void                pushRecursiveClip(SAT_PaintContext* AContext)                   { }
         virtual void                popClip(SAT_PaintContext* AContext)                             { }
@@ -80,7 +105,10 @@ class SAT_BaseWidget
 
     public: // layout
 
-        virtual void                realignChildren()                                               { }
+        virtual SAT_WidgetLayout*           getLayout() { return nullptr; }
+        virtual SAT_WidgetLayoutHandler*    getLayoutHandler() { return nullptr; }
+
+        virtual void                        realignChildren()                                       { }
 
     public: // interactive
 
@@ -120,11 +148,11 @@ class SAT_BaseWidget
         virtual void                on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues)              { }
         virtual void                on_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, intptr_t AValue=0) { }
 
-        virtual uint32_t            on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState)                                  { return SAT_MOUSE_EVENT_RESPONSE_NONE;  }
+        virtual uint32_t            on_widget_mouse_event(SAT_MouseEvent* AEvent)                                                   { return SAT_MOUSE_EVENT_RESPONSE_NONE;  }
+        virtual void                on_widget_mouse_gesture(SAT_MouseGesture* AGesture)                                             { }
+
         virtual uint32_t            on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState)                            { return SAT_MOUSE_EVENT_RESPONSE_NONE; }
-        
-        // virtual uint32_t            on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState)                              { return SAT_MOUSE_GESTURE_RESPONSE_NONE; }
-        // virtual uint32_t            on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState)                        { return SAT_MOUSE_GESTURE_RESPONSE_NONE; }
+        virtual void                on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState)                        {}
 
     public: // do_
 
@@ -139,4 +167,13 @@ class SAT_BaseWidget
         virtual void                do_widget_capture_mouse(SAT_Widget* AWidget)                                                    { }
         virtual void                do_widget_capture_keyboard(SAT_Widget* AWidget)                                                 { }
 
+    public:
+
+        SAT_WidgetLayout        Layout                              = {};
+        SAT_WidgetOptions       Options                             = {};
+        SAT_WidgetState         State                              = {};
+
+
 };
+
+#endif // 0

@@ -11,7 +11,7 @@
 //----------------------------------------------------------------------
 
 // ALWAYS include this as the first thing!
-// so, why not have it her, so we never forget it!
+// so, maybe we should put it here, so we never forget it!
 // #include "base/sat.h"
 
 //----------------------------------------------------------------------

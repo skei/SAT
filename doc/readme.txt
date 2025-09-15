@@ -1,0 +1,51 @@
+[TODO]
+
+- ABOUT
+- CODE STYLE
+- COMPILATION
+- BASE
+    - global
+        - debug
+        - registry
+    - system
+    - type
+    - util
+- PLUGIN
+    - registry
+    - clap
+        - entry
+            - factoty
+        - descriptor
+        - plugin
+        - extension
+        - host
+    - wrapper
+        - standalone
+    - ports, audio/note
+    - parameter
+        - preset
+    - processor
+        - voice processor
+    - editor
+- GUI
+    -concepts
+        - os-level
+        - hierarchy
+        - on, do, listener, owner
+    - native, cpu, gpu
+    - window
+        - paint
+        - widget
+    - surface
+    - renderer
+    - painter
+    - widget
+        - events, messages
+        - painting
+        - layout
+    - bitmap
+- AUDIO
+    - module
+    - graph
+    - io
+

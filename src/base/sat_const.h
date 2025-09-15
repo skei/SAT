@@ -98,13 +98,6 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_CORNER_RIGHT                            (SAT_CORNER_UPPER_RIGHT | SAT_CORNER_LOWER_RIGHT)
 #define SAT_CORNER_ALL                              (SAT_CORNER_UPPER       | SAT_CORNER_LOWER)
 
-#define SAT_CURSOR_UNLOCK                           -5
-#define SAT_CURSOR_LOCK                             -4
-#define SAT_CURSOR_HIDE                             -3
-#define SAT_CURSOR_SHOW                             -2
-#define SAT_CURSOR_RESET                            -1
-#define SAT_CURSOR_DEFAULT                          0
-
 #define SAT_EDGE_NONE                               0
 #define SAT_EDGE_LEFT                               0x01
 #define SAT_EDGE_RIGHT                              0x02
@@ -120,10 +113,6 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_FILE_WRITE_TEXT                         (char*)"w"
 #define SAT_FILE_APPEND_BINARY                      (char*)"ab"
 #define SAT_FILE_APPEND_TEXT                        (char*)"a"
-
-//#define SAT_WIDGET_HINT_DEFAULT                     0
-#define SAT_WIDGET_HINT_NORMAL                      0
-#define SAT_WIDGET_HINT_CLEAR                       1
 
 #define SAT_KEY_NONE                                0
 #define SAT_KEY_BACKSPACE                           8
@@ -143,22 +132,13 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 
 #define SAT_KEYBOARD_EVENT_RESPONSE_NONE            0
 #define SAT_KEYBOARD_EVENT_RESPONSE_IGNORE          1
-// #define SAT_KEYBOARD_EVENT_RESPONSE_HANDLE          2
-// #define SAT_KEYBOARD_EVENT_RESPONSE_ACCEPT          3
-
-/*
+#define SAT_KEYBOARD_EVENT_RESPONSE_CAPTURE         2
+#define SAT_KEYBOARD_EVENT_RESPONSE_RELEASE         3
 
 #define SAT_KEYBOARD_GESTURE_NONE                   0
 #define SAT_KEYBOARD_GESTURE_PRESS                  0x0001
 #define SAT_KEYBOARD_GESTURE_RELEASE                0x0002
 #define SAT_KEYBOARD_GESTURE_ALL                    0xFFFF
-
-#define SAT_KEYBOARD_GESTURE_RESPONSE_NONE          0
-#define SAT_KEYBOARD_GESTURE_RESPONSE_IGNORE        1
-// #define SAT_KEYBOARD_GESTURE_RESPONSE_HANDLE        2
-// #define SAT_KEYBOARD_GESTURE_RESPONSE_ACCEPT        3
-
-*/
 
 #define SAT_KEYBOARD_STATE_NONE                     -1
 #define SAT_KEYBOARD_STATE_IDLE                     0
@@ -180,6 +160,13 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_MOUSE_BUTTON_SIDE_BACKWARD              8
 #define SAT_MOUSE_BUTTON_SIDE_FORWARD               9
 
+#define SAT_MOUSE_CURSOR_UNLOCK                     -5
+#define SAT_MOUSE_CURSOR_LOCK                       -4
+#define SAT_MOUSE_CURSOR_HIDE                       -3
+#define SAT_MOUSE_CURSOR_SHOW                       -2
+#define SAT_MOUSE_CURSOR_RESET                      -1
+#define SAT_MOUSE_CURSOR_DEFAULT                    0
+
 #define SAT_MOUSE_EVENT_NONE                        0
 #define SAT_MOUSE_EVENT_CLICK                       0x0001
 #define SAT_MOUSE_EVENT_RELEASE                     0x0002
@@ -190,26 +177,24 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 
 #define SAT_MOUSE_EVENT_RESPONSE_NONE               0
 #define SAT_MOUSE_EVENT_RESPONSE_IGNORE             1
-//#define SAT_MOUSE_EVENT_RESPONSE_HANDLE             2
-//#define SAT_MOUSE_EVENT_RESPONSE_ACCEPT             3
-
-/*
+#define SAT_MOUSE_EVENT_RESPONSE_CAPTURE            2
+#define SAT_MOUSE_EVENT_RESPONSE_RELEASE            3
 
 #define SAT_MOUSE_GESTURE_NONE                      0
-#define SAT_MOUSE_GESTURE_ACTIVATE                  0x0001
-#define SAT_MOUSE_GESTURE_DEACTIVATE                0x0002
-#define SAT_MOUSE_GESTURE_DRAG                      0x0100
-// #define SAT_MOUSE_GESTURE_TOGGLE                    0x0000
-// #define SAT_MOUSE_GESTURE_SWITCH                    0x0000
-// #define SAT_MOUSE_GESTURE_SELECT                    0x0000
-#define SAT_MOUSE_GESTURE_ALL                       0xFFFF
+#define SAT_MOUSE_GESTURE_CLICK                     0x000001
+#define SAT_MOUSE_GESTURE_RELEASE                   0x000002
+#define SAT_MOUSE_GESTURE_DRAG                      0x000004
+#define SAT_MOUSE_GESTURE_DOUBLE_CLICK              0x000101
+#define SAT_MOUSE_GESTURE_DOUBLE_RELEASE            0x000102
+#define SAT_MOUSE_GESTURE_DOUBLE_DRAG               0x000104
+#define SAT_MOUSE_GESTURE_LONG_CLICK                0x000201
+#define SAT_MOUSE_GESTURE_LONG_RELEASE              0x000202
+#define SAT_MOUSE_GESTURE_LONG_DRAG                 0x000204
 
-#define SAT_MOUSE_GESTURE_RESPONSE_NONE             0
-#define SAT_MOUSE_GESTURE_RESPONSE_IGNORE           1
-// #define SAT_MOUSE_GESTURE_RESPONSE_HANDLE           2
-// #define SAT_MOUSE_GESTURE_RESPONSE_ACCEPT           3
-
-*/
+// #define SAT_MOUSE_GESTURE_TOGGLE                 0x0000
+// #define SAT_MOUSE_GESTURE_SWITCH                 0x0000
+// #define SAT_MOUSE_GESTURE_SELECT                 0x0000
+#define SAT_MOUSE_GESTURE_ALL                       0xFFFFFF
 
 #define SAT_MOUSE_STATE_NONE                        -1
 #define SAT_MOUSE_STATE_IDLE                        0
@@ -281,6 +266,9 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_WIDGET_DRAG_AND_DROP                    0
 #define SAT_WIDGET_DRAG_SELECTION                  -1
 #define SAT_WIDGET_DRAG_VALUE                      -2
+
+#define SAT_WIDGET_HINT_NORMAL                      0
+#define SAT_WIDGET_HINT_CLEAR                       1
 
 #define SAT_WIDGET_LAYOUT_ANCHOR_CURRENT            0x00000000
 #define SAT_WIDGET_LAYOUT_ANCHOR_PARENT             0x01000000
@@ -363,9 +351,9 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_WIDGET_REDRAW_NORMAL                    0
 #define SAT_WIDGET_REDRAW_SELF                      0x01
 #define SAT_WIDGET_REDRAW_PARENT                    0x02
-// #define SAT_WIDGET_REDRAW_OPAQUE_PARENT             0x04
-// #define SAT_WIDGET_REDRAW_ROOT                      0x08
-// #define SAT_WIDGET_REDRAW_CHILDREN                  0x10
+// #define SAT_WIDGET_REDRAW_OPAQUE_PARENT          0x04
+// #define SAT_WIDGET_REDRAW_ROOT                   0x08
+// #define SAT_WIDGET_REDRAW_CHILDREN               0x10
 
 #define SAT_WIDGET_UPDATE_VALUE                     0
 

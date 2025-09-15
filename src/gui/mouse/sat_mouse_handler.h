@@ -3,10 +3,9 @@
 #include "base/sat_base.h"
 #include "gui/mouse/sat_base_mouse_handler.h"
 #include "gui/mouse/sat_mouse_states.h"
+#include "gui/mouse/sat_mouse_state.h"
 #include "gui/window/sat_widget_window.h"
 #include "gui/sat_widget.h"
-
-// #define SAT_DEBUG_MOUSE_HANDLER
 
 #define SAT_MOUSE_CURSOR_STACK_SIZE 256
 typedef SAT_Stack<int32_t,SAT_MOUSE_CURSOR_STACK_SIZE> SAT_CursorStack;
@@ -30,9 +29,13 @@ class SAT_MouseHandler
 
     public:
 
-        void                reset() override;
-        SAT_WidgetWindow*   getWindow() override;
-        SAT_MouseState*     getState() override;
+        SAT_WidgetWindow*   getWindow()         override    { return nullptr; }
+        SAT_MouseState*     getCurrentState()   override    { return MCurrentState; }
+        SAT_MouseEvent*     getEvent()          override    { return &MEvent; }
+        double              getCurrentTime()    override    { return MCurrentTime; }
+        SAT_Widget*         getHoverWidget()    override    { return MHoverWidget; }
+        SAT_Widget*         getActiveWidget()   override    { return MActiveWidget; }
+        SAT_Widget*         getCapturedWidget() override    { return MCapturedWidget; }
 
     public:
 
@@ -41,13 +44,17 @@ class SAT_MouseHandler
         void                resetCursor() override;
         void                showCursor() override;
         void                hideCursor() override;
-        void                pushCursor(int32_t ACursor) override;
-        void                popCursor() override;
         void                lockCursor(SAT_Widget* AWidget) override;
         void                unlockCursor() override;
+        void                pushCursor(int32_t ACursor) override;
+        void                popCursor() override;
+
+        const char*         eventName(uint32_t AEvent) override;
+        const char*         gestureName(uint32_t AGesture) override;
+        const char*         stateName(int32_t AState) override;
 
     public:
-    
+
         void                timer(double ADelta) override;
         void                click(SAT_MouseCoords APos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
         void                release(SAT_MouseCoords APos, uint32_t AButton, uint32_t AState, uint32_t ATime) override;
@@ -55,10 +62,16 @@ class SAT_MouseHandler
         void                enter(SAT_MouseCoords APos, uint32_t ATime) override;
         void                leave(SAT_MouseCoords APos, uint32_t ATime) override;
 
+    public:
+
+        void                reset();
+
     private:
 
         void                setupStates();
-        void                changeState(int32_t AState);
+        bool                sendEvent(SAT_Widget* AWidget, SAT_MouseEvent* AEvent);
+        void                updateState(int32_t AState);
+        void                updateHover(SAT_MouseEvent* AEvent);
         SAT_MouseCoords     adjustPos(SAT_MouseCoords APos);
 
     private:
@@ -66,8 +79,18 @@ class SAT_MouseHandler
         SAT_WidgetWindow*   MWindow                             = nullptr;
         SAT_MouseState*     MCurrentState                       = nullptr;
         SAT_MouseState*     MMouseStates[SAT_MOUSE_STATE_COUNT] = {};
+        SAT_MouseEvent      MEvent                              = {};
+        double              MCurrentTime                        = 0.0;
         SAT_CursorStack     MCursorStack                        = {};
-
+        int32_t             MCurrentCursor                      = SAT_MOUSE_CURSOR_DEFAULT;
+        bool                MLockedCursor                       = false;
+        SAT_MouseCoords     MLockedCursorPos                    = {0,0};
+        SAT_MouseCoords     MLockedCursorVirtualPos             = {0,0};
+        SAT_Widget*         MLockedCursorWidget                 = nullptr;
+        SAT_Widget*         MHoverWidget                        = nullptr;
+        SAT_Widget*         MActiveWidget                       = nullptr;
+        SAT_Widget*         MCapturedWidget                     = nullptr;
+        SAT_MouseCoords     MCurrentPos                         = {0,0};
 };
 
 //----------------------------------------------------------------------
@@ -96,66 +119,16 @@ SAT_MouseHandler::~SAT_MouseHandler()
 //
 //------------------------------
 
-void SAT_MouseHandler::reset()
-{
-    MActiveButton       = SAT_MOUSE_BUTTON_NONE;
-    MActivePos          = {0,0};
-    MActiveTime         = 0.0;;
-
-    MCapturedWidget     = nullptr;
-    MClickedPos         = {0,0};
-    MClickedButton      = SAT_MOUSE_BUTTON_NONE;
-    MClickedModKeys     = SAT_STATE_KEY_NONE;
-    MClickedTime        = 0.0;
-    MClickedWidget      = nullptr;
-    MCurrentTime        = 0.0;
-    MCurrentPos         = {0,0};
-    MCurrentButtons     = SAT_MOUSE_BUTTON_NONE;
-    MCurrentModKeys     = SAT_STATE_KEY_NONE;
-    MCurrentWidget      = MWindow;
-    MCurrentCursor      = SAT_CURSOR_DEFAULT;
-    MLocked             = false;
-    MLockedPos          = {0,0};
-    MLockedVirtualPos   = {0,0};
-    MLockedWidget       = nullptr;
-    MPrevPos            = {0,0};
-    MPrevTimeMoved      = 0.0;
-    MPrevWidget         = MWindow;
-    MPrevCursor         = SAT_CURSOR_DEFAULT;
-    MReleasedPos        = {0,0};
-    MReleasedButton     = SAT_MOUSE_BUTTON_NONE;
-    MReleasedModKeys    = SAT_STATE_KEY_NONE;
-    MReleasedTime       = 0.0;
-    MReleasedWidget     = nullptr;
-    
-    // MCursorStack.reset();
-    // setCursor(SAT_CURSOR_DEFAULT);
-    changeState(SAT_MOUSE_STATE_IDLE);
-}
-
-SAT_WidgetWindow* SAT_MouseHandler::getWindow()
-{
-    return MWindow;
-}
-
-SAT_MouseState*SAT_MouseHandler::getState()
-{
-    return MCurrentState;
-}
-
-//------------------------------
-//
-//------------------------------
-
 void SAT_MouseHandler::captureWidget(SAT_Widget* AWidget)
 {
-    if (AWidget) { SAT_PRINT("%s\n",AWidget->getName()); }
     MCapturedWidget = AWidget;
+    if (MCapturedWidget) MActiveWidget = AWidget;
+    else MActiveWidget = MHoverWidget;
 }
 
 void SAT_MouseHandler::setCursor(int32_t ACursor)
 {
-    SAT_PRINT("%i\n",ACursor);
+    // SAT_PRINT("%i\n",ACursor);
     if (ACursor != MCurrentCursor)
     {
         if (MWindow) MWindow->setMouseCursorShape(ACursor);
@@ -165,17 +138,17 @@ void SAT_MouseHandler::setCursor(int32_t ACursor)
 
 void SAT_MouseHandler::resetCursor()
 {
-    SAT_TRACE;
-    if (MCurrentCursor != SAT_CURSOR_DEFAULT)
+    // SAT_TRACE;
+    if (MCurrentCursor != SAT_MOUSE_CURSOR_DEFAULT)
     {
-        if (MWindow) MWindow->setMouseCursorShape(SAT_CURSOR_DEFAULT);
-        MCurrentCursor = SAT_CURSOR_DEFAULT;
+        if (MWindow) MWindow->setMouseCursorShape(SAT_MOUSE_CURSOR_DEFAULT);
+        MCurrentCursor = SAT_MOUSE_CURSOR_DEFAULT;
     }
 }
 
 void SAT_MouseHandler::showCursor()
 {
-    SAT_TRACE;
+    // SAT_TRACE;
     if (MWindow)
     {
         MWindow->showMouseCursor();
@@ -185,41 +158,93 @@ void SAT_MouseHandler::showCursor()
 
 void SAT_MouseHandler::hideCursor()
 {
-    SAT_TRACE;
+    // SAT_TRACE;
     if (MWindow) MWindow->hideMouseCursor();
+}
 
+void SAT_MouseHandler::lockCursor(SAT_Widget* AWidget)
+{
+    // if (AWidget) { SAT_PRINT("%s\n",AWidget->getName()); }
+    // else { SAT_TRACE; }
+    MLockedCursor = true;
+    MLockedCursorPos = MCurrentPos;
+    MLockedCursorVirtualPos = MCurrentPos;
+    MLockedCursorWidget = AWidget;
+}
+
+void SAT_MouseHandler::unlockCursor()
+{
+    // SAT_TRACE;
+    MLockedCursor = false;
+    MLockedCursorWidget = nullptr;
 }
 
 void SAT_MouseHandler::pushCursor(int32_t ACursor)
 {
-    SAT_PRINT("%i\n",ACursor);
+    // SAT_PRINT("%i\n",ACursor);
     MCursorStack.push(MCurrentCursor);
     setCursor(ACursor);
 }
 
 void SAT_MouseHandler::popCursor()
 {
-    SAT_TRACE;
+    // SAT_TRACE;
     int32_t cursor = MCursorStack.pop();
     setCursor(cursor);
 }
 
-void SAT_MouseHandler::lockCursor(SAT_Widget* AWidget)
+const char* SAT_MouseHandler::eventName(uint32_t AEvent)
 {
-    
-    if (AWidget) { SAT_PRINT("%s\n",AWidget->getName()); }
-    else { SAT_TRACE; }
-    MLocked = true;
-    MLockedPos = MCurrentPos;
-    MLockedVirtualPos = MCurrentPos;
-    MLockedWidget = AWidget;
+    switch (AEvent)
+    {
+        case SAT_MOUSE_EVENT_NONE:      return "NONE";
+        case SAT_MOUSE_EVENT_CLICK:     return "CLICK";
+        case SAT_MOUSE_EVENT_RELEASE:   return "RELEASE";
+        case SAT_MOUSE_EVENT_MOVE:      return "MOVE";
+        case SAT_MOUSE_EVENT_ENTER:     return "ENTER";
+        case SAT_MOUSE_EVENT_LEAVE:     return "LEAVE";
+        default:                        return "UNKNOWN";
+    }
+    return "?";
 }
 
-void SAT_MouseHandler::unlockCursor()
+const char* SAT_MouseHandler::gestureName(uint32_t AGesture)
 {
-    SAT_TRACE;
-    MLocked = false;
-    MLockedWidget = nullptr;
+    switch (AGesture)
+    {
+        case SAT_MOUSE_GESTURE_NONE:            return "NONE";
+        case SAT_MOUSE_GESTURE_CLICK:           return "CLICK";
+        case SAT_MOUSE_GESTURE_RELEASE:         return "RELEASE";
+        case SAT_MOUSE_GESTURE_DRAG:            return "DRAG";
+        case SAT_MOUSE_GESTURE_DOUBLE_CLICK:    return "DOUBLE CLICK";
+        case SAT_MOUSE_GESTURE_DOUBLE_RELEASE:  return "DOUBLE_RELEASE";
+        case SAT_MOUSE_GESTURE_DOUBLE_DRAG:     return "DOUBLE DRAG";
+        case SAT_MOUSE_GESTURE_LONG_CLICK:      return "LONG CLICK";
+        case SAT_MOUSE_GESTURE_LONG_RELEASE:    return "LONG RELEASE";
+        case SAT_MOUSE_GESTURE_LONG_DRAG:       return "LONG DRAG";
+        default:                                return "UNKNOWN";
+    }
+    return "?";
+}
+
+const char* SAT_MouseHandler::stateName(int32_t AState)
+{
+    switch (AState)
+    {
+        case SAT_MOUSE_STATE_NONE:              return "NONE";
+        case SAT_MOUSE_STATE_IDLE:              return "IDLE";
+        case SAT_MOUSE_STATE_CLICKED:           return "CLICKED";
+        case SAT_MOUSE_STATE_DRAGGING:          return "DRAGGING";
+        case SAT_MOUSE_STATE_RELEASED:          return "RELEASED";
+        case SAT_MOUSE_STATE_DOUBLE_CLICKED:    return "DOUBLE CLICKED";
+        case SAT_MOUSE_STATE_DOUBLE_DRAGGING:   return "DOUBLE DRAGGING";
+        case SAT_MOUSE_STATE_DOUBLE_RELEASED:   return "DOUBLE RELEASED";
+        case SAT_MOUSE_STATE_LONG_CLICKED:      return "CLICKED";
+        case SAT_MOUSE_STATE_LONG_DRAGGING:     return "LONG CLICKED";
+        case SAT_MOUSE_STATE_LONG_RELEASED:     return "LONG DRAGGING";
+        default:                                return "UNKNOWN";
+    }
+    return "?";
 }
 
 //------------------------------
@@ -228,146 +253,90 @@ void SAT_MouseHandler::unlockCursor()
 
 void SAT_MouseHandler::timer(double ADelta)
 {
-    MCurrentTime += ADelta;
-    // SAT_PRINT("MCurrentTime %.3f MPrevTimeMoved %.3f\n",MCurrentTime,MPrevTimeMoved);
-    if (!MCurrentState) return;
     int32_t state = MCurrentState->timer(ADelta);
-    changeState(state);
-
-    /*
-    if (MMouse.waitingForLongpress)
-    {
-        if ((MMouse.currentTime - MMouse.clickedTime) >= SAT.GUI->getLongPressTime()) // >= SAT_MOUSE_LONGPRESS_SEC
-        {
-            SAT_Assert(MMouse.clickedWidget);
-            int32_t x = MMouse.clickedPos.x;
-            int32_t y = MMouse.clickedPos.y;
-            uint32_t b = MMouse.clickedButton;
-            uint32_t s = MMouse.clickedState;
-            uint32_t t = MMouse.clickedTime + (uint32_t)(SAT.GUI->getLongPressTime() * 1000); // SAT_MOUSE_LONGPRESS_SEC * 1000
-            //SAT_PRINT("longpress  - %s\n",MMouse.clickedWidget->getName());
-            if (MMouse.clickedWidget->Options.wantLongPress)
-                MMouse.clickedWidget->on_widget_mouse_longpress(x,y,b,s,t);
-            MMouse.waitingForLongpress = false;
-            // MMouse.waitingForDrag = false;
-        }
-    }
-    if (MMouse.waitingForTooltip)
-    {
-        if ((MMouse.currentTime - MMouse.prevMovedTime) >= SAT.GUI->getTooltipDelayTime()) // >= SAT_MOUSE_TOOLTIP_SEC
-        {
-            SAT_Assert(MMouse.tooltipWidget);
-            if (MMouse.tooltipWidget->Options.hasTooltip)
-            {
-            Mouse.c    MMouse.waitingForTooltip = false;
-                MMouse.tooltipVisible = true;
-                showTooltip(MMouse.currentPos.x,MMouse.currentPos.y,MMouse.tooltipWidget);
-            }
-            MMouse.tooltipAllowed = false;
-        }
-    }
-    */
+    updateState(state);
+    MCurrentTime += ADelta;
 }
 
 void SAT_MouseHandler::click(SAT_MouseCoords APos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
-
-    MPrevClickedPos = MClickedPos;
-    MPrevClickedButton = MClickedButton;
-    MPrevClickedTime = MClickedTime;
-    MPrevClickedWidget = MClickedWidget;
-
-    MClickedPos = APos;
-    MClickedButton = AButton;
-    MClickedModKeys = AState;
-    MClickedTime = MCurrentTime;
-    MClickedWidget = MCurrentWidget;
-    MCurrentButtons |= (uint32_t)(1 << (AButton - 1));
-    #ifdef SAT_DEBUG_MOUSE_HANDLER
-        SAT_PRINT("click: %i,%i : %i %i = %s\n",APos.x,APos.y,AButton,AState,MClickedWidget->getName());
-    #endif
-    if (!MCurrentState) return;
-    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_CLICK);
-    //if (event_response != SAT_MOUSE_EVENT_RESPONSE_IGNORE)
-    //{
-        int32_t state = MCurrentState->click(APos,AButton,AState,ATime);
-        changeState(state);
-    //}
+    MEvent.type     = SAT_MOUSE_EVENT_CLICK;
+    MEvent.pos      = APos;
+    MEvent.button   = AButton;
+    MEvent.modkeys  = AState;
+    MEvent.time     = MCurrentTime;
+    if (sendEvent(MActiveWidget,&MEvent))
+    {
+        int32_t state = MCurrentState->click(&MEvent);
+        updateState(state);
+    }
 }
 
 void SAT_MouseHandler::release(SAT_MouseCoords APos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
-    MReleasedPos = APos;
-    MReleasedButton = AButton;
-    MReleasedModKeys = AState;
-    MReleasedTime = MCurrentTime;
-    MReleasedWidget = MCurrentWidget;
-    MCurrentButtons &= ~(uint32_t)(1 << (AButton - 1));
-    #ifdef SAT_DEBUG_MOUSE_HANDLER
-        SAT_PRINT("release: %i,%i : %i %i = %s\n",APos.x,APos.y,AButton,AState,MReleasedWidget->getName());
-    #endif
-    if (!MCurrentState) return;
-    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_RELEASE);
-    //if (event_response != SAT_MOUSE_EVENT_RESPONSE_IGNORE)
-    //{
-        int32_t state = MCurrentState->release(APos,AButton,AState,ATime);
-        changeState(state);
-    //}
+    MEvent.type     = SAT_MOUSE_EVENT_RELEASE;
+    MEvent.pos      = APos;
+    MEvent.button   = AButton;
+    MEvent.modkeys  = AState;
+    MEvent.time     = MCurrentTime;
+    if (sendEvent(MActiveWidget,&MEvent))
+    {
+        int32_t state = MCurrentState->release(&MEvent);
+        updateState(state);
+    }
 }
 
 void SAT_MouseHandler::move(SAT_MouseCoords APos, uint32_t AState, uint32_t ATime)
 {
+    MEvent.type     = SAT_MOUSE_EVENT_MOVE;
+    MEvent.pos      = APos;
+    MEvent.button   = SAT_MOUSE_BUTTON_NONE;
+    MEvent.modkeys  = AState;
+    MEvent.time     = MCurrentTime;
     APos = adjustPos(APos);
-    MPrevPos = MCurrentPos;
-    MPrevTimeMoved = MCurrentTime;
-    MCurrentPos = APos;
-    MCurrentModKeys = AState;
-    MPrevWidget = MCurrentWidget;
-    MCurrentWidget = MWindow->findChildAt(APos.x,APos.y);
-    #ifdef SAT_DEBUG_MOUSE_HANDLER
-        SAT_PRINT("move: %i,%i : %i = %s\n",APos.x,APos.y,AState,MCurrentWidget->getName());
-    #endif
-    if (!MCurrentState) return;
-    //if (MCurrentWidget != MPrevWidget)
-    //{
-    //    sendEvent(MPrevWidget,SAT_MOUSE_EVENT_LEAVE);
-    //    sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_ENTER);
-    //}
-    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_MOVE);
-    //if (event_response != SAT_MOUSE_EVENT_RESPONSE_IGNORE)
-    //{
-        int32_t state = MCurrentState->move(APos,AState,ATime);
-        changeState(state);
-    //}
+    updateHover(&MEvent);
+    MEvent.type = SAT_MOUSE_EVENT_MOVE;
+    if (sendEvent(MActiveWidget,&MEvent))
+    {
+        int32_t state = MCurrentState->move(&MEvent);
+        updateState(state);
+    }
 }
 
 void SAT_MouseHandler::enter(SAT_MouseCoords APos, uint32_t ATime)
 {
-    MPrevWidget = MWindow; // nullptr;
-    MCurrentPos = APos;
-    MCurrentWidget = MWindow->findChildAt(APos.x,APos.y);
-    #ifdef SAT_DEBUG_MOUSE_HANDLER
-        SAT_PRINT("enter: %i,%i = %s\n",APos.x,APos.y,MCurrentWidget->getName());
-    #endif
-    if (!MCurrentState) return;
-    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_ENTER);
-    //if (event_response != SAT_MOUSE_EVENT_RESPONSE_IGNORE)
-    //{
-    //}
+    // MEvent.type     = SAT_MOUSE_EVENT_ENTER;
+    // MEvent.pos      = APos;
+    // MEvent.button   = SAT_MOUSE_BUTTON_NONE;
+    // MEvent.modkeys  = SAT_STATE_KEY_NONE;
+    // MEvent.time     = MCurrentTime;
+    updateHover(&MEvent);
 }
 
 void SAT_MouseHandler::leave(SAT_MouseCoords APos, uint32_t ATime)
 {
-    MPrevWidget = MCurrentWidget;
-    MCurrentWidget = MWindow; // nullptr;
-    #ifdef SAT_DEBUG_MOUSE_HANDLER
-        SAT_PRINT("leave: %i,%i\n",APos.x,APos.y);
-    #endif
-    if (!MCurrentState) return;
-    //int32_t event_response = sendEvent(MPrevWidget,SAT_MOUSE_EVENT_LEAVE);
-    //if (event_response != SAT_MOUSE_EVENT_RESPONSE_IGNORE)
-    //{
-    //}
+    // MEvent.type     = SAT_MOUSE_EVENT_LEAVE;
+    // MEvent.pos      = APos;
+    // MEvent.button   = SAT_MOUSE_BUTTON_NONE;
+    // MEvent.modkeys  = SAT_STATE_KEY_NONE;
+    // MEvent.time     = MCurrentTime;
+    MHoverWidget = nullptr;
+}
+
+//------------------------------
+//
+//------------------------------
+
+void SAT_MouseHandler::reset()
+{
+    MCursorStack.reset();
+    MEvent.handler = this;
+    MCurrentTime = 0.0;
+    MHoverWidget = nullptr;
+    MActiveWidget = nullptr;
+    MCapturedWidget = nullptr;
+    MCurrentState = nullptr;
+    updateState(SAT_MOUSE_STATE_IDLE);
 }
 
 //------------------------------
@@ -387,6 +356,295 @@ void SAT_MouseHandler::setupStates()
     MMouseStates[SAT_MOUSE_STATE_LONG_DRAGGING]     = new SAT_LongDraggingMouseState(this);
     MMouseStates[SAT_MOUSE_STATE_LONG_RELEASED]     = new SAT_LongReleasedMouseState(this);
 }
+
+// return false if event shopuld be ignored..
+
+bool SAT_MouseHandler::sendEvent(SAT_Widget* AWidget, SAT_MouseEvent* AEvent)
+{
+    uint32_t response = SAT_MOUSE_EVENT_RESPONSE_NONE;
+    if (AWidget && AWidget->Options.wantMouseEvents & MEvent.type)
+    {
+        response = AWidget->on_widget_mouse_event(&MEvent);
+    }
+    switch (response)
+    {
+        case SAT_MOUSE_EVENT_RESPONSE_NONE:
+            return true;
+        case SAT_MOUSE_EVENT_RESPONSE_IGNORE:
+            return false;
+        case SAT_MOUSE_EVENT_RESPONSE_CAPTURE:
+            captureWidget(AWidget);
+            return true;
+        case SAT_MOUSE_EVENT_RESPONSE_RELEASE:
+            captureWidget(nullptr);
+            return true;
+    }
+    return true;
+}
+
+void SAT_MouseHandler::updateState(int32_t AState)
+{
+    SAT_Assert(AState < SAT_MOUSE_STATE_COUNT);
+    if (AState == SAT_MOUSE_STATE_NONE) return;
+    int32_t from_state = SAT_MOUSE_STATE_NONE;
+    int32_t to_state = AState;
+    if (MCurrentState)
+    {
+        from_state = MCurrentState->type;
+        if (from_state == to_state) return;
+        MCurrentState->leave(to_state);
+    }
+    MCurrentState = MMouseStates[to_state];
+    MCurrentState->enter(from_state);
+}
+
+void SAT_MouseHandler::updateHover(SAT_MouseEvent* AEvent)
+{
+    SAT_Widget* widget = MWindow->findChildAt(AEvent->pos.x,AEvent->pos.y);
+    if (widget != MHoverWidget)
+    {
+        AEvent->type = SAT_MOUSE_EVENT_LEAVE;
+        if (sendEvent(MHoverWidget,&MEvent))
+        {
+            //MHoverWidget = nullptr;
+        }
+        AEvent->type = SAT_MOUSE_EVENT_ENTER;
+        if (sendEvent(widget,&MEvent))
+        {
+            //MHoverWidget = widget;
+        }
+    }
+    MHoverWidget = widget;
+    if (MCapturedWidget) MActiveWidget = MCapturedWidget;
+    else MActiveWidget = MHoverWidget;
+}
+
+SAT_MouseCoords SAT_MouseHandler::adjustPos(SAT_MouseCoords APos)
+{
+    if (MLockedCursor)
+    {
+        if ((APos.x != MLockedCursorPos.x) || (APos.y != MLockedCursorPos.y))
+        {
+            int32_t xdiff = APos.x - MLockedCursorPos.x;
+            int32_t ydiff = APos.y - MLockedCursorPos.y;
+            MLockedCursorVirtualPos.x += xdiff;
+            MLockedCursorVirtualPos.y += ydiff;
+            MWindow->setMouseCursorPos(MLockedCursorPos.x,MLockedCursorPos.y);
+            return MLockedCursorVirtualPos;
+        }
+    }
+    return APos;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//------------------------------
+//
+//------------------------------
+
+#if 0
+
+//------------------------------
+//
+//------------------------------
+
+void SAT_MouseHandler::captureWidget(SAT_Widget* AWidget)
+{
+    if (AWidget) {
+        //SAT_PRINT("capturing %s\n",AWidget->getName());
+        if (capturedWidget)
+        {
+            if (capturedWidget->State.captured)
+            {
+                SAT_PRINT("%s is already captured!\n",capturedWidget->getName());
+            }
+            else
+            {
+                SAT_PRINT("%s is already captured! but its state is NOT captured!\n",capturedWidget->getName());
+            }
+        }
+        else
+        {
+            capturedWidget = AWidget;
+            AWidget->State.captured = true;
+            activeWidget = AWidget;
+        }
+    }
+    else
+    {
+        if (capturedWidget)
+        {
+            //SAT_PRINT("releasing %s\n",MCapturedWidget->getName());
+            capturedWidget->State.captured = false;
+            capturedWidget = nullptr;
+            activeWidget = currentWidget;
+        }
+        else
+        {
+            SAT_PRINT("no widget is captured!\n");
+        }
+    }
+}
+
+
+//------------------------------
+//
+//------------------------------
+
+void SAT_MouseHandler::timer(double ADelta)
+{
+    currentTime += ADelta;
+    // SAT_PRINT("MCurrentTime %.3f MPrevTimeMoved %.3f\n",MCurrentTime,MPrevTimeMoved);
+    if (!MCurrentState) return;
+    int32_t state = MCurrentState->timer(ADelta);
+    changeState(state);
+}
+
+void SAT_MouseHandler::click(SAT_MouseCoords APos, uint32_t AButton, uint32_t AState, uint32_t ATime)
+{
+
+    prevClickedPos = clickedPos;
+    prevClickedButton = clickedButton;
+    prevClickedTime = clickedTime;
+    prevClickedWidget = clickedWidget;
+
+    clickedPos = APos;
+    clickedButton = AButton;
+    clickedModKeys = AState;
+    clickedTime = currentTime;
+    clickedWidget = currentWidget;
+    currentButtons |= (uint32_t)(1 << (AButton - 1));
+    if (!MCurrentState) return;
+
+    //debugPrintState("click: ");
+
+    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_CLICK);
+    //if (handleResponse(MCurrentWidget,event_response))
+    int32_t event_response = sendEvent(activeWidget,SAT_MOUSE_EVENT_CLICK);
+    if (handleResponse(activeWidget,event_response))
+    {
+        int32_t state = MCurrentState->click(APos,AButton,AState,ATime);
+        changeState(state);
+    }
+}
+
+void SAT_MouseHandler::release(SAT_MouseCoords APos, uint32_t AButton, uint32_t AState, uint32_t ATime)
+{
+    releasedPos = APos;
+    releasedButton = AButton;
+    releasedModKeys = AState;
+    releasedTime = currentTime;
+    releasedWidget = currentWidget;
+    currentButtons &= ~(uint32_t)(1 << (AButton - 1));
+    if (!MCurrentState) return;
+
+    //debugPrintState("release: ");
+
+    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_RELEASE);
+    //if (handleResponse(MCurrentWidget,event_response))
+    int32_t event_response = sendEvent(activeWidget,SAT_MOUSE_EVENT_RELEASE);
+
+    /*
+        ouch.. if we release widget from capture (in handleResponse),
+        MActiveWidget & MCurrentWidget is set to currently hovering widget :-/
+        and it will receive the release..
+    */
+
+    if (handleResponse(activeWidget,event_response))
+    {
+        int32_t state = MCurrentState->release(APos,AButton,AState,ATime);
+        changeState(state);
+    }
+}
+
+void SAT_MouseHandler::move(SAT_MouseCoords APos, uint32_t AState, uint32_t ATime)
+{
+    APos = adjustPos(APos);
+    prevPos = currentPos;
+    prevTimeMoved = currentTime;
+    currentPos = APos;
+    currentModKeys = AState;
+    prevWidget = currentWidget;
+    currentWidget = MWindow->findChildAt(APos.x,APos.y);
+    if (!MCurrentState) return;
+
+    //debugPrintState("move (pre): ");
+
+    if (currentWidget != prevWidget)
+    {
+        int32_t leave_response = sendEvent(prevWidget,SAT_MOUSE_EVENT_LEAVE);
+        handleResponse(prevWidget,leave_response);
+        int32_t enter_response = sendEvent(currentWidget,SAT_MOUSE_EVENT_ENTER);
+        handleResponse(currentWidget,enter_response);
+    }
+
+    if (capturedWidget) activeWidget = capturedWidget;
+    else activeWidget = currentWidget;
+
+    //debugPrintState("move (post): ");
+
+    //int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_MOVE);
+    //if (handleResponse(MCurrentWidget,event_response))
+    int32_t event_response = sendEvent(activeWidget,SAT_MOUSE_EVENT_MOVE);
+    if (handleResponse(activeWidget,event_response))
+    {
+        int32_t state = MCurrentState->move(APos,AState,ATime);
+        changeState(state);
+    }
+}
+
+void SAT_MouseHandler::enter(SAT_MouseCoords APos, uint32_t ATime)
+{
+    prevWidget = MWindow; // nullptr;
+    currentPos = APos;
+    currentWidget = MWindow->findChildAt(APos.x,APos.y);
+    if (!MCurrentState) return;
+
+    //debugPrintState("enter (pre): ");
+
+    if (capturedWidget) activeWidget = capturedWidget;
+    else activeWidget = currentWidget;
+
+    //debugPrintState("enter (post): ");
+
+    // int32_t event_response = sendEvent(MCurrentWidget,SAT_MOUSE_EVENT_ENTER);
+    // if (handleResponse(MCurrentWidget,event_response))
+    int32_t event_response = sendEvent(activeWidget,SAT_MOUSE_EVENT_ENTER);
+    if (handleResponse(activeWidget,event_response))
+    {
+    }
+}
+
+void SAT_MouseHandler::leave(SAT_MouseCoords APos, uint32_t ATime)
+{
+    prevWidget = currentWidget;
+    currentWidget = MWindow; // nullptr;
+    if (!MCurrentState) return;
+    
+    // int32_t event_response = sendEvent(MPrevWidget,SAT_MOUSE_EVENT_LEAVE);
+    // if (handleResponse(MPrevWidget,event_response))
+    int32_t event_response = sendEvent(activeWidget,SAT_MOUSE_EVENT_LEAVE);
+    if (handleResponse(activeWidget,event_response))
+    {
+    }
+}
+
+//------------------------------
+//
+//------------------------------
 
 void SAT_MouseHandler::changeState(int32_t AState)
 {
@@ -413,317 +671,56 @@ void SAT_MouseHandler::changeState(int32_t AState)
     }
 }
 
-SAT_MouseCoords SAT_MouseHandler::adjustPos(SAT_MouseCoords APos)
+
+uint32_t SAT_MouseHandler::sendEvent(SAT_Widget* AWidget, uint32_t AEvent)
 {
-    if (MLocked)
+    uint32_t retval = SAT_MOUSE_EVENT_RESPONSE_NONE;
+    if (AWidget && (AWidget->Options.wantMouseEvents & AEvent))
     {
-        if ((APos.x != MLockedPos.x) || (APos.y != MLockedPos.y))
+        SAT_MouseEvent event = 
         {
-            int32_t xdiff = APos.x - MLockedPos.x;
-            int32_t ydiff = APos.y - MLockedPos.y;
-            MLockedVirtualPos.x += xdiff;
-            MLockedVirtualPos.y += ydiff;
-            MWindow->setMouseCursorPos(MLockedPos.x,MLockedPos.y);
-            return MLockedVirtualPos;
-        }
+            // .type    = AEvent;
+            // .pos     = currentPos;
+            // .button  = 
+            // .modkeys = 
+            // .time    = 
+        };
+        retval = AWidget->on_widget_mouse_event(&event,this);
     }
-    return APos;
+    return retval;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//----------------------------------------------------------------------
-//
-//
-//
-//----------------------------------------------------------------------
-
-#if 0
-
-void SAT_WidgetWindow::updateHover(int32_t AXpos, int32_t AYpos, uint32_t ATime, SAT_Widget* APrevHover)
+bool SAT_MouseHandler::handleResponse(SAT_Widget* AWidget, uint32_t AResponse)
 {
-
-    // outside of window?
-
-    int32_t winw = (int32_t)getWidth();
-    int32_t winh = (int32_t)getHeight();
-    if ((AXpos < 0) || (AXpos >= winw) || (AYpos < 0) || (AYpos >= winh)) return;
-
-    // if a modal widget is active, only search from that one,
-    // otherwise search from the top..
-
-    SAT_Widget* hover = nullptr;
-    if (MMouse.modalWidget) hover = MMouse.modalWidget->findHoveringChild(AXpos,AYpos);
-    else hover = findHoveringChild(AXpos,AYpos);
-
-    // compare with current hovered widget, or argument?
-
-    SAT_Widget* prev_hover;
-    if (APrevHover) prev_hover = APrevHover;
-    else prev_hover = MMouse.hoverWidget;
-    
-    // are we hovering over a different widget?
-
-    SAT_Widget* entered_widget = nullptr;
-    SAT_Widget* left_widget = nullptr;
-    if (hover != prev_hover)
+    switch (AResponse)
     {
-        left_widget = prev_hover;
-        entered_widget = hover;
-        MMouse.tooltipAllowed = true;
+        case SAT_MOUSE_EVENT_RESPONSE_NONE:
+            return true;
+        case SAT_MOUSE_EVENT_RESPONSE_IGNORE:
+            return false;
+        case SAT_MOUSE_EVENT_RESPONSE_CAPTURE:
+            SAT_PRINT("capturing %s\n",AWidget->getName());
+            captureWidget(AWidget);
+            return true;
+        case SAT_MOUSE_EVENT_RESPONSE_RELEASE:
+            SAT_PRINT("releasing %s\n",capturedWidget->getName());
+            captureWidget(nullptr);
+            return true;
+        default:
+            return true;
     }
-
-    // don't send enter/leave messages if a captured widget has captureHover flag..
-
-    bool send_hover_events = true;
-    if (MMouse.capturedWidget && MMouse.capturedWidget->Options.captureHover) send_hover_events = false;
-
-    if (left_widget)
-    {
-        // MMouse.hoverWidget = nullptr;
-        left_widget->State.hovering = false;
-        if (left_widget->Options.activeIfHovering) left_widget->State.active = false;
-        if (left_widget->Options.visibleIfHovering) left_widget->State.visible = false;
-        if (send_hover_events) left_widget->on_widget_mouse_leave(entered_widget,AXpos,AYpos,ATime);
-        }
-    if (entered_widget)
-    {
-        MMouse.hoverWidget = entered_widget;
-        entered_widget->State.hovering = true;
-        if (entered_widget->Options.activeIfHovering) entered_widget->State.active = true;
-        if (entered_widget->Options.visibleIfHovering) entered_widget->State.visible = true;
-        if (send_hover_events) entered_widget->on_widget_mouse_enter(left_widget,AXpos,AYpos,ATime);
-    }
-
+    return true;
 }
 
-void SAT_Window::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
+void SAT_MouseHandler::debugPrintState(const char* prefix)
 {
-    MMouse.clickedTime = MMouse.currentTime;
-    MMouse.clickedPos.x = AXpos;
-    MMouse.clickedPos.y = AXpos;
-    MMouse.clickedButton = AButton;
-    MMouse.clickedState = AState;
-    // MMouse.clicked_widget = nullptr;
-    // MMouse.waiting_longpress = true;
-    MMouse.waitingForLongpress = false;
-    MMouse.waitingForTooltip = false;
-    // tooltip
-    if (MMouse.tooltipVisible)
-    {
-        MMouse.tooltipVisible = false;
-        hideTooltip();
-    }
-    // click
-    // if mouse is captured && have captureClick, events are sent to the
-    // captured widget.. otherwise they are sent to the hovered widget
-    SAT_Widget* clicked =nullptr;
-    if (MMouse.capturedWidget && MMouse.capturedWidget->Options.captureClick)
-    {
-        clicked = MMouse.capturedWidget;
-    }
-    else
-    {
-        clicked = MMouse.hoverWidget;
-    }
-    MMouse.clickedWidget = clicked;
-    // if clicked widget is not active, just return..
-    if (!clicked->State.active) return;
-    // did we double click?
-    SAT_Widget* double_clicked = nullptr;
-    if ((AButton == MMouse.releasedButton) && (MMouse.hoverWidget == MMouse.releasedWidget))
-    {
-        if ((MMouse.currentTime - MMouse.releasedTime) <= SAT.GUI->getDoubleClickTime())  // <= SAT_MOUSE_DOUBLE_CLICK_SEC)
-        {
-            double_clicked = MMouse.hoverWidget;
-        }
-    }
-    // if we double-clicked, and the last cliked button wants them,
-    // send dbl-click message, otherwise just sent as regular click
-    if (double_clicked && clicked->Options.wantDoubleClick)
-    {
-        clicked->on_widget_mouse_double_click(AXpos,AYpos,AButton,AState,ATime);
-    }
-    else if (clicked)
-    {
-        clicked->on_widget_mouse_click(AXpos,AYpos,AButton,AState,ATime);
-    }
-    // if we aren't already captured, and the clicked widget wants to be captured,
-    // set new captured widget..
-    if (!MMouse.capturedWidget && clicked->Options.mouseCapture)
-    {
-        if ((AButton == SAT_BUTTON_LEFT) || (AButton == SAT_BUTTON_MIDDLE) || (AButton == SAT_BUTTON_RIGHT))
-        {
-            MMouse.capturedWidget = clicked;//MMouse.hoverWidget;
-            MMouse.capturedButton = AButton;
-        }
-    }
-    //MMouse.clickedWidget = clicked;
-    MMouse.waitingForDrag = true;
-    MMouse.waitingForLongpress = true;
-}
-
-void SAT_Window::on_window_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
-{
-    MMouse.releasedButton = AButton;
-    MMouse.releasedTime = MMouse.currentTime;
-    MMouse.releasedWidget = MMouse.hoverWidget;
-    MMouse.waitingForLongpress = false;
-    MMouse.waitingForDrag = false;
-    // only captured widgets gets release messages..
-    if (MMouse.capturedWidget)
-    {
-        MMouse.capturedWidget->on_widget_mouse_release(AXpos,AYpos,AButton,AState,ATime);
-        MMouse.tooltipAllowed = true;
-        // if we released the same button as started the capture, un-capture..
-        // and update hover state..
-        if (MMouse.capturedButton == AButton)
-        {
-            SAT_Widget* was_captured = MMouse.capturedWidget;
-            MMouse.capturedWidget->State.hovering = false;
-            MMouse.capturedWidget = nullptr;
-            //MMouse.hoverWidget = nullptr; // force 'rescan'..
-            //updateHover(AXpos,AYpos,ATime);
-            updateHover(AXpos,AYpos,ATime,was_captured);
-        }
-    }
-}
-
-void SAT_Window::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
-{
-    MMouse.prevMovedTime = MMouse.currentTime;
-    MMouse.waitingForLongpress = false;
-    MMouse.waitingForTooltip = false;
-    // get rid of tooltip if it is visible..
-    if (MMouse.tooltipVisible)
-    {
-        hideTooltip();
-        MMouse.tooltipVisible = false;
-    }
-    // are we waiting for the first mose movement to start a drag?
-    if (MMouse.waitingForDrag)
-    {
-        // do the clicked widget want tot drag start message?
-        if (MMouse.clickedWidget->Options.wantStartDrag)
-        {
-            // if a widget is captured, and we clicked another one,
-            // don't start dragging, else send drag-start message to clicked widget
-            bool can_start_drag = true;
-            if (MMouse.capturedWidget && (MMouse.capturedWidget != MMouse.clickedWidget)) can_start_drag = false;
-            if (can_start_drag)
-            {
-                MMouse.clickedWidget->on_widget_mouse_start_drag(MMouse.clickedPos.x,MMouse.clickedPos.y,MMouse.clickedButton,AState,ATime);
-            }
-        }
-        MMouse.waitingForDrag = false;
-    }
-    // if mouse is locked, update virtual coord, and set mouse back..
-    if (MMouse.locked)
-    {
-        if (updateLockedMouse(AXpos,AYpos))
-        {
-            if (MMouse.capturedWidget)
-            {
-                int32_t x = MMouse.lockedVirtualPos.x;
-                int32_t y = MMouse.lockedVirtualPos.y;
-                MMouse.capturedWidget->on_widget_mouse_move(x,y,AState,ATime);
-            }
-        }
-    }
-    // otherwise, update hover state..
-    else
-    {
-        MMouse.currentPos.x = AXpos;
-        MMouse.currentPos.y = AYpos;
-        updateHover(AXpos,AYpos,ATime);
-        // if a widget is captured..
-        if (MMouse.capturedWidget)
-        {
-            // .. send move messages to it
-            MMouse.capturedWidget->on_widget_mouse_move(AXpos,AYpos,AState,ATime);
-
-            // if it's not the hovered one..
-            if (MMouse.capturedWidget != MMouse.hoverWidget)
-            {
-                // .. and hover is not captured..
-                if (!MMouse.capturedWidget->Options.captureHover)
-                {
-                    // .. allow/wait for tooltip
-                    if (MMouse.tooltipAllowed)
-                    {
-                        MMouse.waitingForTooltip = true;
-                        MMouse.tooltipWidget = MMouse.hoverWidget; // capturedWidget;
-                    }
-                }
-            }
-        }
-        // .. else, if no captured widget..
-        else 
-        {
-            if (MMouse.hoverWidget)
-            {
-                // .. send move msg if hovered widget wants it..
-                if (MMouse.hoverWidget->Options.wantHoverAlways)
-                {
-                    MMouse.hoverWidget->on_widget_mouse_move(AXpos,AYpos,AState,ATime);
-                }
-                // .. and prepare for tooltip..
-                if (MMouse.tooltipAllowed)
-                {
-                    MMouse.waitingForTooltip = true;
-                    MMouse.tooltipWidget = MMouse.hoverWidget;
-                }
-            }
-        }
-
-    }
-}
-
-void SAT_Window::on_window_mouse_enter(int32_t AXpos, int32_t AYpos, uint32_t ATime)
-{
-    updateHover(AXpos,AYpos,ATime);
-    MMouse.tooltipAllowed = true;
-}
-
-void SAT_Window::on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint32_t ATime)
-{
-    if (MMouse.tooltipVisible)
-    {
-        MMouse.tooltipVisible = false;
-        hideTooltip();
-    }
-    MMouse.waitingForTooltip = false;
-    MMouse.tooltipAllowed = false;
-    MMouse.waitingForLongpress = false;
-    if (MMouse.hoverWidget)
-    {
-        MMouse.hoverWidget->State.hovering = false;
-        MMouse.hoverWidget->on_widget_mouse_leave(nullptr,AXpos,AYpos,ATime);
-        //if (MMouse.hoverWidget->Options.redrawIfHovering) MMouse.hoverWidget->do_widget_redraw(MMouse.hoverWidget);
-        MMouse.hoverWidget = nullptr;
-    }
-    // do_widget_cursor(this,SAT_CURSOR_DEFAULT);
-    // do_widget_hint(this,0,WidgetBase.hint);
+    const char* current = "(null)";
+    const char* captured = "(null)";
+    const char* active = "(null)";
+    if (currentWidget) current = currentWidget->getName();
+    if (capturedWidget) captured = capturedWidget->getName();
+    if (activeWidget) active = activeWidget->getName();
+    SAT_DPRINT("%s current '%s' captured '%s' active '%s' \n",prefix,current,captured,active);
 }
 
 #endif // 0

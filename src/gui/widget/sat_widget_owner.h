@@ -22,7 +22,4 @@ class SAT_WidgetOwner
         virtual sat_coord_t         do_widget_owner_get_scale(SAT_Widget* AWidget)          { return 1.0; }
         virtual bool                do_widget_owner_register_timer(SAT_Widget* AWidget)     { return false; }
         virtual bool                do_widget_owner_unregister_timer(SAT_Widget* AWidget)   { return false; }
-
-        // virtual SAT_MouseHandler*   do_widget_owner_get_mouse_handler(SAT_Widget* AWidget)  { return nullptr; }
-        // virtual SAT_MouseState*     do_widget_owner_get_mouse_state(SAT_Widget* AWidget)    { return nullptr; }
 };

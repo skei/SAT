@@ -2,14 +2,15 @@
 
 #include "base/sat_base.h"
 #include "gui/painter/sat_paint_context.h"
-#include "gui/widget/sat_base_widget.h"
 #include "gui/widget/sat_widget_owner.h"
 #include "gui/sat_painter.h"
 #include "gui/sat_skin.h"
 
 class SAT_AnimChain;
-class SAT_KeyboardState;
-class SAT_MouseState;
+class SAT_KeyboardEvent;
+class SAT_KeyboardGesture;
+class SAT_MouseEvent;
+class SAT_MouseGesture;
 class SAT_Parameter;
 
 class SAT_Widget;
@@ -21,40 +22,54 @@ typedef SAT_Array<SAT_Widget*> SAT_WidgetArray;
 //
 //----------------------------------------------------------------------
 
-struct SAT_Widget__Layout
+struct SAT_WidgetLayout
 {
-    uint32_t    anchor              = SAT_WIDGET_LAYOUT_ANCHOR_CURRENT | SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT;
-    uint32_t    stretch             = SAT_WIDGET_LAYOUT_STRETCH_CURRENT | SAT_WIDGET_LAYOUT_STRETCH_NONE;
-    uint32_t    crop                = SAT_WIDGET_LAYOUT_CROP_NONE;
-    uint32_t    relative            = SAT_WIDGET_LAYOUT_RELATIVE_NONE;
-    uint32_t    stack               = SAT_WIDGET_LAYOUT_STACK_CURRENT | SAT_WIDGET_LAYOUT_STACK_NONE;
-    SAT_Rect    innerBorder         = {};
-    SAT_Rect    outerBorder         = {};
-    SAT_Point   spacing             = {};
-    uint32_t    limit               = SAT_WIDGET_LAYOUT_LIMIT_NONE;
-    SAT_Rect    minimum             = {-1,-1,-1,-1};
-    SAT_Rect    maximum             = {-1,-1,-1,-1};
+    uint32_t    anchor                  = SAT_WIDGET_LAYOUT_ANCHOR_CURRENT | SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT;
+    uint32_t    stretch                 = SAT_WIDGET_LAYOUT_STRETCH_CURRENT | SAT_WIDGET_LAYOUT_STRETCH_NONE;
+    uint32_t    crop                    = SAT_WIDGET_LAYOUT_CROP_NONE;
+    uint32_t    relative                = SAT_WIDGET_LAYOUT_RELATIVE_NONE;
+    uint32_t    stack                   = SAT_WIDGET_LAYOUT_STACK_CURRENT | SAT_WIDGET_LAYOUT_STACK_NONE;
+    SAT_Rect    innerBorder             = {};
+    SAT_Rect    outerBorder             = {};
+    SAT_Point   spacing                 = {};
+    uint32_t    limit                   = SAT_WIDGET_LAYOUT_LIMIT_NONE;
+    SAT_Rect    minimum                 = {-1,-1,-1,-1};
+    SAT_Rect    maximum                 = {-1,-1,-1,-1};
+ // SAT_Point   scrollOffset            = {0,0};        // scrollbox..
+ // SAT_Rect    animRect                = {0,0,1,1};    // x,y = offset, w/h = scale.. temp, while animating
+ // SAT_Rect    postRect                = {};           // x,y = offset, w/h = addition.. movable, sizable widgets
+    //----------
+    SAT_Rect    rect                    = {};
+    sat_coord_t scale                   = 1.0;
+    //----------
+    SAT_Rect    baseRect                = {};
+    SAT_Rect    initialRect             = {};
+    SAT_Rect    contentRect             = {};
+    sat_coord_t recursiveScale          = 1.0;
+    SAT_Rect    recursiveClipRect       = {};
+    SAT_Widget* recursiveOpaqueParent   = nullptr;
 };
 
-struct SAT_Widget__Options
+struct SAT_WidgetOptions
 {
-    bool        clip                = true;
-    bool        realignIfInvisible  = false;
-    uint32_t    wantMouseEvents     = SAT_MOUSE_EVENT_NONE;
-    uint32_t    wantKeyboardEvents  = SAT_KEYBOARD_EVENT_NONE;
-    // uint32_t    wantMouseGestures    = SAT_MOUSE_GESTURE_NONE;
-    // uint32_t    wantKeyboardGestures = SAT_KEYBOARD_GESTURE_NONE;
+    bool        clip                    = true;
+    bool        realignIfInvisible      = false;
+    uint32_t    wantMouseEvents         = SAT_MOUSE_EVENT_NONE;
+    uint32_t    wantKeyboardEvents      = SAT_KEYBOARD_EVENT_NONE;
+    uint32_t    wantMouseGestures       = SAT_MOUSE_GESTURE_NONE;
+    uint32_t    wantKeyboardGestures    = SAT_KEYBOARD_GESTURE_NONE;
 };
 
-struct SAT_Widget__State
+struct SAT_WidgetState
 {
-    bool        active              = true;     //
-    bool        visible             = true;     // findChildAt (todo mask), paintWidget, realignChildren
-    bool        opaque              = true;     // realignChildren
-    // bool        hovering            = false;    // getPaintState
-    // bool        enabled             = true;     // getPaintState
-    // bool        interact            = false;    // getPaintState
-    // bool        highlighted         = false;    // getPaintState
+    bool        active                  = true;
+    bool        visible                 = true;
+    bool        opaque                  = true;
+    bool        captured                = false;
+    // bool     hovering                = false;
+    // bool     enabled                 = true;
+    // bool     interact                = false;
+    // bool     highlighted             = false;
 };
 
 //----------------------------------------------------------------------
@@ -64,7 +79,6 @@ struct SAT_Widget__State
 //----------------------------------------------------------------------
 
 class SAT_Widget
-: public SAT_BaseWidget
 {
 
     friend class SAT_WidgetWindow;
@@ -76,164 +90,142 @@ class SAT_Widget
 
     public: // base
 
-    public: // base
-
-        void                setName(const char* AName) override;
-        void                setHint(const char* AHint) override;
-        void                setTooltip(const char* ATooltip) override;
-        const char*         getName() override;
-        const char*         getHint() override;
-        const char*         getTooltip() override;
-        const char*         getTypeName() override;
+        virtual void                setName(const char* AName);
+        virtual void                setHint(const char* AHint);
+        virtual void                setTooltip(const char* ATooltip);
+        virtual const char*         getName();
+        virtual const char*         getHint();
+        virtual const char*         getTooltip();
+        virtual const char*         getTypeName();
 
     public: // hierarchy
 
-        void                setParent(SAT_Widget* AParent) override;
-        void                setIndex(uint32_t AIndex) override;
-        SAT_WidgetOwner*    getOwner() override;
-        SAT_Widget*         getParent() override;
-        uint32_t            getIndex() override;
-        SAT_Widget*         appendChild(SAT_Widget* AWidget) override;
-        void                deleteChildren() override;
-        void                removeChild(SAT_Widget* AWidget, bool ADelete=true) override;
-        uint32_t            getNumChildren() override;
-        SAT_Widget*         getChild(uint32_t AIndex) override;
-        SAT_Widget*         findChild(const char* AName) override;
-        void                showOwner(SAT_WidgetOwner* AOwner) override;
-        void                hideOwner(SAT_WidgetOwner* AOwner) override;
+        virtual void                setParent(SAT_Widget* AParent);
+        virtual void                setIndex(uint32_t AIndex);
+        virtual SAT_WidgetOwner*    getOwner();
+        virtual SAT_Widget*         getParent();
+        virtual uint32_t            getIndex();
+        virtual SAT_Widget*         appendChild(SAT_Widget* AWidget);
+        virtual void                deleteChildren();
+        virtual void                removeChild(SAT_Widget* AWidget, bool ADelete=true);
+        virtual uint32_t            getNumChildren();
+        virtual SAT_Widget*         getChild(uint32_t AIndex);
+        virtual SAT_Widget*         findChild(const char* AName);
+        virtual void                showOwner(SAT_WidgetOwner* AOwner);
+        virtual void                hideOwner(SAT_WidgetOwner* AOwner);
 
     public: // visual
 
-        void                setOpaque(bool AState=true) override;
-        void                setVisible(bool AState=true) override;
-        void                setChildrenVisible(bool AState=true) override;
-        void                setScale(sat_coord_t AScale) override;
-        void                setSkin(SAT_Skin* ASkin, bool AReplace=true) override;
-        void                setChildrenSkin(SAT_Skin* ASkin, bool AReplace=true) override;
-     // void                setRect(SAT_Rect ARect) override;
-     // void                setBaseRect(SAT_Rect ARect) override;
-        bool                isOpaque() override;
-        bool                isVisible() override;
-        sat_coord_t         getScale() override;
-        SAT_Skin*           getSkin() override;
-        SAT_Rect            getRect() override;
-        SAT_Rect            getClipRect() override;
-        SAT_Rect            getContentRect() override;
-        SAT_Widget*         getOpaqueParent() override;
-        SAT_Widget*         findChildAt(int32_t AXpos, int32_t AYpos) override;
-        void                pushClip(SAT_PaintContext* AContext) override;
-        void                pushRecursiveClip(SAT_PaintContext* AContext) override;
-        void                popClip(SAT_PaintContext* AContext) override;
-        sat_coord_t         getPaintScale() override;
-        uint32_t            getPaintState() override;
-        void                paintChildren(SAT_PaintContext* AContext) override;
-        void                paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidget) override;
-
+        virtual void                setOpaque(bool AState=true);
+        virtual void                setVisible(bool AState=true);
+        virtual void                setChildrenVisible(bool AState=true);
+        virtual void                setScale(sat_coord_t AScale);
+        virtual void                setSkin(SAT_Skin* ASkin, bool AReplace=true);
+        virtual void                setChildrenSkin(SAT_Skin* ASkin, bool AReplace=true);
+        virtual void                setRect(SAT_Rect ARect);
+      //virtual void                setBaseRect(SAT_Rect ARect);
+        virtual bool                isOpaque();
+        virtual bool                isVisible();
+        virtual sat_coord_t         getScale();
+        virtual SAT_Skin*           getSkin();
+        virtual SAT_Rect            getRect();
+        virtual SAT_Rect            getClipRect();
+        virtual SAT_Rect            getContentRect();
+        virtual SAT_Widget*         getOpaqueParent();
+        virtual SAT_Widget*         findChildAt(int32_t AXpos, int32_t AYpos);
+        virtual void                pushClip(SAT_PaintContext* AContext);
+        virtual void                pushRecursiveClip(SAT_PaintContext* AContext);
+        virtual void                popClip(SAT_PaintContext* AContext);
+        virtual sat_coord_t         getPaintScale();
+        virtual uint32_t            getPaintState();
+        virtual void                paintChildren(SAT_PaintContext* AContext);
+        virtual void                paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidget);
 
     public: // layout
 
-        void                realignChildren() override;
-
+        virtual void                realignChildren();
 
     public: // interactive
 
-        void                setActive(bool AState=true) override;
-        void                setChildrenActive(bool AState=true) override;
-//        void                setEnabled(bool AState=true) override;
-//        void                setChildrenEnabled(bool AState=true) override;
-        bool                isActive() override;
-//        bool                isEnabled() override;
-
-     // void                activateVisibleChildren() override;
-     // void                deactivateInvisibleChildren() override;
+        virtual void                setActive(bool AState=true);
+        virtual void                setChildrenActive(bool AState=true);
+        virtual bool                isActive();
+     // virtual void                setEnabled(bool AState=true);
+     // virtual void                setChildrenEnabled(bool AState=true);
+     // virtual bool                isEnabled();
 
     public: // value
 
-        uint32_t            getValueIndex() override;
-        sat_param_t         getValue() override;
-        sat_param_t         getValue(uint32_t AIndex) override;
-        SAT_Parameter*      getParameter() override;
-        SAT_Parameter*      getParameter(uint32_t AIndex) override;
-        void                setValueIndex(uint32_t AIndex) override;
-        void                setValue(sat_param_t AValue) override;
-        void                setValue(sat_param_t AValue, uint32_t AIndex) override;
-        void                setParameter(SAT_Parameter* AParameter) override;
-        void                setParameter(SAT_Parameter* AParameter, uint32_t AIndex) override;
+        virtual uint32_t            getValueIndex();
+        virtual sat_param_t         getValue();
+        virtual sat_param_t         getValue(uint32_t AIndex);
+        virtual SAT_Parameter*      getParameter();
+        virtual SAT_Parameter*      getParameter(uint32_t AIndex);
+        virtual void                setValueIndex(uint32_t AIndex);
+        virtual void                setValue(sat_param_t AValue);
+        virtual void                setValue(sat_param_t AValue, uint32_t AIndex);
+        virtual void                setParameter(SAT_Parameter* AParameter);
+        virtual void                setParameter(SAT_Parameter* AParameter, uint32_t AIndex);
 
     public: // on_
 
-        void                on_widget_show(SAT_WidgetOwner* AOwner) override;
-        void                on_widget_hide(SAT_WidgetOwner* AOwner) override;
-        void                on_widget_paint(SAT_PaintContext* AContext) override;
-        void                on_widget_pre_paint(SAT_PaintContext* AContext) override;
-        void                on_widget_post_paint(SAT_PaintContext* AContext) override;
-        void                on_widget_realign() override;
-        SAT_Rect            on_widget_pre_align(SAT_Rect ARect) override;
-        SAT_Rect            on_widget_post_align(SAT_Rect ARect) override;
-        void                on_widget_timer(uint32_t ATimerId, double ADelta) override;
-        void                on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues) override;
-        void                on_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, intptr_t AValue=0) override;
-
-        uint32_t            on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState) override;
-        uint32_t            on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState) override;
-
-        // uint32_t            on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState) override;
-        // uint32_t            on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState) override;
+        virtual void                on_widget_show(SAT_WidgetOwner* AOwner);
+        virtual void                on_widget_hide(SAT_WidgetOwner* AOwner);
+        virtual void                on_widget_paint(SAT_PaintContext* AContext);
+        virtual void                on_widget_pre_paint(SAT_PaintContext* AContext);
+        virtual void                on_widget_post_paint(SAT_PaintContext* AContext);
+        virtual void                on_widget_realign();
+        virtual SAT_Rect            on_widget_pre_align(SAT_Rect ARect);
+        virtual SAT_Rect            on_widget_post_align(SAT_Rect ARect);
+        virtual void                on_widget_timer(uint32_t ATimerId, double ADelta);
+        virtual void                on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues);
+        virtual void                on_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, intptr_t AValue=0);
+        virtual uint32_t            on_widget_mouse_event(SAT_MouseEvent* AEvent);
+        virtual void                on_widget_mouse_gesture(SAT_MouseGesture* AGesture);
+        virtual uint32_t            on_widget_keyboard_event(SAT_KeyboardEvent* AEvent);
+        virtual void                on_widget_keyboard_gesture(SAT_KeyboardGesture* AGesture);
 
     public: // do_
 
-        void                do_widget_update(SAT_Widget* AWidget, uint32_t AIndex=0) override;
-        void                do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT) override;
-        void                do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF) override;
-        void                do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain) override;
-        void                do_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, int32_t AValue=0) override;
-        void                do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint) override;
-        void                do_widget_modal(SAT_Widget* AWidget) override;
-        void                do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor) override;
-        void                do_widget_capture_mouse(SAT_Widget* AWidget) override;
-        void                do_widget_capture_keyboard(SAT_Widget* AWidget) override;
+        virtual void                do_widget_update(SAT_Widget* AWidget, uint32_t AIndex=0);
+        virtual void                do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT);
+        virtual void                do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF);
+        virtual void                do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain);
+        virtual void                do_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, int32_t AValue=0);
+        virtual void                do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint);
+        virtual void                do_widget_modal(SAT_Widget* AWidget);
+        virtual void                do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor);
+        virtual void                do_widget_capture_mouse(SAT_Widget* AWidget);
+        virtual void                do_widget_capture_keyboard(SAT_Widget* AWidget);
 
     public: 
 
-        SAT_Widget__Layout      Layout                              = {};
-        SAT_Widget__Options     Options                             = {};
-
-    //protected:
-
-        SAT_Widget__State        State                              = {};
+        SAT_WidgetLayout    Layout                              = {};
+        SAT_WidgetOptions   Options                             = {};
+        SAT_WidgetState     State                               = {};
 
     protected:
 
-        const char*             MTypeName                           = "SAT_Widget";
-        const char*             MName                               = "";
-        const char*             MHint                               = "";
-        const char*             MTooltip                            = "";
-        uint32_t                MCursor                             = SAT_CURSOR_DEFAULT;   // hint/description
+        const char*         MTypeName                           = "SAT_Widget";
+        const char*         MName                               = "";
+        const char*         MHint                               = "";
+        const char*         MTooltip                            = "";
+        uint32_t            MCursor                             = SAT_MOUSE_CURSOR_DEFAULT;
+        SAT_Skin*           MSkin                               = nullptr;
 
-        SAT_WidgetOwner*        MOwner                              = nullptr;
-        SAT_Widget*             MParent                             = nullptr;
-        uint32_t                MIndex                              = 0;
-        SAT_WidgetArray         MChildren                           = {};
+        SAT_WidgetOwner*    MOwner                              = nullptr;
+        SAT_Widget*         MParent                             = nullptr;
+        uint32_t            MIndex                              = 0;
+        SAT_WidgetArray     MChildren                           = {};
 
-        SAT_Rect                MBaseRect                           = {};
-        SAT_Rect                MInitialRect                        = {};
-        sat_coord_t             MScale                              = 1.0;
-        SAT_Skin*               MSkin                               = nullptr;
+        uint32_t            MValueIndex                         = 0;
+        sat_param_t         MValues[SAT_WIDGET_NUM_VALUES]      = {};
+        SAT_Parameter*      MParameters[SAT_WIDGET_NUM_VALUES]  = {};
 
-        uint32_t                MValueIndex                         = 0;
-        sat_param_t             MValues[SAT_WIDGET_NUM_VALUES]      = {};
-        SAT_Parameter*          MParameters[SAT_WIDGET_NUM_VALUES]  = {};
-
-        SAT_Rect                MRect                               = {};
-        SAT_Rect                MContentRect                        = {};
-        sat_coord_t             MRecursiveScale                     = 1.0;
-        SAT_Rect                MRecursiveClipRect                  = {};
-        SAT_Widget*             MRecursiveOpaqueParent              = nullptr;
-
-        uint32_t                MLastPainted                        = SAT_UINT32_MAX;
-        // uint32_t             MLast_redrawn                       = SAT_UINT32_MAX;
-        // uint32_t             MLast_realigned                     = SAT_UINT32_MAX;
-        // uint32_t             MLast_updated                       = SAT_UINT32_MAX;
+        uint32_t            MPrevPainted                        = SAT_UINT32_MAX;
+        // uint32_t         MPrevRedrawn                        = SAT_UINT32_MAX;
+        // uint32_t         MPrevRealigned                      = SAT_UINT32_MAX;
+        // uint32_t         MPrevUpdated                        = SAT_UINT32_MAX;
 
 };
 
@@ -244,16 +236,15 @@ class SAT_Widget
 //----------------------------------------------------------------------
 
 SAT_Widget::SAT_Widget(SAT_Rect ARect)
-: SAT_BaseWidget()
 {
     MTypeName = "SAT_Widget";
-    MBaseRect = ARect;
-    MInitialRect = ARect;
+    Layout.baseRect = ARect;
+    Layout.initialRect = ARect;
     MSkin = SAT.GUI->SKINS.find("Default");
-    MRect = ARect;
-    MContentRect = ARect;
-    MRecursiveClipRect = ARect;
-    MRecursiveOpaqueParent = this;
+    Layout.rect = ARect;
+    Layout.contentRect = ARect;
+    Layout.recursiveClipRect = ARect;
+    Layout.recursiveOpaqueParent = this;
 }
 
 SAT_Widget::~SAT_Widget()
@@ -320,8 +311,6 @@ void SAT_Widget::setIndex(uint32_t AIndex)
     MIndex = AIndex;
 }
 
-//----------
-
 SAT_WidgetOwner* SAT_Widget::getOwner()
 {
     return MOwner;
@@ -337,14 +326,14 @@ uint32_t SAT_Widget::getIndex()
     return MIndex;
 }
 
-//----------
-
 SAT_Widget* SAT_Widget::appendChild(SAT_Widget* AWidget)
 {
-    AWidget->MParent = this;
+    //AWidget->MParent = this;
+    AWidget->setParent(this);
     uint32_t index = MChildren.size();
-    AWidget->MIndex = index;
-    if (!AWidget->MSkin) AWidget->MSkin = MSkin;
+    //AWidget->MIndex = index;
+    AWidget->setIndex(index);
+    if (!AWidget->getSkin()) AWidget->setSkin(MSkin);
     MChildren.append(AWidget);
     return AWidget;
 }
@@ -399,11 +388,8 @@ SAT_Widget* SAT_Widget::findChild(const char* AName)
     return nullptr;
 }
 
-//----------
-
 void SAT_Widget::showOwner(SAT_WidgetOwner* AOwner)
 {
-    // setOwner(AOwner);
     on_widget_show(AOwner);
     MOwner = AOwner;
     uint32_t num = getNumChildren();
@@ -416,7 +402,6 @@ void SAT_Widget::showOwner(SAT_WidgetOwner* AOwner)
 
 void SAT_Widget::hideOwner(SAT_WidgetOwner* AOwner)
 {
-    // setOwner(nullptr);
     on_widget_hide(AOwner);
     MOwner = nullptr;
     uint32_t num = getNumChildren();
@@ -427,8 +412,6 @@ void SAT_Widget::hideOwner(SAT_WidgetOwner* AOwner)
     }
 }
 
-
-//----------
 
 void SAT_Widget::setOpaque(bool AState)
 {
@@ -453,13 +436,11 @@ void SAT_Widget::setChildrenVisible(bool AState)
 
 void SAT_Widget::setScale(sat_coord_t AScale)
 {
-    MScale = AScale;
+    Layout.scale = AScale;
 }
 
-/*
-    if AReplace is true, it will just replace the existing skin 
-    else it will only set skin if it doesn't already have one
-*/
+// if AReplace is true, it will just replace the existing skin 
+// else it will only set skin if it doesn't already have one
 
 void SAT_Widget::setSkin(SAT_Skin* ASkin, bool AReplace)
 {
@@ -479,22 +460,20 @@ void SAT_Widget::setChildrenSkin(SAT_Skin* ASkin, bool AReplace)
     }
 }
 
-/*
-    ARect = screen-space
-    todo: convert back to widget-space & set base_rect
-*/
+// ARect = screen-space
+// todo: convert back to widget-space & set base_rect
 
-// void SAT_Widget::setRect(SAT_Rect ARect)
-// {
-// }
+void SAT_Widget::setRect(SAT_Rect ARect)
+{
+    Layout.rect = ARect;
+}
 
-/*
-    ARect = widget-space..
-    unaffected by alignment/layout
-*/
+// ARect = widget-space..
+// unaffected by alignment/layout
 
 // void SAT_Widget::setBaseRect(SAT_Rect ARect)
 // {
+//     MBaseRect = ARect;
 // }
 
 //----------
@@ -511,7 +490,7 @@ bool SAT_Widget::isVisible()
 
 sat_coord_t SAT_Widget::getScale()
 {
-    return MScale;
+    return Layout.scale;
 }
 
 SAT_Skin* SAT_Widget::getSkin()
@@ -523,31 +502,27 @@ SAT_Skin* SAT_Widget::getSkin()
 
 SAT_Rect SAT_Widget::getRect()
 {
-    return MRect;
+    return Layout.rect;
 }
 
 SAT_Rect SAT_Widget::getClipRect()
 {
-    return MRecursiveClipRect;
+    return Layout.recursiveClipRect;
 }
 
 SAT_Rect SAT_Widget::getContentRect()
 {
-    return MContentRect;
+    return Layout.contentRect;
 }
 
 SAT_Widget* SAT_Widget::getOpaqueParent()
 {
-    return MRecursiveOpaqueParent;
+    return Layout.recursiveOpaqueParent;
 }
 
-//----------
-
-/*
-    returns this if no child widgets at x,y
-    for a window, no widgets means the window itself
-    (also when outside of the window)
-*/
+// returns this if no child widgets at x,y
+// for a window, no widgets means the window itself
+// (also when outside of the window)
 
 // todo:
 // findVisibleChildAt?
@@ -562,7 +537,7 @@ SAT_Widget* SAT_Widget::findChildAt(int32_t AXpos, int32_t AYpos)
         for (int32_t i=num-1; i>=0; i--)
         {
             SAT_Widget* widget = getChild(i);
-            SAT_Rect widget_rect = widget->MRect;
+            SAT_Rect widget_rect = widget->getRect();
             if (widget_rect.contains(AXpos,AYpos))
             {
                 // TODO: argument: uint32_t AMask?
@@ -577,8 +552,6 @@ SAT_Widget* SAT_Widget::findChildAt(int32_t AXpos, int32_t AYpos)
     }
     return this;
 }
-
-//----------
 
 void SAT_Widget::pushClip(SAT_PaintContext* AContext)
 {
@@ -595,7 +568,7 @@ void SAT_Widget::pushRecursiveClip(SAT_PaintContext* AContext)
     if (Options.clip)
     {
         SAT_Painter* painter= AContext->painter;
-        SAT_Rect rect = MRecursiveClipRect;
+        SAT_Rect rect = Layout.recursiveClipRect;
         painter->pushOverlappingClipRect(rect);
     }
 }
@@ -616,7 +589,7 @@ sat_coord_t SAT_Widget::getPaintScale()
 {
     SAT_Assert(MOwner);
     sat_coord_t scale = MOwner->do_widget_owner_get_scale(this);
-    scale *= MRecursiveScale;
+    scale *= Layout.recursiveScale;
     scale *= getScale();
     return scale;
 }
@@ -631,11 +604,8 @@ uint32_t SAT_Widget::getPaintState()
     return state;
 }
 
-/*
-    assumes widget is visible, and clipping is set up
-    see: State.visible, pushRecursiveClip/popClip
-
-*/
+// assumes widget is visible, and clipping is set up
+// see: State.visible, pushRecursiveClip/popClip
 
 void SAT_Widget::paintChildren(SAT_PaintContext* AContext)
 {
@@ -644,9 +614,10 @@ void SAT_Widget::paintChildren(SAT_PaintContext* AContext)
     {
         for(uint32_t i=0; i<numchildren; i++)
         {
-            SAT_Widget* child = MChildren[i];
+            SAT_Widget* child = (SAT_Widget*)MChildren[i];
             // skip child if it's outside current widget (its parent) rect.. scroll boxes, etc..
-            if (child->MRect.intersects(MRect))
+            SAT_Rect child_rect = child->getRect();
+            if (child->Layout.rect.intersects(Layout.rect))
             {
                 paintWidget(AContext,child);
             }
@@ -656,17 +627,14 @@ void SAT_Widget::paintChildren(SAT_PaintContext* AContext)
 
 void SAT_Widget::paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidget)
 {
-    //SAT_PRINT("painting: %s\n",AWidget->getName());
     // skip if widget doesn't intersect update_rect..
-    if (!AWidget->MRect.intersects(AContext->update_rect)) return;
-
+    if (!AWidget->Layout.rect.intersects(AContext->update_rect)) return;
     if (AWidget->State.visible)
     {
-        //SAT_PRINT("painting %s\n",AWidget->getName());
         AWidget->pushRecursiveClip(AContext);
         AWidget->on_widget_paint(AContext);
         AWidget->popClip(AContext);
-        AWidget->MLastPainted = AContext->current_frame;
+        AWidget->MPrevPainted = AContext->current_frame;
     }
 }
 
@@ -676,24 +644,22 @@ void SAT_Widget::paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidget)
 //
 //------------------------------
 
-/*
-    realign all child widgets (recursively)
-    note: MOwner (SAT_WidgetOwner) needs to be set..
-*/
+// realign all child widgets (recursively)
 
 void SAT_Widget::realignChildren()
 {
     SAT_Assert(MOwner);
 
     sat_coord_t scale = MOwner->do_widget_owner_get_scale(this);
-    sat_coord_t recursive_scale = MRecursiveScale * getScale();
+    sat_coord_t recursive_scale = Layout.recursiveScale * getScale();
     scale *= recursive_scale;
 
     sat_coord_t w = MOwner->do_widget_owner_get_width(this);
     sat_coord_t h = MOwner->do_widget_owner_get_height(this);
     SAT_Rect root_rect = SAT_Rect(w,h);
 
-    SAT_Rect widget_rect = MRect;
+    //SAT_Rect widget_rect = Layout.rect;
+    SAT_Rect widget_rect = Layout.baseRect;
 
     SAT_Rect inner_border = Layout.innerBorder;
     inner_border.scale(scale);
@@ -707,7 +673,7 @@ void SAT_Widget::realignChildren()
     SAT_Rect current_rect = widget_rect;
     current_rect.shrink(inner_border);
 
-    MContentRect = SAT_Rect( widget_rect.x,widget_rect.y, 0,0 );
+    Layout.contentRect = SAT_Rect( widget_rect.x,widget_rect.y, 0,0 );
 
     double stackx           = 0;
     double stacky           = 0;
@@ -733,20 +699,20 @@ void SAT_Widget::realignChildren()
             switch(child->Layout.relative)
             {
                 case SAT_WIDGET_LAYOUT_RELATIVE_NONE:
-                    child_rect = child->MBaseRect;
+                    child_rect = child->Layout.baseRect;
                     child_rect.scale(scale);
                     break;
                 case SAT_WIDGET_LAYOUT_RELATIVE_PARENT:
                     child_rect = SAT_Rect(parent_rect.w,parent_rect.h,parent_rect.w,parent_rect.h);
-                    child_rect.scale(child->MInitialRect);
+                    child_rect.scale(child->Layout.initialRect);
                     child_rect.scale(0.01);
                 case SAT_WIDGET_LAYOUT_RELATIVE_CURRENT:
                     child_rect = SAT_Rect(current_rect.w,current_rect.h,current_rect.w,current_rect.h);
-                    child_rect.scale(child->MInitialRect);
+                    child_rect.scale(child->Layout.initialRect);
                     child_rect.scale(0.01);
                 case SAT_WIDGET_LAYOUT_RELATIVE_ROOT:
                     child_rect = SAT_Rect(root_rect.w,root_rect.h,root_rect.w,root_rect.h);
-                    child_rect.scale(child->MInitialRect);
+                    child_rect.scale(child->Layout.initialRect);
                     child_rect.scale(0.01);
                 default:
                     SAT_PRINT("Error! unknown layout relative mode: %i\n",child->Layout.relative);
@@ -912,7 +878,7 @@ void SAT_Widget::realignChildren()
                     limit_scale.set(scale);
                     break;
                 case SAT_WIDGET_LAYOUT_LIMIT_BASE:
-                    limit_scale = MBaseRect;
+                    limit_scale = Layout.baseRect;
                     limit_scale.scale(scale * 0.01);
                     break;
                 case SAT_WIDGET_LAYOUT_LIMIT_PARENT:
@@ -946,7 +912,7 @@ void SAT_Widget::realignChildren()
             
             // --- content rect ---
 
-            MContentRect.combine(child_rect);
+            Layout.contentRect.combine(child_rect);
 
             // --- outer border ---
 
@@ -962,14 +928,14 @@ void SAT_Widget::realignChildren()
 
             //SAT_PRINT("%s : %.f,%.f, %.f,%.f\n",child->getName(),child_rect.x,child_rect.y,child_rect.w,child_rect.h);
 
-            child->MRect = child_rect;
-            child->MRecursiveScale = recursive_scale;
+            child->Layout.rect = child_rect;
+            child->Layout.recursiveScale = recursive_scale;
 
-            child->MRecursiveClipRect = child_rect;
-            child->MRecursiveClipRect.overlap(MRecursiveClipRect);  // overlap(widget_rect);
+            child->Layout.recursiveClipRect = child_rect;
+            child->Layout.recursiveClipRect.overlap(Layout.recursiveClipRect);  // overlap(widget_rect);
 
-            if (child->State.opaque) child->MRecursiveOpaqueParent = child;
-            else child->MRecursiveOpaqueParent = MRecursiveOpaqueParent;
+            if (child->State.opaque) child->Layout.recursiveOpaqueParent = child;
+            else child->Layout.recursiveOpaqueParent = Layout.recursiveOpaqueParent;
 
             if (!child->MSkin) child->MSkin = MSkin;
 
@@ -982,7 +948,7 @@ void SAT_Widget::realignChildren()
                 if (child_layout & SAT_WIDGET_LAYOUT_CONTENT_SIZE)
                 {
                     SAT_Rect child_content = child->getContentRect();
-                    child->MRect = child_content;
+                    child->Layout.rect = child_content;
                 }
             */
 
@@ -1003,8 +969,9 @@ void SAT_Widget::realignChildren()
 
     } // for
 
-    MContentRect.w += inner_border.w;
-    MContentRect.h += inner_border.h;
+    Layout.contentRect.w += inner_border.w;
+    Layout.contentRect.h += inner_border.h;
+
 }
 
 //------------------------------
@@ -1029,6 +996,11 @@ void SAT_Widget::setChildrenActive(bool AState)
     }
 }
 
+bool SAT_Widget::isActive()
+{
+    return State.active;
+}
+
 // void SAT_Widget::setEnabled(bool AState)
 // {
 //     State.enabled = AState;
@@ -1044,13 +1016,6 @@ void SAT_Widget::setChildrenActive(bool AState)
 //         widget->setEnabled(AState);
 //     }
 // }
-
-//----------
-
-bool SAT_Widget::isActive()
-{
-    return State.active;
-}
 
 // bool SAT_Widget::isEnabled()
 // {
@@ -1149,20 +1114,16 @@ void SAT_Widget::on_widget_realign()
     realignChildren();
 }
 
-/*
-    called before calculating new rect
-    here we can remember the starting rect, prepare things..
-*/
+// called before calculating new rect
+// here we can remember the starting rect, prepare things..
 
 SAT_Rect SAT_Widget::on_widget_pre_align(SAT_Rect ARect)
 {
     return ARect;
 }
 
-/*
-    called after new rect has been calculated
-    cwe can do some final adjustments, or undo things..
-*/
+// called after new rect has been calculated
+// we can do some final adjustments, or undo things..
 
 SAT_Rect SAT_Widget::on_widget_post_align(SAT_Rect ARect)
 {
@@ -1181,25 +1142,23 @@ void SAT_Widget::on_widget_notify(SAT_Widget* AWidget, uint32_t AType, intptr_t 
 {
 }
 
-uint32_t SAT_Widget::on_widget_mouse_event(uint32_t AEvent, SAT_MouseState* AState)
+uint32_t SAT_Widget::on_widget_mouse_event(SAT_MouseEvent* AEvent)
 {
     return SAT_MOUSE_EVENT_RESPONSE_NONE;
 }
 
-uint32_t SAT_Widget::on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState* AState)
+void SAT_Widget::on_widget_mouse_gesture(SAT_MouseGesture* AGesture)
 {
-    return SAT_KEYBOARD_EVENT_RESPONSE_NONE;    
 }
 
-// uint32_t SAT_Widget::on_widget_mouse_gesture(uint32_t AGesture, SAT_MouseState* AState)
-// {
-//     return SAT_MOUSE_GESTURE_RESPONSE_NONE;
-// }
+uint32_t SAT_Widget::on_widget_keyboard_event(SAT_KeyboardEvent* AEvent)
+{
+    return SAT_KEYBOARD_EVENT_RESPONSE_NONE;
+}
 
-// uint32_t SAT_Widget::on_widget_keyboard_gesture(uint32_t AGesture, SAT_KeyboardState* AState)
-// {
-//     return SAT_KEYBOARD_GESTURE_RESPONSE_NONE;    
-// }
+void SAT_Widget::on_widget_keyboard_gesture(SAT_KeyboardGesture* AGesture)
+{
+}
 
 //------------------------------
 //
@@ -1209,60 +1168,60 @@ uint32_t SAT_Widget::on_widget_keyboard_event(uint32_t AEvent, SAT_KeyboardState
 
 void SAT_Widget::do_widget_update(SAT_Widget* AWidget, uint32_t AIndex)
 {
-    SAT_Widget* parent = getParent();
+    SAT_Widget* parent = (SAT_Widget*)getParent();
     if (parent) parent->do_widget_update(AWidget,AIndex);
 }
 
 void SAT_Widget::do_widget_realign(SAT_Widget* AWidget, uint32_t AMode)
 {
-    SAT_Widget* parent = getParent();
+    SAT_Widget* parent = (SAT_Widget*)getParent();
     if (parent) parent->do_widget_realign(AWidget,AMode);
 }
 
 void SAT_Widget::do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode)
 {
-    SAT_Widget* parent = getParent();
+    SAT_Widget* parent = (SAT_Widget*)getParent();
     if (parent) parent->do_widget_redraw(AWidget,AMode);
 }
 
 void SAT_Widget::do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain)
 {
-    SAT_Widget* parent = getParent();
+    SAT_Widget* parent = (SAT_Widget*)getParent();
     if (parent) parent->do_widget_anim(AWidget,AChain);
 }
 
 void SAT_Widget::do_widget_notify(SAT_Widget* AWidget, uint32_t AType, int32_t AValue)
 {
-    SAT_Widget* parent = getParent();
+    SAT_Widget* parent = (SAT_Widget*)getParent();
     if (parent) parent->do_widget_notify(AWidget,AType,AValue);
 }
 
 void SAT_Widget::do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint)
 {
-    SAT_Widget* parent = getParent();
+    SAT_Widget* parent = (SAT_Widget*)getParent();
     if (parent) parent->do_widget_hint(AWidget,AType,AHint);
 }
 
 void SAT_Widget::do_widget_modal(SAT_Widget* AWidget)
 {
-    SAT_Widget* parent = getParent();
+    SAT_Widget* parent = (SAT_Widget*)getParent();
     if (parent) parent->do_widget_modal(AWidget);
 }
 
 void SAT_Widget::do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor)
 {
-    SAT_Widget* parent = getParent();
+    SAT_Widget* parent = (SAT_Widget*)getParent();
     if (parent) parent->do_widget_cursor(AWidget,ACursor);
 }
 
 void SAT_Widget::do_widget_capture_mouse(SAT_Widget* AWidget)
 {
-    SAT_Widget* parent = getParent();
+    SAT_Widget* parent = (SAT_Widget*)getParent();
     if (parent) parent->do_widget_capture_mouse(AWidget);
 }
 
 void SAT_Widget::do_widget_capture_keyboard(SAT_Widget* AWidget)
 {
-    SAT_Widget* parent = getParent();
+    SAT_Widget* parent = (SAT_Widget*)getParent();
     if (parent) parent->do_widget_capture_keyboard(AWidget);
 }

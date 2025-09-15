@@ -59,6 +59,7 @@ int main(void)
                 // widget1->Layout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
 
                 widget1->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
+                widget1->Options.wantMouseGestures = SAT_MOUSE_GESTURE_ALL;
 
                 //----------
 
@@ -70,6 +71,7 @@ int main(void)
                 // widget2->Layout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
 
                 widget2->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
+                widget2->Options.wantMouseGestures = SAT_MOUSE_GESTURE_ALL;
 
                 //----------
 
@@ -80,7 +82,9 @@ int main(void)
 
                 widget3->State.active = false;
                 widget3->State.visible = false;
+                
                 widget3->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
+                widget3->Options.wantMouseGestures = SAT_MOUSE_GESTURE_ALL;
 
 
     window->show();
