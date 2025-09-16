@@ -22,7 +22,7 @@
     #error NO WINDOW_DEFINED
 #endif
 
-typedef SAT_SPSCQueue<uint64_t,SAT_QUEUE_SIZE_RESIZE> SAT_ResizeQueue;
+typedef SAT_SPSCQueue<uint64_t,SAT_RESIZE_QUEUE_SIZE> SAT_ResizeQueue;
 
 //----------------------------------------------------------------------
 //

@@ -3,8 +3,8 @@
 #include "base/util/sat_easing.h"
 #include "gui/sat_widget.h"
 
-// #define SAT_TWEEN_MAX_VALUES        4
-// #define SAT_QUEUE_SIZE_TWEEN        32
+// #define SAT_ANIM_MAX_VALUES        4
+// #define SAT_ANIM_QUEUE_SIZE        32
 
 // delete, end, repeat, ..
 
@@ -15,7 +15,7 @@ class SAT_AnimChain;
 
 typedef SAT_Array<SAT_AnimNode*> SAT_AnimNodeArray;
 typedef SAT_Array<SAT_AnimChain*> SAT_AnimChainArray;
-typedef SAT_SPSCQueue<SAT_AnimChain*,SAT_QUEUE_SIZE_TWEEN>  SAT_AnimChainQueue;
+typedef SAT_SPSCQueue<SAT_AnimChain*,SAT_ANIM_QUEUE_SIZE>  SAT_AnimChainQueue;
 
 //----------------------------------------------------------------------
 //
@@ -29,14 +29,14 @@ class SAT_AnimNode
         SAT_AnimNode(SAT_Widget* ATarget, uint32_t AId, double ADuration, uint32_t AType, uint32_t ANumValues=0, double* AStartValues=nullptr, double* AEndValues=nullptr, uint32_t AEasing=0);
         ~SAT_AnimNode();
     public:
-        uint32_t    MType                               = 0;        // anim, pause, signal ..
-        uint32_t    MId                                 = 0;        // id
-        double      MDuration                           = 0.0;      // in seconds
-        SAT_Widget* MTarget                             = nullptr;  // target widget
-        uint32_t    MEasing                             = 0;        // easing
-        uint32_t    MNumValues                          = 0;        // number of coords/vriables
-        double      MStartValues[SAT_TWEEN_MAX_VALUES]  = {0};      // start values
-        double      MDeltaValues[SAT_TWEEN_MAX_VALUES]  = {0};      // values change to react target in 'duration' time
+        uint32_t            MType                               = 0;        // anim, pause, signal ..
+        uint32_t            MId                                 = 0;        // id
+        double              MDuration                           = 0.0;      // in seconds
+        SAT_Widget*         MTarget                             = nullptr;  // target widget
+        uint32_t            MEasing                             = 0;        // easing
+        uint32_t            MNumValues                          = 0;        // number of coords/vriables
+        double              MStartValues[SAT_ANIM_MAX_VALUES]   = {0};      // start values
+        double              MDeltaValues[SAT_ANIM_MAX_VALUES]   = {0};      // values change to react target in 'duration' time
 };
 
 class SAT_AnimChain
@@ -45,12 +45,12 @@ class SAT_AnimChain
         SAT_AnimChain();
         ~SAT_AnimChain();
     public:
-        SAT_AnimNode*   appendNode(SAT_AnimNode* ANode);
-        void            deleteNodes();
-        uint32_t        getNumNodes();
-        void            start(void);
-        void            stop(void);
-        bool            isActive();
+        SAT_AnimNode*       appendNode(SAT_AnimNode* ANode);
+        void                deleteNodes();
+        uint32_t            getNumNodes();
+        void                start(void);
+        void                stop(void);
+        bool                isActive();
     public:
         bool                MActive         = true;
         uint32_t            MCurrentNode    = 0;
@@ -64,13 +64,12 @@ class SAT_Animator
         SAT_Animator();
         ~SAT_Animator();
     public:
-     // void            appendAnim(SAT_AnimNode* AAnim);
-        SAT_AnimChain*  appendChain(SAT_AnimChain* AChain);
-        void            deleteChains();
-        virtual void    process(double ADelta);
+        SAT_AnimChain*      appendChain(SAT_AnimChain* AChain);
+        void                deleteChains();
+        virtual void        process(double ADelta);
     private:
-        SAT_AnimChainArray  MChains;    // = {};
-        SAT_AnimChainQueue  MPending;   // = {};
+        SAT_AnimChainArray  MChains     = {};
+        SAT_AnimChainQueue  MPending    = {};
 };
 
 //----------------------------------------------------------------------
@@ -168,12 +167,10 @@ SAT_Animator::~SAT_Animator()
     #endif
 }
 
-// void SAT_Animator::appendAnim(SAT_AnimNode* AAnim)
-// {
-//     // create chain
-//     // append node
-// }
-  
+// we don't append anim chains automatically..
+// they are read during timer handling, potentially fram a different thread..
+// instead, we add the chain to a queue, and flush this at the start of anim processing
+
 SAT_AnimChain* SAT_Animator::appendChain(SAT_AnimChain* AChain)
 {
     MPending.write(AChain);
@@ -190,31 +187,42 @@ void SAT_Animator::deleteChains()
     }
 }
   
-/*
-    'double free or corruption' crash when anim ends..
-    (still relevant, or was this from earlier debugging?
-*/
+// 'double free or corruption' crash when anim ends..
+// (still relevant, or was this from earlier debugging?
 
 void SAT_Animator::process(double ADelta)
 {
-    // SAT_TRACE;
     SAT_AnimChain* chain;
+
+    /// --- add pending chains ---
+
     while (MPending.read(&chain))
     {
         MChains.append(chain);
     }
+
+    // ---
+
     uint32_t num_chains = MChains.size();
     for (uint32_t i=0; i<num_chains; i++)
     {
         if (MChains[i]->MActive)
         {
+            // --- handle chain ---
+
             uint32_t index = MChains[i]->MCurrentNode;
             SAT_AnimNode* node = MChains[i]->MNodes[index];
             if (node)
             {
+
+                // --- handle node ---
+
                 SAT_Widget* target = node->MTarget;
                 double data[16] = {0};
                 // double time_left = node->MDuration - (MChains[i]->MCurrentTime + ADelta);
+
+                // interpolate values
+
                 for (uint32_t j=0; j<node->MNumValues; j++)
                 {
                     // if (next_time >= node->MDuration)
@@ -232,11 +240,18 @@ void SAT_Animator::process(double ADelta)
                     );
                     // }
                 }
+
+                // call widget
                 target->on_widget_anim(node->MId,node->MType,node->MNumValues,data);
+
+                // update node
+
                 MChains[i]->MCurrentTime += ADelta;
                 if (MChains[i]->MCurrentTime >= node->MDuration)
                 {
-                    // jump to end point..
+
+                    // end node? jump to end point..
+
                     for (uint32_t j=0; j<node->MNumValues; j++)
                     {
                         data[j] = SAT_Easing(
@@ -247,9 +262,15 @@ void SAT_Animator::process(double ADelta)
                             node->MDuration
                         );
                     }
+
+                    // call widget
                     target->on_widget_anim(node->MId,node->MType,node->MNumValues,data);
+
                     MChains[i]->MCurrentTime = 0.0; // -= node->MDuration;
                     MChains[i]->MCurrentNode += 1;
+
+                    // end of chain
+
                     if (MChains[i]->MCurrentNode >= MChains[i]->MNodes.size())
                     {
                         MChains[i]->MActive = false;
@@ -258,11 +279,14 @@ void SAT_Animator::process(double ADelta)
                         // MChains[i]->MCurrentNode = 0;
                         // MChains[i]->MCurrentTime = 0.0;
                     }
-                } // duration
-            } // node active
-        } // anim active
-    } // for
+
+                }
+            }
+        }
+    }
+
     // delete finished chains
+
     uint32_t i = 0;
     while (i < MChains.size())
     {
@@ -274,4 +298,5 @@ void SAT_Animator::process(double ADelta)
         }
         i += 1;
     }
+
 }

@@ -19,6 +19,10 @@ class SAT_Window
         SAT_Window(uint32_t AWidth, uint32_t AHeight, intptr_t AParent=0);
         virtual ~SAT_Window();
      public:
+        SAT_Animator*           getAnimator()           override    { return &MAnimator; }
+        SAT_KeyboardHandler*    getKeyboardHandler()    override    { return &MKeyboard; }
+        SAT_MouseHandler*       getMouseHandler()       override    { return &MMouse; }
+     public:
         void    handleTimer(uint32_t ATimerId, double ADelta, bool AInTimerThread=false) override;
     public:
         void    on_window_show() override;
@@ -36,12 +40,12 @@ class SAT_Window
      // void    on_window_timer(uint32_t ATimerId, double ADelta) override;
 
     public:
-        void    do_widget_update(SAT_Widget* AWidget, uint32_t AIndex=0) override;
-        void    do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT) override;
-        void    do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF) override;
+     // void    do_widget_update(SAT_Widget* AWidget, uint32_t AIndex=0) override;
+     // void    do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT) override;
+     // void    do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REDRAW_SELF) override;
         void    do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain) override;
-        void    do_widget_notify(SAT_Widget* AWidget, uint32_t AType, int32_t AValue) override;
-        void    do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint) override;
+     // void    do_widget_notify(SAT_Widget* AWidget, uint32_t AType, int32_t AValue) override;
+     // void    do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint) override;
         void    do_widget_modal(SAT_Widget* AWidget) override;
         void    do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor) override;
         void    do_widget_capture_mouse(SAT_Widget* AWidget) override;
@@ -159,45 +163,29 @@ void SAT_Window::on_window_key_release(uint32_t AKey, uint32_t AChar, uint32_t A
 //     SAT_WidgetWindow::on_window_client_message(AData);
 // }
 
-// // [GUI THREAD]
 // void SAT_Window::on_window_timer(uint32_t ATimerId, double ADelta)
 // {
-//     //MMouse.timer(ADelta); // see handleTimer..
 //     SAT_WidgetWindow::on_window_timer(ATimerId,ADelta);
-// }
-
-//------------------------------
-// widget owner
-//------------------------------
-
-// SAT_MouseHandler* SAT_Window::do_widget_owner_get_mouse_handler(SAT_Widget* AWidget)
-// {
-//     return &MMouse;
-// }
-
-// SAT_MouseState* SAT_Window::do_widget_owner_get_mouse_state(SAT_Widget* AWidget)
-// {
-//     return MMouse.getCurrentState();
 // }
 
 //------------------------------
 // do_widget
 //------------------------------
 
-void SAT_Window::do_widget_update(SAT_Widget* AWidget, uint32_t AIndex)
-{
-    SAT_WidgetWindow::do_widget_update(AWidget,AIndex);
-}
+// void SAT_Window::do_widget_update(SAT_Widget* AWidget, uint32_t AIndex)
+// {
+//     SAT_WidgetWindow::do_widget_update(AWidget,AIndex);
+// }
 
-void SAT_Window::do_widget_realign(SAT_Widget* AWidget, uint32_t AMode)
-{
-    SAT_WidgetWindow::do_widget_realign(AWidget,AMode);
-}
+// void SAT_Window::do_widget_realign(SAT_Widget* AWidget, uint32_t AMode)
+// {
+//     SAT_WidgetWindow::do_widget_realign(AWidget,AMode);
+// }
 
-void SAT_Window::do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode)
-{
-    SAT_WidgetWindow::do_widget_redraw(AWidget,AMode);
-}
+// void SAT_Window::do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode)
+// {
+//     SAT_WidgetWindow::do_widget_redraw(AWidget,AMode);
+// }
 
 void SAT_Window::do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain)
 {
@@ -205,19 +193,19 @@ void SAT_Window::do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain)
     SAT_WidgetWindow::do_widget_anim(AWidget,AChain);
 }
 
-void SAT_Window::do_widget_notify(SAT_Widget* AWidget, uint32_t AType, int32_t AValue)
-{
-    SAT_WidgetWindow::do_widget_notify(AWidget,AType,AValue);
-}
+// void SAT_Window::do_widget_notify(SAT_Widget* AWidget, uint32_t AType, int32_t AValue)
+// {
+//     SAT_WidgetWindow::do_widget_notify(AWidget,AType,AValue);
+// }
 
-void SAT_Window::do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint)
-{
-    SAT_WidgetWindow::do_widget_hint(AWidget,AType,AHint);
-}
+// void SAT_Window::do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint)
+// {
+//     SAT_WidgetWindow::do_widget_hint(AWidget,AType,AHint);
+// }
 
 void SAT_Window::do_widget_modal(SAT_Widget* AWidget)
 {
-    // MMouse.modalWidget = AWidget;
+    MMouse.modalWidget(AWidget);
     SAT_WidgetWindow::do_widget_modal(AWidget);
 }
 

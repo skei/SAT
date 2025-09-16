@@ -38,20 +38,20 @@
 // gui
 //----------------------------------------
 
+#define SAT_ANIM_FINISHED                           0xffffffff
+#define SAT_ANIM_QUEUE_SIZE                         256
+#define SAT_ANIM_MAX_VALUES                         4
 #define SAT_MOUSE_DOUBLE_CLICK_SEC                  0.25
 #define SAT_MOUSE_LONGPRESS_SEC                     1.0
 #define SAT_MOUSE_TOOLTIP_SEC                       0.5
+#define SAT_PAINT_QUEUE_SIZE                        256
 #define SAT_PAINTER_CLIP_RECT_STACK_SIZE            256
-#define SAT_QUEUE_SIZE_PAINT                        256
-#define SAT_QUEUE_SIZE_REALIGN                      256
-#define SAT_QUEUE_SIZE_REDRAW                       256
-#define SAT_QUEUE_SIZE_RESIZE                       256
-#define SAT_QUEUE_SIZE_TWEEN                        256
-#define SAT_QUEUE_SIZE_UPDATE                       256
+#define SAT_REALIGN_QUEUE_SIZE                      256
+#define SAT_REDRAW_QUEUE_SIZE                       256
 #define SAT_RENDERER_MAJOR_VERSION                  3
 #define SAT_RENDERER_MINOR_VERSION                  2
-#define SAT_TWEEN_MAX_VALUES                        4
-#define SAT_TWEEN_FINISHED                          0xffffffff
+#define SAT_RESIZE_QUEUE_SIZE                       256
+#define SAT_UPDATE_QUEUE_SIZE                       256
 #define SAT_WIDGET_NUM_VALUES                       16
 #define SAT_WINDOW_BUFFER_MIN_SIZE                  256
 #define SAT_WINDOW_TIMER_MS                         20
@@ -69,13 +69,13 @@
 // not used?
 //----------------------------------------
 
+// #define SAT_ANIM_CHAIN_QUEUE_SIZE                   32
 // #define SAT_PLUGIN_MAX_PARAM_EVENTS_PER_BLOCK       1024
 // #define SAT_PLUGIN_MAX_MOD_EVENTS_PER_BLOCK         1024
 // #define SAT_PLUGIN_MAX_GUI_EVENTS_PER_BLOCK         32
 // #define SAT_PLUGIN_MAX_NOTE_ENDS_PER_BLOCK          1024
 // #define SAT_THREAD_POOL_MAX_THREADS                 256
 // #define SAT_THREAD_POOL_MAX_VOICES                  96
-// #define SAT_TWEEN_CHAIN_QUEUE_SIZE                  32
 // #define SAT_VOICE_MAX_EVENTS_PER_BLOCK              1024
 // #define SAT_VOICE_PROCESSOR_MAX_EVENTS_PER_BLOCK    1024
 // #define SAT_VOICE_PROCESSOR_NUM_THREADS             12

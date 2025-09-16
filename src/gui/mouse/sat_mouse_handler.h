@@ -20,8 +20,6 @@ class SAT_MouseHandler
 : public SAT_BaseMouseHandler
 {
 
-    //friend class SAT_Window;
-
     public:
 
         SAT_MouseHandler(SAT_WidgetWindow* AWindow);
@@ -32,6 +30,7 @@ class SAT_MouseHandler
         SAT_WidgetWindow*   getWindow()         override    { return nullptr; }
         SAT_MouseState*     getCurrentState()   override    { return MCurrentState; }
         SAT_MouseEvent*     getEvent()          override    { return &MEvent; }
+        SAT_MouseGesture*   getGesture()        override    { return &MGesture; }
         double              getCurrentTime()    override    { return MCurrentTime; }
         SAT_Widget*         getHoverWidget()    override    { return MHoverWidget; }
         SAT_Widget*         getActiveWidget()   override    { return MActiveWidget; }
@@ -39,7 +38,11 @@ class SAT_MouseHandler
 
     public:
 
+        void                reset();
+
         void                captureWidget(SAT_Widget* AWidget) override;
+        void                modalWidget(SAT_Widget* AWidget) override;
+
         void                setCursor(int32_t ACursor) override;
         void                resetCursor() override;
         void                showCursor() override;
@@ -62,16 +65,13 @@ class SAT_MouseHandler
         void                enter(SAT_MouseCoords APos, uint32_t ATime) override;
         void                leave(SAT_MouseCoords APos, uint32_t ATime) override;
 
-    public:
-
-        void                reset();
-
     private:
 
         void                setupStates();
         bool                sendEvent(SAT_Widget* AWidget, SAT_MouseEvent* AEvent);
+        void                sendGesture(SAT_MouseGesture* AGesture, SAT_Widget* AWidget);
         void                updateState(int32_t AState);
-        void                updateHover(SAT_MouseEvent* AEvent);
+        void                updateHover(SAT_MouseEvent* AEvent, bool AVisibleOnly=true, bool AActiveOnly=false);
         SAT_MouseCoords     adjustPos(SAT_MouseCoords APos);
 
     private:
@@ -79,18 +79,25 @@ class SAT_MouseHandler
         SAT_WidgetWindow*   MWindow                             = nullptr;
         SAT_MouseState*     MCurrentState                       = nullptr;
         SAT_MouseState*     MMouseStates[SAT_MOUSE_STATE_COUNT] = {};
-        SAT_MouseEvent      MEvent                              = {};
-        double              MCurrentTime                        = 0.0;
+
         SAT_CursorStack     MCursorStack                        = {};
         int32_t             MCurrentCursor                      = SAT_MOUSE_CURSOR_DEFAULT;
+
+        SAT_MouseEvent      MEvent                              = {};
+        SAT_MouseGesture    MGesture                            = {};
+
+        SAT_MouseCoords     MCurrentPos                         = {0,0};
+        double              MCurrentTime                        = 0.0;
+
         bool                MLockedCursor                       = false;
         SAT_MouseCoords     MLockedCursorPos                    = {0,0};
         SAT_MouseCoords     MLockedCursorVirtualPos             = {0,0};
         SAT_Widget*         MLockedCursorWidget                 = nullptr;
+
         SAT_Widget*         MHoverWidget                        = nullptr;
         SAT_Widget*         MActiveWidget                       = nullptr;
         SAT_Widget*         MCapturedWidget                     = nullptr;
-        SAT_MouseCoords     MCurrentPos                         = {0,0};
+        SAT_Widget*         MModalWidget                        = nullptr;
 };
 
 //----------------------------------------------------------------------
@@ -103,6 +110,8 @@ SAT_MouseHandler::SAT_MouseHandler(SAT_WidgetWindow* AWindow)
 : SAT_BaseMouseHandler()
 {
     MWindow = AWindow;
+    MEvent.handler  = this;
+    MGesture.handler = this;
     setupStates();
     reset();
 }
@@ -119,12 +128,35 @@ SAT_MouseHandler::~SAT_MouseHandler()
 //
 //------------------------------
 
+void SAT_MouseHandler::reset()
+{
+    MCursorStack.reset();
+    MCurrentCursor  = SAT_MOUSE_CURSOR_DEFAULT;
+    MCurrentTime    = 0.0;
+    MLockedCursor   = false;
+    MHoverWidget    = nullptr;
+    MActiveWidget   = nullptr;
+    MCapturedWidget = nullptr;
+    MModalWidget    = nullptr;
+    MCurrentState   = nullptr;
+    updateState(SAT_MOUSE_STATE_IDLE);
+}
+
 void SAT_MouseHandler::captureWidget(SAT_Widget* AWidget)
 {
     MCapturedWidget = AWidget;
     if (MCapturedWidget) MActiveWidget = AWidget;
     else MActiveWidget = MHoverWidget;
 }
+
+void SAT_MouseHandler::modalWidget(SAT_Widget* AWidget)
+{
+    MModalWidget = AWidget;
+}
+
+//------------------------------
+//
+//------------------------------
 
 void SAT_MouseHandler::setCursor(int32_t ACursor)
 {
@@ -294,7 +326,7 @@ void SAT_MouseHandler::move(SAT_MouseCoords APos, uint32_t AState, uint32_t ATim
     MEvent.modkeys  = AState;
     MEvent.time     = MCurrentTime;
     APos = adjustPos(APos);
-    updateHover(&MEvent);
+    updateHover(&MEvent,false,true);
     MEvent.type = SAT_MOUSE_EVENT_MOVE;
     if (sendEvent(MActiveWidget,&MEvent))
     {
@@ -310,7 +342,7 @@ void SAT_MouseHandler::enter(SAT_MouseCoords APos, uint32_t ATime)
     // MEvent.button   = SAT_MOUSE_BUTTON_NONE;
     // MEvent.modkeys  = SAT_STATE_KEY_NONE;
     // MEvent.time     = MCurrentTime;
-    updateHover(&MEvent);
+    updateHover(&MEvent,false,true);
 }
 
 void SAT_MouseHandler::leave(SAT_MouseCoords APos, uint32_t ATime)
@@ -321,22 +353,6 @@ void SAT_MouseHandler::leave(SAT_MouseCoords APos, uint32_t ATime)
     // MEvent.modkeys  = SAT_STATE_KEY_NONE;
     // MEvent.time     = MCurrentTime;
     MHoverWidget = nullptr;
-}
-
-//------------------------------
-//
-//------------------------------
-
-void SAT_MouseHandler::reset()
-{
-    MCursorStack.reset();
-    MEvent.handler = this;
-    MCurrentTime = 0.0;
-    MHoverWidget = nullptr;
-    MActiveWidget = nullptr;
-    MCapturedWidget = nullptr;
-    MCurrentState = nullptr;
-    updateState(SAT_MOUSE_STATE_IDLE);
 }
 
 //------------------------------
@@ -361,10 +377,11 @@ void SAT_MouseHandler::setupStates()
 
 bool SAT_MouseHandler::sendEvent(SAT_Widget* AWidget, SAT_MouseEvent* AEvent)
 {
+    AEvent->state = MCurrentState;
     uint32_t response = SAT_MOUSE_EVENT_RESPONSE_NONE;
-    if (AWidget && AWidget->Options.wantMouseEvents & MEvent.type)
+    if (AWidget && AWidget->Options.wantMouseEvents & AEvent->type)
     {
-        response = AWidget->on_widget_mouse_event(&MEvent);
+        response = AWidget->on_widget_mouse_event(AEvent);
     }
     switch (response)
     {
@@ -380,6 +397,15 @@ bool SAT_MouseHandler::sendEvent(SAT_Widget* AWidget, SAT_MouseEvent* AEvent)
             return true;
     }
     return true;
+}
+
+void SAT_MouseHandler::sendGesture(SAT_MouseGesture* AGesture, SAT_Widget* AWidget)
+{
+    AGesture->state = MCurrentState;
+    if (AWidget && AWidget->Options.wantMouseGestures & AGesture->type)
+    {
+        AWidget->on_widget_mouse_gesture(AGesture);
+    }
 }
 
 void SAT_MouseHandler::updateState(int32_t AState)
@@ -398,9 +424,9 @@ void SAT_MouseHandler::updateState(int32_t AState)
     MCurrentState->enter(from_state);
 }
 
-void SAT_MouseHandler::updateHover(SAT_MouseEvent* AEvent)
+void SAT_MouseHandler::updateHover(SAT_MouseEvent* AEvent, bool AVisibleOnly, bool AActiveOnly)
 {
-    SAT_Widget* widget = MWindow->findChildAt(AEvent->pos.x,AEvent->pos.y);
+    SAT_Widget* widget = MWindow->findChildAt(AEvent->pos.x,AEvent->pos.y,AVisibleOnly,AActiveOnly);
     if (widget != MHoverWidget)
     {
         AEvent->type = SAT_MOUSE_EVENT_LEAVE;
@@ -435,6 +461,29 @@ SAT_MouseCoords SAT_MouseHandler::adjustPos(SAT_MouseCoords APos)
     }
     return APos;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

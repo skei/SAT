@@ -69,7 +69,7 @@ void SAT_TextWidget::setText(const char* AText)
 void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
 {
     SAT_Painter* painter = AContext->painter;
-    SAT_Rect rect = getRect();
+    SAT_Rect rect = Layout.rect;
     uint32_t state = getPaintState();
     uint32_t mode = MSkin->getTextMode(state);
     switch (mode)

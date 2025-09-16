@@ -35,8 +35,6 @@ class SAT_MouseState
         SAT_WidgetWindow*           window  = nullptr;
         int32_t                     type    = SAT_MOUSE_STATE_NONE;
         const char*                 name    ="";
-    protected:
-        void                        sendGesture(SAT_MouseGesture* AGesture);
 };
 
 //----------------------------------------------------------------------
@@ -59,15 +57,3 @@ SAT_MouseState::~SAT_MouseState()
 //
 //------------------------------
 
-void SAT_MouseState::sendGesture(SAT_MouseGesture* AGesture)
-{
-    // SAT_MouseGesture gesture =
-    // {
-    //     .type = AGesture
-    // };
-    // SAT_Widget* widget = activeWidget();
-    // if (widget && (widget->Options.wantMouseGestures & AGesture))
-    // {
-    //     widget->on_widget_mouse_gesture(&gesture,this);
-    // }
-}
