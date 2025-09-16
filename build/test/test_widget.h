@@ -49,7 +49,7 @@ int main(void)
             panel->setName("panel");
             //panel->Layout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
             //panel->Options.auto_redraw_hover = true;
-            panel->Layout.baseScale = 1.0;
+            panel->Options.scale = 1.0;
 
                 SAT_TestWidget* widget1 = new SAT_TestWidget(SAT_Rect(50,10,200,100));
                 panel->appendChild(widget1);
@@ -57,8 +57,8 @@ int main(void)
                 widget1->setTooltip("widget1 tooltip");
                 // widget1->Layout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
                 // widget1->Layout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
-                widget1->State.active = false;
-                widget1->State.visible = true;
+                widget1->Options.active = false;
+                widget1->Options.visible = true;
                 widget1->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
                 widget1->Options.wantMouseGestures = SAT_MOUSE_GESTURE_ALL;
 
@@ -70,7 +70,7 @@ int main(void)
                 widget2->setTooltip("widget2 tooltip");
                 // widget2->Layout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
                 // widget2->Layout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
-
+                // widget2->Options.alignable = false;
                 widget2->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
                 widget2->Options.wantMouseGestures = SAT_MOUSE_GESTURE_ALL;
 
@@ -80,8 +80,8 @@ int main(void)
                 panel->appendChild(widget3);
                 widget3->setName("widget3");
                 widget3->setTooltip("widget3 tooltip");
-                widget3->State.active = true;
-                widget3->State.visible = false;
+                widget3->Options.active = true;
+                widget3->Options.visible = false;
                 widget3->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
                 widget3->Options.wantMouseGestures = SAT_MOUSE_GESTURE_ALL;
 

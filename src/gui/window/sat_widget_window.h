@@ -145,12 +145,12 @@ SAT_WidgetWindow::SAT_WidgetWindow(uint32_t AWidth, uint32_t AHeight, intptr_t A
 : SAT_PaintWindow(AWidth, AHeight, AParent)
 , SAT_Widget(SAT_Rect(AWidth,AHeight))
 {
-    MTypeName           = "SAT_WidgetWindow";
-    MInitialWidth       = AWidth;
-    MInitialHeight      = AHeight;
-    MProportional       = false;
-    Layout.opaqueParent = this;
-    MSkin               = SAT.GUI->SKINS.find("Default");
+    MTypeName       = "SAT_WidgetWindow";
+    MInitialWidth   = AWidth;
+    MInitialHeight  = AHeight;
+    MProportional   = false;
+    MOpaqueParent   = this;
+    MSkin           = SAT.GUI->SKINS.find("Default");
 };
 
 SAT_WidgetWindow::~SAT_WidgetWindow()
@@ -250,8 +250,8 @@ void SAT_WidgetWindow::handleTimer(uint32_t ATimerId, double ADelta, bool AInTim
     while (MRedrawQueue.read(&widget))
     {
         // .. possibly do some more checking and culling here..
-        if (count == 0) update_rect = widget->Layout.clipRect;
-        else update_rect.combine(widget->Layout.clipRect);
+        if (count == 0) update_rect = widget->MClipRect;
+        else update_rect.combine(widget->MClipRect);
 
         MPaintQueue.write(widget);
         count += 1;
@@ -306,7 +306,7 @@ void SAT_WidgetWindow::paintWidgets(SAT_PaintContext* AContext)
         {
             if (widget->MPrevPainted != AContext->current_frame)
             {
-                SAT_Widget* opaque_parent = widget->Layout.opaqueParent;
+                SAT_Widget* opaque_parent = widget->MOpaqueParent;
                 SAT_PRINT("painting: %s (opaque_parent: %s)\n",widget->getName(),opaque_parent->getName());
                 // TODO: set clipping around this widget, even if we redraw parent?
                 if (opaque_parent != widget) paintWidget(AContext,opaque_parent);
@@ -325,7 +325,7 @@ void SAT_WidgetWindow::paintBackground(SAT_PaintContext* AContext)
     for (uint32_t i=0; i<MBackgroundWidgets.size(); i++)
     {
         SAT_Widget* widget = MBackgroundWidgets[i];
-        SAT_Rect rect = widget->Layout.rect;
+        SAT_Rect rect = widget->MRect;
         if (rect.intersects(AContext->update_rect))
         {
             paintWidget(AContext,widget);
@@ -340,7 +340,7 @@ void SAT_WidgetWindow::paintOverlay(SAT_PaintContext* AContext)
     for (uint32_t i=0; i<MOverlayWidgets.size(); i++)
     {
         SAT_Widget* widget = MOverlayWidgets[i];
-        SAT_Rect rect = widget->Layout.rect;
+        SAT_Rect rect = widget->MRect;
         if (rect.intersects(AContext->update_rect))
         {
             paintWidget(AContext,widget);
@@ -406,11 +406,11 @@ void SAT_WidgetWindow::on_window_hide()
 void SAT_WidgetWindow::on_window_resize(uint32_t AWidth, uint32_t AHeight)
 {
     MWindowScale = calcScale(AWidth,AHeight);
-    Layout.baseScale = MWindowScale;
+    Options.scale = MWindowScale;
     SAT_Rect rect = SAT_Rect(AWidth,AHeight);
-    Layout.rect = rect;
-    Layout.baseRect = rect;
-    Layout.clipRect = rect;
+    MRect = rect;
+    MBaseRect = rect;
+    MClipRect = rect;
     realignChildren();
     SAT_PaintWindow::windowResize(AWidth,AHeight);
     MNeedFullRepaint = true;
@@ -475,7 +475,7 @@ uint32_t SAT_WidgetWindow::do_widget_owner_get_height(SAT_Widget* AWidget)
 
 sat_coord_t SAT_WidgetWindow::do_widget_owner_get_scale(SAT_Widget* AWidget)
 {
-    //return Layout.baseScale;
+    //return Options.scale;
     return MWindowScale;
 }
 
@@ -521,7 +521,7 @@ void SAT_WidgetWindow::do_widget_realign(SAT_Widget* AWidget, uint32_t AMode)
             MRealignQueue.write(AWidget);
             break;
         case SAT_WIDGET_REALIGN_PARENT:
-            parent = AWidget->getParent();
+            parent = AWidget->MParent; // getParent();
             if (parent) MRealignQueue.write(parent);
             break;
         default:
@@ -550,7 +550,7 @@ void SAT_WidgetWindow::do_widget_redraw(SAT_Widget* AWidget, uint32_t AMode)
             MRedrawQueue.write(AWidget);
             break;
         case SAT_WIDGET_REDRAW_PARENT:
-            parent = AWidget->getParent();
+            parent = AWidget->MParent; // getParent();
             if (parent) MRedrawQueue.write(parent);
             break;
         //case SAT_WIDGET_REDRAW_OPAQUE_PARENT:

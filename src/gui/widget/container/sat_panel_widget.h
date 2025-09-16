@@ -65,7 +65,7 @@ SAT_PanelWidget::~SAT_PanelWidget()
 void SAT_PanelWidget::fillBackground(SAT_PaintContext* AContext)
 {
     SAT_Painter* painter = AContext->painter;
-    SAT_Rect rect = Layout.rect;
+    SAT_Rect rect = MRect;
     uint32_t state = getPaintState();
     uint32_t mode = MSkin->getBackgroundMode(state);
     switch (mode)
@@ -83,7 +83,7 @@ void SAT_PanelWidget::fillBackground(SAT_PaintContext* AContext)
 void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
 {
     SAT_Painter* painter = AContext->painter;
-    SAT_Rect rect = Layout.rect;
+    SAT_Rect rect = MRect;
     uint32_t state = getPaintState();
     uint32_t mode = MSkin->getBorderMode(state);
     switch (mode)

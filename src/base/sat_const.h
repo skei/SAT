@@ -245,11 +245,11 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_SKIN_MATCH_ANY                          3
 
 #define SAT_SKIN_STATE_NORMAL                       0
-#define SAT_SKIN_STATE_HOVERING                     0x01
-#define SAT_SKIN_STATE_DISABLED                     0x02
-#define SAT_SKIN_STATE_HIGHLIGHTED                  0x04
-#define SAT_SKIN_STATE_INTERACT                     0x08
-#define SAT_SKIN_STATE_ALL                          0x0F
+#define SAT_SKIN_STATE_HOVERING                     0x0001
+#define SAT_SKIN_STATE_DISABLED                     0x0002
+#define SAT_SKIN_STATE_HIGHLIGHTED                  0x0004
+#define SAT_SKIN_STATE_INTERACTING                  0x0008
+#define SAT_SKIN_STATE_ALL                          0xFFFF
 #define SAT_SKIN_STATE_COUNT                        16
 
 #define SAT_SKIN_TEXT_NONE                          0
@@ -300,12 +300,12 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_WIDGET_LAYOUT_LIMIT_BASE                2
 #define SAT_WIDGET_LAYOUT_LIMIT_PARENT              3
 #define SAT_WIDGET_LAYOUT_LIMIT_CURRENT             4
-#define SAT_WIDGET_LAYOUT_LIMIT_ROOT                5
+#define SAT_WIDGET_LAYOUT_LIMIT_WINDOW              5
 
 #define SAT_WIDGET_LAYOUT_RELATIVE_NONE             0
 #define SAT_WIDGET_LAYOUT_RELATIVE_PARENT           1
 #define SAT_WIDGET_LAYOUT_RELATIVE_CURRENT          2
-#define SAT_WIDGET_LAYOUT_RELATIVE_ROOT             3
+#define SAT_WIDGET_LAYOUT_RELATIVE_WINDOW           3
 
 #define SAT_WIDGET_LAYOUT_STACK_CURRENT             0x00000000
 #define SAT_WIDGET_LAYOUT_STACK_PARENT              0x01000000
