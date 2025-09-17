@@ -1,51 +1,124 @@
 [TODO]
 
-- ABOUT
-- CODE STYLE
-- COMPILATION
-- BASE
-    - global
-        - debug
-        - registry
-    - system
-    - type
-    - util
-- PLUGIN
+----------------------------------------------------------------------
+ABOUT
+----------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------
+CODE STYLE
+----------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------
+COMPILATION
+----------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------
+BASE
+----------------------------------------------------------------------
+
+
+* global
+
+    - debug
     - registry
-    - clap
-        - entry
-            - factoty
-        - descriptor
-        - plugin
-        - extension
-        - host
-    - wrapper
-        - standalone
-    - ports, audio/note
-    - parameter
-        - preset
-    - processor
-        - voice processor
-    - editor
-- GUI
-    -concepts
-        - os-level
-        - hierarchy
-        - on, do, listener, owner
-    - native, cpu, gpu
-    - window
-        - paint
-        - widget
-    - surface
-    - renderer
-    - painter
+
+* system
+
+* type
+
+* util
+
+
+----------------------------------------------------------------------
+PLUGIN
+----------------------------------------------------------------------
+
+
+* registry
+
+* clap
+
+    - entry
+    - factoty
+    - descriptor
+    - plugin
+    - extension
+    - host
+
+* wrapper
+
+    - standalone
+
+* ports, audio/note
+
+* parameter
+
+    - preset
+
+* processor
+
+    - voice processor
+
+* editor
+
+
+----------------------------------------------------------------------
+GUI
+----------------------------------------------------------------------
+
+
+*concepts
+
+    - os-level
+    - hierarchy
+    - on, do, listener, owner
+
+* native, cpu, gpu
+
+* window
+
+    - paint
     - widget
-        - events, messages
-        - painting
-        - layout
-    - bitmap
-- AUDIO
-    - module
-    - graph
-    - io
+
+* surface
+
+* renderer
+
+* painter
+
+* widget
+
+    - events, messages
+    - painting
+    - layout
+
+* bitmap
+
+
+----------------------------------------------------------------------
+AUDIO
+----------------------------------------------------------------------
+
+
+* module
+
+* graph
+
+* io
+
+
+----------------------------------------------------------------------
+CONTACT
+----------------------------------------------------------------------
+
+
+* email: tor.helge.skei@gmail.com
+* github: https://github.com/skei/SAT
+* discord: https://discord.gg/KMNea8P6Pe
 

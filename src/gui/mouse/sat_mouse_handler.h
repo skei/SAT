@@ -130,6 +130,7 @@ SAT_MouseHandler::~SAT_MouseHandler()
 
 void SAT_MouseHandler::reset()
 {
+    SAT_TRACE;
     MCursorStack.reset();
     MCurrentCursor  = SAT_MOUSE_CURSOR_DEFAULT;
     MCurrentTime    = 0.0;

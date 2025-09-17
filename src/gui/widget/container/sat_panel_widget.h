@@ -28,18 +28,18 @@ class SAT_PanelWidget
 : public SAT_Widget
 {
     public:
-
         SAT_PanelWidget(SAT_Rect ARect);
         virtual ~SAT_PanelWidget();
-
+    public:
+        void on_widget_paint(SAT_PaintContext* AContext) override;
     protected:
-
         virtual void fillBackground(SAT_PaintContext* AContext);
         virtual void drawBorder(SAT_PaintContext* AContext);
+        virtual void drawInnerDropShadow(SAT_PaintContext* AContext);
+        virtual void drawOuterDropShadow(SAT_PaintContext* AContext);
+        virtual void drawGradient(SAT_PaintContext* AContext);
+        virtual void drawRoundedCorners(SAT_PaintContext* AContext);
 
-    public:
-
-        void on_widget_paint(SAT_PaintContext* AContext) override;
 
 };
 
@@ -62,6 +62,17 @@ SAT_PanelWidget::~SAT_PanelWidget()
 //
 //------------------------------
 
+void SAT_PanelWidget::on_widget_paint(SAT_PaintContext* AContext)
+{
+    fillBackground(AContext);
+    paintChildren(AContext);    
+    drawBorder(AContext);
+}
+
+//------------------------------
+//
+//------------------------------
+
 void SAT_PanelWidget::fillBackground(SAT_PaintContext* AContext)
 {
     SAT_Painter* painter = AContext->painter;
@@ -70,6 +81,8 @@ void SAT_PanelWidget::fillBackground(SAT_PaintContext* AContext)
     uint32_t mode = MSkin->getBackgroundMode(state);
     switch (mode)
     {
+        case SAT_SKIN_BACKGROUND_NONE:
+            break;
         case SAT_SKIN_BACKGROUND_COLOR:
         {
             SAT_Color color = MSkin->getBackgroundColor(state);
@@ -77,6 +90,13 @@ void SAT_PanelWidget::fillBackground(SAT_PaintContext* AContext)
             painter->fillRect(rect);
             break;
         }
+        case SAT_SKIN_BACKGROUND_GRADIENT:
+            break;
+        case SAT_SKIN_BACKGROUND_IMAGE:
+            break;
+        default:
+            SAT_PRINT("Error! unknown skin background mode: %i\n",mode);
+            break;
     }
 }
 
@@ -88,25 +108,41 @@ void SAT_PanelWidget::drawBorder(SAT_PaintContext* AContext)
     uint32_t mode = MSkin->getBorderMode(state);
     switch (mode)
     {
+        case SAT_SKIN_BORDER_NONE:
+            break;
         case SAT_SKIN_BORDER_RECT:
         {
             SAT_Color color = MSkin->getBorderColor(state);
             sat_coord_t width = MSkin->getBorderWidth(state);
+            // if antialising:
+            // rect.shrink(width * 0.5);
             painter->setDrawColor(color);
             painter->setLineWidth(width);
             painter->drawRect(rect);
             painter->setLineWidth(0);
+            break;
         }
+        case SAT_SKIN_BORDER_ROUNDED:
+            break;
+        default:
+            SAT_PRINT("Error! unknown skin border mode: %i\n",mode);
+            break;
     }
 }
 
-//------------------------------
-//
-//------------------------------
-
-void SAT_PanelWidget::on_widget_paint(SAT_PaintContext* AContext)
+void SAT_PanelWidget::drawInnerDropShadow(SAT_PaintContext* AContext)
 {
-    fillBackground(AContext);
-    paintChildren(AContext);    
-    drawBorder(AContext);
 }
+
+void SAT_PanelWidget::drawOuterDropShadow(SAT_PaintContext* AContext)
+{
+}
+
+void SAT_PanelWidget::drawGradient(SAT_PaintContext* AContext)
+{
+}
+
+void SAT_PanelWidget::drawRoundedCorners(SAT_PaintContext* AContext)
+{
+}
+

@@ -12,7 +12,7 @@ CC="g++"
 
 INPUT="build.cpp"
 OUTPUT="plugin.exe"
-SYSTEM="LINUX"
+OS="LINUX"
 FORMAT="EXE"
 GUI="NATIVE"
 #WINDOW="X11"
@@ -93,10 +93,11 @@ function print_help_and_exit {
     echo "  -i <path>       input file name/path"
     echo "  -o <path>       output file name/path"
     echo ""
-    echo "  -S <system>     LINUX, windows, (mac)"
+    echo "  -O <os>         LINUX, windows, (mac)"
     echo "  -F <format>     clap, vst3, vst2, lv2, dssi, ladspa, EXE, (exelib)"
     echo "  -G <gui>        NATIVE, cpu, gpu, none"
 #    echo "  -W <window>     X11, win32, wayland, none"
+#    echo "  -S <surfacer>
 #    echo "  -R <renderer>   glx, wgl, egl, X11, win32, none"
 #    echo "  -P <painter>    nanovg, cairo, X11, win32, blend2d, canvasify, none"
 #    echo "  -A <audio>      JACK, .."
@@ -122,16 +123,17 @@ if [ "$#" -eq 0 ]; then
 fi
 
 #while getopts i:o:S:F:G:W:R:P:A:dtsb:a:vh? arg
-while getopts i:o:S:F:G:W:R:P:A:dtsb:a:vh? arg
+while getopts i:o:O:F:G:W:R:P:A:dtsb:a:vh? arg
 do
     A=""
     case $arg in
         i)      INPUT=$OPTARG;;
         o)      OUTPUT=$OPTARG;;
-        S)      SYSTEM==${OPTARG^^};; # $OPTARG;;
+        O)      OS==${OPTARG^^};; # $OPTARG;;
         F)      FORMAT=${OPTARG^^};; # $OPTARG;;
         G)      GUI=${OPTARG^^};; # $OPTARG;;
  #       W)      WINDOW=${OPTARG^^};; # $OPTARG;;
+ #       S)      SURFACE=${OPTARG^^};; # $OPTARG;;
  #       R)      RENDERER=${OPTARG^^};; # $OPTARG;;
  #       P)      PAINTER=${OPTARG^^};; # $OPTARG;;
  #       A)      AUDIO=${OPTARG^^};; # $OPTARG;;
@@ -197,14 +199,14 @@ OUTPUT_DIR=${OUTPUT%$OUTPUT_FILE}
 #  else
 #fi
 
-if [[ "$SYSTEM" == *"LINUX"* ]]; then
+if [[ "$OS" == *"LINUX"* ]]; then
     LINUX=true
     CC="g++"
     FLAGS+=" -pthread"
     LIB+=" -ldl -lrt"
 fi
 
-if [[ "$SYSTEM" == *"WINDOWS"* ]]; then
+if [[ "$OS" == *"WINDOWS"* ]]; then
     WIN32=true
     CC="/usr/bin/x86_64-w64-mingw32-g++"
     FLAGS+=" -static-libgcc"
@@ -301,7 +303,7 @@ case $GUI in
     "NATIVE")
         #echo "gui = nogui"
         FLAGS+=" -DSAT_GUI_NATIVE"
-        # if [[ "$SYSTEM" == *"LINUX"* ]]; then
+        # if [[ "$OS" == *"LINUX"* ]]; then
         if $LINUX
         then
             #echo "gui = x11"
@@ -310,7 +312,7 @@ case $GUI in
             LIB+=" -lxkbcommon"
             #FLAGS+=" -DSAT_GUI_X11"
         fi
-        # if [[ "$SYSTEM" == *"WIN32"* ]]; then
+        # if [[ "$OS" == *"WIN32"* ]]; then
         if $WIN32
         then
             #echo "gui = win32"
@@ -325,7 +327,7 @@ case $GUI in
     "GPU")
         #echo "gui = nogui"
         FLAGS+=" -DSAT_GUI_GPU"
-        # if [[ "$SYSTEM" == *"LINUX"* ]]; then
+        # if [[ "$OS" == *"LINUX"* ]]; then
         if $LINUX
         then
             LIB+=" -lX11 -lX11-xcb"
@@ -336,7 +338,7 @@ case $GUI in
             #LIB+=" -lEGL"
             #FLAGS+=" -DSAT_GUI_X11"
         fi
-        # if [[ "$SYSTEM" == *"WIN32"* ]]; then
+        # if [[ "$OS" == *"WIN32"* ]]; then
         if $WIN32
         then
             #echo "gui = win32"

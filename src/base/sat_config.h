@@ -147,6 +147,7 @@
 // #define SAT_NO_BITMAP_DECODE
 // #define SAT_NO_BITMAP_DECODE_FILE
 // #define SAT_NO_WINDOW_BUFFERING
+// SAT_NO_WINDOW_EVENT_QUEUE
 #define SAT_WINDOW_REDIRECT_TIMER_TO_GUI_THREAD
 #define SAT_X11_WAIT_FOR_MAPNOTIFY
 
@@ -156,24 +157,38 @@
 // #define SAT_GUI_NATIVE
 // #define SAT_GUI_CPU
 // #define SAT_GUI_GPU
+
+// #define SAT_USE_BLEND2D
+// #define SAT_USE_CAIRO
+// #define SAT_USE_CANVAS_ITY
+// #define SAT_USE_EGL
+// #define SAT_USE_GDI
+// #define SAT_USE_GLX
+// #define SAT_USE_NANOVG
+// #define SAT_USE_WAYLAND
+// #define SAT_USE_WGL
+// #define SAT_USE_WIN32
+// #define SAT_USE_X11
+// #define SAT_USE_X11_XRENDER
+
 // #define SAT_PAINTER_BLEND2D
 // #define SAT_PAINTER_CAIRO
 // #define SAT_PAINTER_CANVAS_ITY
 // #define SAT_PAINTER_NANOVG
 // #define SAT_PAINTER_WIN32
 // #define SAT_PAINTER_X11
+
 // #define SAT_RENDERER_EGL
 // #define SAT_RENDERER_GDI
 // #define SAT_RENDERER_GLX
 // #define SAT_RENDERER_WGL
 // #define SAT_RENDERER_X11
+
 // #define SAT_SURFACE_BITMAP
 // #define SAT_SURFACE_NANOVG
 // #define SAT_SURFACE_WIN32
-// #define SAT_SURFACE_X11  
-// #define SAT_USE_CAIRO
-// #define SAT_USE_X11
-// #define SAT_USE_X11_XRENDER
+// #define SAT_SURFACE_X11
+
 // #define SAT_WINDOW_WAYLAND
 // #define SAT_WINDOW_WIN32
 // #define SAT_WINDOW_X11
@@ -289,6 +304,7 @@
     // simplified
 
     #define SAT_GUI_TYPE_DEFINED
+
     #if defined SAT_LINUX
         #define SAT_USE_X11
         // #define SAT_USE_X11_XRENDER
@@ -301,11 +317,17 @@
     #else
         #error NO OS DEFINED
     #endif
+
 #elif defined SAT_GUI_CPU
+
     #define SAT_GUI_TYPE_DEFINED
+
     // cairo, canvasify, blend2d, ..
+
 #elif defined SAT_GUI_GPU
+
     #define SAT_GUI_TYPE_DEFINED
+    
     // opengl, nanovg
 
 #else

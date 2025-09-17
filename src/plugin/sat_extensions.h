@@ -16,7 +16,7 @@ class SAT_Extensions
         ~SAT_Extensions();
     public:
         void        append(SAT_ClapExtension* AExtension, bool AReplace=true);
-        //void        remove(uint32_t AIndex, bool ARemove=true);
+      //void        remove(uint32_t AIndex, bool ARemove=true);
         void        remove(uint32_t AIndex, bool ADelete=true);
         void        deleteAll();
         const void* find(const char* AName);

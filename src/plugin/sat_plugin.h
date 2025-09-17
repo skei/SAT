@@ -413,6 +413,7 @@ bool SAT_Plugin::gui_is_api_supported(const char *api, bool is_floating)
     if (is_floating) return false;
     #if defined SAT_LINUX
         return SAT_IsEqual(api,CLAP_WINDOW_API_X11);
+        //return SAT_IsEqual(api,CLAP_WINDOW_API_WAYLAND);
     #elif defined SAT_WIN32
         return SAT_IsEqual(api,CLAP_WINDOW_API_WIN32);
     #else
@@ -426,6 +427,7 @@ bool SAT_Plugin::gui_get_preferred_api(const char **api, bool *is_floating)
     SAT_Assert(MEditor);
     #if defined SAT_LINUX
         *api = CLAP_WINDOW_API_X11;
+        //*api = CLAP_WINDOW_API_WAYLAND;
     #elif defined SAT_WIN32
         *api = CLAP_WINDOW_API_WIN32;
     #else
@@ -441,6 +443,7 @@ bool SAT_Plugin::gui_create(const char *api, bool is_floating)
     if (is_floating) return false;
     #if defined SAT_LINUX
         if (!SAT_IsEqual(api,CLAP_WINDOW_API_X11)) return false;
+        //if (!SAT_IsEqual(api,CLAP_WINDOW_API_WAYLAND)) return false;
     #elif defined SAT_WIN32
         if (!SAT_IsEqual(api,CLAP_WINDOW_API_WIN32)) return false;
     #else
@@ -498,6 +501,7 @@ bool SAT_Plugin::gui_set_parent(const clap_window_t *window)
     SAT_Assert(MEditor);
     #if defined SAT_LINUX
         SAT_Assert(SAT_IsEqual(window->api,CLAP_WINDOW_API_X11));
+        //SAT_Assert(SAT_IsEqual(window->api,CLAP_WINDOW_API_WAYLAND));
         return MEditor->set_parent(window->x11);
     #elif defined SAT_WIN32
         SAT_Assert(SAT_IsEqual(window->api,CLAP_WINDOW_API_WIN32));
@@ -512,6 +516,7 @@ bool SAT_Plugin::gui_set_transient(const clap_window_t *window)
     SAT_Assert(MEditor);
     #if defined SAT_LINUX
         SAT_Assert(SAT_IsEqual(window->api,CLAP_WINDOW_API_X11));
+        //SAT_Assert(SAT_IsEqual(window->api,CLAP_WINDOW_API_WAYLAND));
         return MEditor->set_parent(window->x11);
     #elif defined SAT_WIN32
         SAT_Assert(SAT_IsEqual(window->api,CLAP_WINDOW_API_WIN32));
@@ -625,7 +630,7 @@ bool SAT_Plugin::gui_hide()
 // bool SAT_Plugin::undo_delta_redo(clap_id format_version, const void *delta, size_t delta_size)
 
 //------------------------------
-// draft extensions
+// other extensions
 //------------------------------
 
 // #ifdef SAT_INCLUDE_ARA_EXTENSIONS

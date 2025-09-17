@@ -38,15 +38,13 @@ class SAT_Painter
         void                beginPainting(uint32_t AWidth, uint32_t AHeight) override;
         void                endPainting() override;
     public:
-        virtual void        pushClipRect(SAT_Rect ARect);
-        virtual void        pushClipRectAndReset();
-        virtual void        pushOverlappingClipRect(SAT_Rect ARect);
-        virtual void        popClipRect();
-        virtual void        resetClipRectStack();
         virtual SAT_Rect    getClipRect();
         virtual void        setClipRect(SAT_Rect ARect);
-
-    public:
+        virtual void        pushClipRect(SAT_Rect ARect);
+        virtual void        pushOverlappingClipRect(SAT_Rect ARect);
+        virtual void        popClipRect();
+        // virtual void     pushClipRectAndReset();
+        // virtual void     resetClipRectStack();
     public:
         SAT_ClipRectStack   MClipRectStack      = {};     
         SAT_Rect            MCurrentClipRect    = {};     
@@ -68,6 +66,10 @@ SAT_Painter::~SAT_Painter()
 {
     SAT_Assert(MClipRectStack.isEmpty());
 }
+
+//------------------------------
+//
+//------------------------------
 
 /*
     start painting..
@@ -97,6 +99,20 @@ void SAT_Painter::endPainting()
     SAT_Assert(MClipRectStack.isEmpty());
     resetClip();
     SAT_ImplementedPainter::endPainting();
+}
+
+//------------------------------
+//
+//------------------------------
+
+SAT_Rect SAT_Painter::getClipRect()
+{
+    return MCurrentClipRect;
+}
+
+void SAT_Painter::setClipRect(SAT_Rect ARect)
+{
+    MCurrentClipRect = ARect;
 }
 
 /*
@@ -131,18 +147,6 @@ void SAT_Painter::pushOverlappingClipRect(SAT_Rect ARect)
 }
 
 /*
-    push the current clip rect onto the stack,
-    and reset clipping
-*/
-
-void SAT_Painter::pushClipRectAndReset()
-{
-    MClipRectStack.push(MCurrentClipRect);
-    resetClip();
-    // MCurrentClipRect = SAT_Rect(0);
-}
-
-/*
     pop rect off the stack, and set cliping to it
 */
 
@@ -153,17 +157,20 @@ void SAT_Painter::popClipRect()
     setClip(rect);
 }
 
-void SAT_Painter::resetClipRectStack()
-{
-    MClipRectStack.reset();
-}
+/*
+    push the current clip rect onto the stack,
+    and reset clipping
+*/
 
-SAT_Rect SAT_Painter::getClipRect()
-{
-    return MCurrentClipRect;
-}
+// void SAT_Painter::pushClipRectAndReset()
+// {
+//     MClipRectStack.push(MCurrentClipRect);
+//     resetClip();
+//     // MCurrentClipRect = SAT_Rect(0);
+// }
 
-void SAT_Painter::setClipRect(SAT_Rect ARect)
-{
-    MCurrentClipRect = ARect;
-}
+// void SAT_Painter::resetClipRectStack()
+// {
+//     MClipRectStack.reset();
+// }
+

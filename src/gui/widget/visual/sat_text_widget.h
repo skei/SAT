@@ -74,6 +74,8 @@ void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
     uint32_t mode = MSkin->getTextMode(state);
     switch (mode)
     {
+        case SAT_SKIN_TEXT_NONE:
+            break;
         case SAT_SKIN_TEXT_NORMAL:
         {
             SAT_Color color = MSkin->getTextColor(state);
@@ -84,7 +86,11 @@ void SAT_TextWidget::drawText(SAT_PaintContext* AContext)
             // painter->setTextSize(size);
             // painter->setTextFont(font);
             painter->drawText(rect,MText,align);
+            break;
         }
+        default:
+            SAT_PRINT("Error! unknown skin text mode: %i\n",mode);
+            break;
     }
 }
 

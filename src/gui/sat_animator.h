@@ -64,6 +64,7 @@ class SAT_Animator
         SAT_Animator();
         ~SAT_Animator();
     public:
+        void                reset();
         SAT_AnimChain*      appendChain(SAT_AnimChain* AChain);
         void                deleteChains();
         virtual void        process(double ADelta);
@@ -165,6 +166,14 @@ SAT_Animator::~SAT_Animator()
     #if !defined (SAT_NO_AUTODELETE)
         deleteChains();
     #endif
+}
+
+// called when window is opened (possible after a hide/show cycle)
+// make sure we start from a clean state..
+
+void SAT_Animator::reset()
+{
+    SAT_TRACE;
 }
 
 // we don't append anim chains automatically..

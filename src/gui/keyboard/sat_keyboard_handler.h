@@ -175,6 +175,7 @@ void SAT_KeyboardHandler::release(uint32_t AKey, uint32_t AState, uint32_t ATime
 
 void SAT_KeyboardHandler::reset()
 {
+    SAT_TRACE;
     MEvent.handler = this;
     MCurrentTime = 0.0;
     MCapturedWidget = nullptr;

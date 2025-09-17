@@ -1,6 +1,6 @@
 /*
-    ../build/compile -i ../build/build.cpp -o ../bin/build -S linux -F exe -G native -d
-    ../build/compile -i ../build/build.cpp -o ../bin/build.clap -S linux -F clap -G native -d
+    ../build/compile -i ../build/build.cpp -o ../bin/build -O linux -F exe -G native -d
+    ../build/compile -i ../build/build.cpp -o ../bin/build.clap -O linux -F clap -G native -d
     nc -U -l -k /tmp/sat.socket
 */
 

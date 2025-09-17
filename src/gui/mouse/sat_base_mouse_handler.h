@@ -7,6 +7,10 @@
 class SAT_MouseHandler;
 class SAT_MouseState;
 
+//------------------------------
+//
+//------------------------------
+
 struct SAT_MouseCoords
 {
     int32_t x;

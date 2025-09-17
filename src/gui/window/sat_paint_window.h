@@ -1,5 +1,17 @@
 #pragma once
 
+/*
+    - renderer and painter
+    - optional buffer
+    - resizing (resize buffer & redraw everything)
+        resize messages are just pushed to a resize queue, which is checked at the start of
+        the next time a paint event comes in.. before actually painting..
+        flush the resize queue, use the latest size..
+        resize buffer via a power-of-two scheme (to avoid a bunch of single-pixel buffer-changes)
+    - painting (to bufffer or screen)
+        if buffering, copy update-rect part of buffer to the screen after painting
+*/
+
 #include "base/sat_base.h"
 #include "gui/painter/sat_paint_context.h"
 #include "gui/renderer/sat_render_context.h"
@@ -204,12 +216,10 @@ void SAT_PaintWindow::handleResizing()
         uint32_t width  = (size & 0xffffffff00000000) >> 32;
         uint32_t height = (size & 0x00000000ffffffff);
         // todo: check if new size != prevous size?
-        // SAT.STATISTICS->report_WindowResizeQueue(count,width,height);
         MResizedWindow = true;
         #ifndef SAT_NO_WINDOW_BUFFERING
             MResizedBuffer = MBuffer->resizeBuffer(width,height);
             //TODO: clear buffer?
-            // SAT.STATISTICS->report_WindowBufferResize(width,height);
         #endif
     }
 }
