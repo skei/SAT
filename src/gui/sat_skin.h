@@ -6,6 +6,17 @@
     note: included in SAT_Global, so SAT_Assert ia not defined yet..
 */
 
+/*
+    skin size:
+        5 SAT_Color      5 * 16 =  80
+        8 uint32_t       8 * 4  =  32
+        2 intptr_t       2 * 8  =  16
+        4 sat_coord_t    4 * 8  =  32
+        -----------------------------
+                                = 160
+        * 16 = 2560
+        + name
+*/
 
 //----------------------------------------------------------------------
 //

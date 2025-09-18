@@ -38,11 +38,24 @@ int main(void)
     SAT_Window* window = new SAT_Window(640,480);
     window->setName("window");
 
-        SAT_PanelWidget* background = new SAT_PanelWidget(SAT_Rect(640,480));
+        // SAT_PanelWidget* background = new SAT_PanelWidget(SAT_Rect(640,480));
+        // window->appendChild(background);
+        // background->setName("background");
+        // background->Layout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
+        // //background->setScale(1.0);
+
+        SAT_BackgroundWidget* background = new SAT_BackgroundWidget(0);
         window->appendChild(background);
         background->setName("background");
-        background->Layout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
-        //background->setScale(1.0);
+        // background->Layout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
+        // //background->setScale(1.0);
+
+        SAT_OverlayWidget* overlay = new SAT_OverlayWidget(0);
+        window->appendChild(overlay);
+        overlay->setName("overlay");
+        // background->Layout.stretch = SAT_WIDGET_LAYOUT_STRETCH_ALL;
+        // //background->setScale(1.0);
+        overlay->Options.visible = true;
 
             SAT_PanelWidget* panel = new SAT_PanelWidget(SAT_Rect(10,10,500,400));
             background->appendChild(panel);
@@ -77,11 +90,12 @@ int main(void)
                 //----------
 
                 SAT_TestWidget* widget3 = new SAT_TestWidget(SAT_Rect(10,60,100,100));
-                panel->appendChild(widget3);
+                //panel->appendChild(widget3);
+                overlay->appendChild(widget3);
                 widget3->setName("widget3");
                 widget3->setTooltip("widget3 tooltip");
                 widget3->Options.active = true;
-                widget3->Options.visible = false;
+                widget3->Options.visible = true;
                 widget3->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
                 widget3->Options.wantMouseGestures = SAT_MOUSE_GESTURE_ALL;
 

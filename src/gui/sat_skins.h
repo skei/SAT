@@ -7,6 +7,8 @@
 class SAT_Skin;
 typedef SAT_Array<SAT_Skin*> SAT_SkinArray;
 
+
+
 //----------------------------------------------------------------------
 //
 //
@@ -51,6 +53,8 @@ SAT_Skins::~SAT_Skins()
 void SAT_Skins::initialize()
 {
     append( new SAT_DefaultSkin() );
+    append( new SAT_DefaultBackgroundSkin() );
+    append( new SAT_DefaultOverlaySkin() );
     append( new SAT_DefaultPanelSkin() );
     append( new SAT_DefaultTextSkin() );
 }

@@ -1,12 +1,5 @@
 #pragma once
 
-/*
-    - widget_window is-a widget, sitting at the top of the widget hierarchy
-    - widget handling & managing, events up and down the hierarchy
-    - realigning, redrawing..
-    - scaling, timer, queueing
-*/
-
 #include "base/sat_base.h"
 #include "base/system/sat_timer.h"
 #include "gui/window/sat_paint_window.h"
@@ -47,12 +40,9 @@ class SAT_WidgetWindow
         virtual void            setProportional(bool AProportional=true);
         virtual sat_coord_t     calcScale(uint32_t ANewWidth, uint32_t ANewHeight);
         virtual void            setHintWidget(SAT_Widget* AWidget);
-     // virtual void            showPopup(SAT_Widget* AWidget, int32_t AXpos, int32_t AYpos);
-     // virtual void            updatePopup(SAT_Widget* AWidget, int32_t AXpos, int32_t AYpos);
-     // virtual void            hidePopup();
-     // virtual void            showTooltip(SAT_Widget* AWidget, int32_t AXpos, int32_t AYpos);
-     // virtual void            updateTooltip(SAT_Widget* AWidget, int32_t AXpos, int32_t AYpos);
-     // virtual void            hideTooltip();
+        virtual SAT_Widget*     getHintWidget();
+        virtual void            setOverlayWidget(SAT_Widget* AWidget);
+        virtual SAT_Widget*     getOverlayWidget();
     public: // timer
         virtual void            appendTimerWidget(SAT_Widget* AWidget);
         virtual void            removeTimerWidget(SAT_Widget* AWidget);
@@ -60,8 +50,9 @@ class SAT_WidgetWindow
     public: // painting
         virtual void            paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidget);
         virtual void            paintWidgets(SAT_PaintContext* AContext);
-        virtual void            paintBackground(SAT_PaintContext* AContext);
         virtual void            paintOverlay(SAT_PaintContext* AContext);
+        virtual void            paintOverlayArea(SAT_PaintContext* AContext, SAT_Rect ARect);
+
     private:
         void                    on_timer_listener_update(SAT_Timer* ATimer, double ADelta) override;
         void                    on_window_paint(SAT_PaintContext* AContext) override;
@@ -107,8 +98,7 @@ class SAT_WidgetWindow
         SAT_WidgetRedrawQueue   MRedrawQueue        = {};
         SAT_WidgetPaintQueue    MPaintQueue         = {};
       //SAT_WidgetUpdateQueue   MUpdateQueue        = {};
-        SAT_WidgetArray         MBackgroundWidgets  = {};
-        SAT_WidgetArray         MOverlayWidgets     = {};
+        SAT_Widget*             MOverlayWidget      = nullptr;
         SAT_WidgetArray         MTimerWidgets       = {};
         SAT_Timer               MTimer              = SAT_Timer(this);
         uint32_t                MCurrentTimerTick   = 0;
@@ -137,6 +127,9 @@ SAT_WidgetWindow::SAT_WidgetWindow(uint32_t AWidth, uint32_t AHeight, intptr_t A
     MOpaqueParent   = this;
     MSkin           = SAT.GUI->SKINS.find("Default");
 };
+
+// if you don't want the destructor to automatically delete the background and overlay widgets,
+// set them to null before destyoying the window..
 
 SAT_WidgetWindow::~SAT_WidgetWindow()
 {
@@ -176,6 +169,21 @@ sat_coord_t SAT_WidgetWindow::calcScale(uint32_t ANewWidth, uint32_t ANewHeight)
 void SAT_WidgetWindow::setHintWidget(SAT_Widget* AWidget)
 {
     MHintReceiver = AWidget;
+}
+
+SAT_Widget* SAT_WidgetWindow::getHintWidget()
+{
+    return MHintReceiver;
+}
+
+void SAT_WidgetWindow::setOverlayWidget(SAT_Widget* AWidget)
+{
+    MOverlayWidget = AWidget;
+}
+
+SAT_Widget* SAT_WidgetWindow::getOverlayWidget()
+{
+    return MOverlayWidget;
 }
 
 // void SAT_WidgetWindow::showPopup(SAT_Widget* AWidget, int32_t AXpos, int32_t AYpos)
@@ -286,6 +294,7 @@ void SAT_WidgetWindow::paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidg
         {
             if (AWidget->MRect.intersects(AContext->update_rect))
             {
+                AWidget->on_widget_pre_paint(AContext);
                 AWidget->pushClip(AContext);
                 SAT_Widget* opaque_parent = AWidget->MOpaqueParent;
                 if (opaque_parent != AWidget)
@@ -299,6 +308,7 @@ void SAT_WidgetWindow::paintWidget(SAT_PaintContext* AContext, SAT_Widget* AWidg
                     AWidget->MPrevPainted = AContext->current_frame;
                 }
                 AWidget->popClip(AContext);
+                AWidget->on_widget_post_paint(AContext);
             }
         }
     }
@@ -328,45 +338,48 @@ void SAT_WidgetWindow::paintWidgets(SAT_PaintContext* AContext)
     }
 }
 
-// before painting widgets in MPaintQueue..
-// draw (visible) background widgets that intersect the update_rect
-// no MOpaqueParent or MPrevPainted check?
-// calls widget->paintWidget, which sets up clipping (widget cliprect),
+// draw overlay widget (and children) after painting widgets in MPaintQueue..
+// (if visible, and interset update_rect)
+// clipping = update_rect
 
-void SAT_WidgetWindow::paintBackground(SAT_PaintContext* AContext)
+void SAT_WidgetWindow::paintOverlay(SAT_PaintContext* AContext)
 {
-    for (uint32_t i=0; i<MBackgroundWidgets.size(); i++)
+    if (!MOverlayWidget) return;
+    if (MOverlayWidget->MState.visible)
     {
-        SAT_Widget* widget = MBackgroundWidgets[i];
-        if (widget->MState.visible)
+        if (MOverlayWidget->MPrevPainted != AContext->current_frame)
         {
-            // if (widget->MPrevPainted != AContext->current_frame)
-            if (widget->MRect.intersects(AContext->update_rect))
+            if (MOverlayWidget->MRect.intersects(AContext->update_rect))
             {
-                // SAT_Widget* opaque_parent = widget->MOpaqueParent;
-                widget->paintWidget(AContext); // calls push/popClip
+                MOverlayWidget->on_widget_pre_paint(AContext);
+                MOverlayWidget->pushClip(AContext);
+                MOverlayWidget->on_widget_paint(AContext);
+                MOverlayWidget->MPrevPainted = AContext->current_frame;
+                MOverlayWidget->popClip(AContext);
+                MOverlayWidget->on_widget_post_paint(AContext);
             }
         }
     }
 }
 
-// after painting widgets in MPaintQueue..
-// draw (visible) overlay widgets that intersect the update_rect
-// no MOpaqueParent or MPrevPainted check?
-// calls widget->paintWidget, which sets up clipping (widget's cliprect)
+// same as paintOverlay, but paints (and clips) a specified area
+// instead of update_rect
 
-void SAT_WidgetWindow::paintOverlay(SAT_PaintContext* AContext)
+void SAT_WidgetWindow::paintOverlayArea(SAT_PaintContext* AContext, SAT_Rect ARect)
 {
-    for (uint32_t i=0; i<MOverlayWidgets.size(); i++)
+    if (!MOverlayWidget) return;
+    if (MOverlayWidget->MState.visible)
     {
-        SAT_Widget* widget = MOverlayWidgets[i];
-        if (widget->MState.visible)
+        if (MOverlayWidget->MPrevPainted != AContext->current_frame)
         {
-            // if (widget->MPrevPainted != AContext->current_frame)
-            if (widget->MRect.intersects(AContext->update_rect))
+            if (MOverlayWidget->MRect.intersects(ARect))
             {
-                // SAT_Widget* opaque_parent = widget->MOpaqueParent;
-                widget->paintWidget(AContext); // calls push/popClip
+                MOverlayWidget->on_widget_pre_paint(AContext);
+                AContext->painter->pushOverlappingClipRect(ARect);
+                MOverlayWidget->on_widget_paint(AContext);
+                MOverlayWidget->MPrevPainted = AContext->current_frame;
+                AContext->painter->popClipRect();
+                MOverlayWidget->on_widget_post_paint(AContext);
             }
         }
     }
@@ -405,7 +418,6 @@ void SAT_WidgetWindow::on_timer_listener_update(SAT_Timer* ATimer, double ADelta
 
 void SAT_WidgetWindow::on_window_paint(SAT_PaintContext* AContext)
 {
-    paintBackground(AContext);
     paintWidgets(AContext);
     paintOverlay(AContext);
 }
@@ -447,10 +459,9 @@ void SAT_WidgetWindow::on_window_hide()
 
 void SAT_WidgetWindow::on_window_resize(uint32_t AWidth, uint32_t AHeight)
 {
-    // MWindowScale = calcScale(AWidth,AHeight);
-    // Options.scale = MWindowScale;
-    Options.scale = calcScale(AWidth,AHeight);
+    sat_coord_t scale = calcScale(AWidth,AHeight);
     SAT_Rect rect = SAT_Rect(AWidth,AHeight);
+    Options.scale = scale;
     MRect = rect;
     MBaseRect = rect;
     MClipRect = rect;

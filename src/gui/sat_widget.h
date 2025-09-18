@@ -112,6 +112,7 @@ class SAT_Widget
         virtual void            setChildrenVisible(bool AState=true);
         virtual void            setChildrenSkin(SAT_Skin* ASkin, bool AReplace=true);
         // virtual void         setChildrenDisabled(bool AState=true);
+        virtual void            setReference(SAT_Widget* AWidget);
         virtual void            realignChildren();
     public: // value
         virtual uint32_t        getValueIndex();
@@ -175,6 +176,7 @@ class SAT_Widget
         SAT_Point               MScrollOffset                       = {};               // (base units) scrollbox
         SAT_Widget*             MOpaqueParent                       = nullptr;          // widget to sytart from during painting (self, if widget is opaque)
         sat_coord_t             MScale                              = 1.0;              // recursively (what's actually visible)
+        SAT_Widget*             MReference                          = nullptr;
         // uint32_t             MPrevRealigned                      = SAT_UINT32_MAX;
     protected: // painting
         SAT_Skin*               MSkin                               = nullptr;
@@ -404,9 +406,11 @@ uint32_t SAT_Widget::getPaintState()
 
 void SAT_Widget::paintWidget(SAT_PaintContext* AContext)
 {
+    on_widget_pre_paint(AContext);
     pushClip(AContext);
     on_widget_paint(AContext);
     popClip(AContext);
+    on_widget_post_paint(AContext);
     MPrevPainted = AContext->current_frame;
 }
 
@@ -495,24 +499,34 @@ void SAT_Widget::setChildrenSkin(SAT_Skin* ASkin, bool AReplace)
 //     }
 // }
 
+void SAT_Widget::setReference(SAT_Widget* AWidget)
+{
+    MReference = AWidget;
+}
+
 void SAT_Widget::realignChildren()
 {
-
     sat_coord_t scale = Options.scale * MScale;
 
     SAT_Rect widget_rect = MBaseRect;
-
+    
     SAT_Rect inner_border = Layout.innerBorder;
     inner_border.scale(scale);
 
     SAT_Point spacing = Layout.spacing;
     spacing.scale(scale);
 
+    SAT_Rect remainder_rect = widget_rect;
+    remainder_rect.shrink(inner_border);
+
     SAT_Rect parent_rect = widget_rect;
     parent_rect.shrink(inner_border);
 
-    SAT_Rect remainder_rect = widget_rect;
-    remainder_rect.shrink(inner_border);
+    SAT_Rect root_rect = widget_rect;
+
+    SAT_Rect reference_rect = widget_rect;
+    if (MReference) reference_rect = MReference->MRect;
+    // reference_rect.shrink(inner_border);
 
     MContentRect = SAT_Rect( widget_rect.x,widget_rect.y, 0,0 );
 
@@ -542,13 +556,23 @@ void SAT_Widget::realignChildren()
                     child_rect = child->MBaseRect;
                     child_rect.scale(scale);
                     break;
+                case SAT_WIDGET_LAYOUT_RELATIVE_REMAINDER:
+                    child_rect = SAT_Rect(remainder_rect.w,remainder_rect.h,remainder_rect.w,remainder_rect.h);
+                    child_rect.scale(child->MInitialRect);
+                    child_rect.scale(0.01);
+                    break;
                 case SAT_WIDGET_LAYOUT_RELATIVE_PARENT:
                     child_rect = SAT_Rect(parent_rect.w,parent_rect.h,parent_rect.w,parent_rect.h);
                     child_rect.scale(child->MInitialRect);
                     child_rect.scale(0.01);
                     break;
-                case SAT_WIDGET_LAYOUT_RELATIVE_REMAINDER:
-                    child_rect = SAT_Rect(remainder_rect.w,remainder_rect.h,remainder_rect.w,remainder_rect.h);
+                case SAT_WIDGET_LAYOUT_RELATIVE_ROOT:
+                    child_rect = SAT_Rect(root_rect.w,root_rect.h,root_rect.w,root_rect.h);
+                    child_rect.scale(child->MInitialRect);
+                    child_rect.scale(0.01);
+                    break;
+                case SAT_WIDGET_LAYOUT_RELATIVE_REFERENCE:
+                    child_rect = SAT_Rect(reference_rect.w,reference_rect.h,reference_rect.w,reference_rect.h);
                     child_rect.scale(child->MInitialRect);
                     child_rect.scale(0.01);
                     break;
@@ -581,6 +605,12 @@ void SAT_Widget::realignChildren()
                 case SAT_WIDGET_LAYOUT_ANCHOR_PARENT:
                     anchor_rect = parent_rect;
                     break;
+                case SAT_WIDGET_LAYOUT_ANCHOR_ROOT:
+                    anchor_rect = root_rect;
+                    break;
+                case SAT_WIDGET_LAYOUT_ANCHOR_REFERENCE:
+                    anchor_rect = reference_rect;
+                    break;
                 default:
                     SAT_PRINT("Error: unknown layout anchor mode: %i\n",child->Layout.anchor & 0xff000000);
                     break;
@@ -590,6 +620,7 @@ void SAT_Widget::realignChildren()
             bool yanchored = false;
             double anchor_xcenter = anchor_rect.x + (anchor_rect.w * 0.5);
             double anchor_ycenter = anchor_rect.y + (anchor_rect.h * 0.5);
+            
             if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_LEFT)               { xanchored = true; child_rect.x += anchor_rect.x; }
             if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_TOP)                { yanchored = true; child_rect.y += anchor_rect.y; }
             if (child->Layout.anchor & SAT_WIDGET_LAYOUT_ANCHOR_RIGHT)              { xanchored = true; child_rect.x += (anchor_rect.x2()  - child_rect.w); }
@@ -607,6 +638,12 @@ void SAT_Widget::realignChildren()
                     break;
                 case SAT_WIDGET_LAYOUT_STACK_PARENT:
                     stack_rect = parent_rect;
+                    break;
+                case SAT_WIDGET_LAYOUT_STACK_ROOT:
+                    stack_rect = root_rect;
+                    break;
+                case SAT_WIDGET_LAYOUT_STACK_REFERENCE:
+                    stack_rect = reference_rect;
                     break;
                 default:
                     SAT_PRINT("Error! unknown layout stack mode: %i\n",child->Layout.stack & 0xff000000);
@@ -651,8 +688,8 @@ void SAT_Widget::realignChildren()
                 if (child_rect.w > stack_widest) stack_widest = child_rect.w;
             }
 
-            if (!xanchored) child_rect.x += widget_rect.x;
-            if (!yanchored) child_rect.y += widget_rect.y;
+            if (!xanchored) child_rect.x += root_rect.x; // widget_rect.x;
+            if (!yanchored) child_rect.y += root_rect.y; // widget_rect.y;
 
             // --- stretch ---
 
@@ -664,6 +701,12 @@ void SAT_Widget::realignChildren()
                     break;
                 case SAT_WIDGET_LAYOUT_STRETCH_PARENT:
                     stretch_rect = parent_rect;
+                    break;
+                case SAT_WIDGET_LAYOUT_STRETCH_ROOT:
+                    stretch_rect = root_rect;
+                    break;
+                case SAT_WIDGET_LAYOUT_STRETCH_REFERENCE:
+                    stretch_rect = reference_rect;
                     break;
                 default:
                     SAT_PRINT("Error: unknown layout stretch mode: %i\n",child->Layout.stretch & 0xff000000);
@@ -708,20 +751,24 @@ void SAT_Widget::realignChildren()
                 case SAT_WIDGET_LAYOUT_LIMIT_NONE:
                     limit_scale.set(1.0);
                     break;
-                case SAT_WIDGET_LAYOUT_LIMIT_PIXELS:
-                    limit_scale.set(scale);
-                    break;
-                case SAT_WIDGET_LAYOUT_LIMIT_BASE:
-                    limit_scale = MBaseRect;
+                case SAT_WIDGET_LAYOUT_LIMIT_REMAINDER:
+                    limit_scale = remainder_rect;
                     limit_scale.scale(scale * 0.01);
                     break;
                 case SAT_WIDGET_LAYOUT_LIMIT_PARENT:
                     limit_scale = parent_rect;
                     limit_scale.scale(scale * 0.01);
                     break;
-                case SAT_WIDGET_LAYOUT_LIMIT_REMAINDER:
-                    limit_scale = remainder_rect;
+                case SAT_WIDGET_LAYOUT_LIMIT_ROOT:
+                    limit_scale = root_rect;
                     limit_scale.scale(scale * 0.01);
+                    break;
+                case SAT_WIDGET_LAYOUT_LIMIT_REFERENCE:
+                    limit_scale = reference_rect;
+                    limit_scale.scale(scale * 0.01);
+                    break;
+                case SAT_WIDGET_LAYOUT_LIMIT_PIXELS:
+                    limit_scale.set(scale);
                     break;
                 default:
                     SAT_PRINT("Error: unknown layout limit mode: %i\n",child->Layout.limits);
@@ -781,7 +828,7 @@ void SAT_Widget::realignChildren()
 
         else
         {
-            // widget is not alignable, so it will not be drawn or accept events,
+            // widget is not alignable, it will not be drawn or accept events,
             // so we set it, and its children not visible/active..
             child->setVisible(false);
             child->setActive(false);
@@ -870,9 +917,15 @@ void SAT_Widget::on_widget_paint(SAT_PaintContext* AContext)
     paintChildren(AContext);
 }
 
+// called before on_widget_paint
+// before clipping is set..
+
 void SAT_Widget::on_widget_pre_paint(SAT_PaintContext* AContext)
 {
 }
+
+// called after on_widget_paint
+// after clipping is reset..
 
 void SAT_Widget::on_widget_post_paint(SAT_PaintContext* AContext)
 {

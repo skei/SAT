@@ -21,7 +21,8 @@ class SAT_TestWidget
         uint32_t    on_widget_mouse_event(SAT_MouseEvent* AEvent) override;
         void        on_widget_mouse_gesture(SAT_MouseGesture* AGesture) override;
 
-    protected:
+        // void        on_widget_pre_paint(SAT_PaintContext* AContext) override;
+        // void        on_widget_post_paint(SAT_PaintContext* AContext) override;
 
 };
 
@@ -33,7 +34,7 @@ SAT_TestWidget::SAT_TestWidget(SAT_Rect ARect)
 : SAT_TextWidget(ARect)
 {
     MTypeName = "SAT_TestWidget";
-    MSkin = SAT.GUI->SKINS.find("DefaultText");
+    MSkin = SAT.GUI->SKINS.find("Default Text");
 }
 
 SAT_TestWidget::~SAT_TestWidget()
@@ -79,3 +80,25 @@ struct SAT_MouseGesture
 void SAT_TestWidget::on_widget_mouse_gesture(SAT_MouseGesture* AGesture)
 {
 }
+
+//------------------------------
+// testing pre/post paint
+//------------------------------
+
+// void SAT_TestWidget::on_widget_pre_paint(SAT_PaintContext* AContext)
+// {
+//     SAT_Rect rect = MRect;
+//     rect.grow(5);
+//     SAT_Painter* painter = AContext->painter;
+//     painter->setFillColor(SAT_Red);
+//     painter->fillRect(rect);
+// }
+
+// void SAT_TestWidget::on_widget_post_paint(SAT_PaintContext* AContext)
+// {
+//     SAT_Rect rect = MRect;
+//     rect.shrink(5);
+//     SAT_Painter* painter = AContext->painter;
+//     painter->setDrawColor(SAT_Green);
+//     painter->drawRect(rect);
+// }

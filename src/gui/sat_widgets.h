@@ -9,6 +9,7 @@
 //
 //----------------------------------------------------------------------
 
+#include "gui/widget/container/sat_background_widget.h"
 #include "gui/widget/container/sat_buffered_widget.h"
 #include "gui/widget/container/sat_dialog_box.h"
 #include "gui/widget/container/sat_group_box_widget.h"
@@ -44,7 +45,7 @@
 #include "gui/widget/interface/sat_sizer_widget.h"
 #include "gui/widget/interface/sat_tooltip_widget.h"
 
-//#include "gui/widget/nonvisual/"
+#include "gui/widget/nonvisual/sat_interceptor_widget.h"
 
 #include "gui/widget/visual/sat_9patch_image_widget.h"
 #include "gui/widget/visual//sat_circular_waveform_widget.h"
