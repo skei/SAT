@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/sat.h"
-#include "gui/mouse/sat_mouse_state.h"
+#include "gui/input/sat_input_state.h"
 #include "gui/widget/visual/sat_text_widget.h"
 
 //----------------------------------------------------------------------
@@ -18,8 +18,8 @@ class SAT_TestWidget
         virtual ~SAT_TestWidget();
     public:
 
-        uint32_t    on_widget_mouse_event(SAT_MouseEvent* AEvent) override;
-        void        on_widget_mouse_gesture(SAT_MouseGesture* AGesture) override;
+        uint32_t    on_widget_input_event(SAT_InputEvent* AEvent) override;
+        void        on_widget_input_gesture(SAT_InputGesture* AGesture) override;
 
         // void        on_widget_pre_paint(SAT_PaintContext* AContext) override;
         // void        on_widget_post_paint(SAT_PaintContext* AContext) override;
@@ -35,6 +35,8 @@ SAT_TestWidget::SAT_TestWidget(SAT_Rect ARect)
 {
     MTypeName = "SAT_TestWidget";
     MSkin = SAT.GUI->SKINS.find("Default Text");
+    Options.wantInputEvents = SAT_INPUT_EVENT_ALL;
+    Options.wantInputGestures = SAT_INPUT_GESTURE_ALL;
 }
 
 SAT_TestWidget::~SAT_TestWidget()
@@ -57,12 +59,12 @@ struct SAT_MouseEvent
 };
 */
 
-uint32_t SAT_TestWidget::on_widget_mouse_event(SAT_MouseEvent* AEvent)
+uint32_t SAT_TestWidget::on_widget_input_event(SAT_InputEvent* AEvent)
 {
-    uint32_t event_type = AEvent->type;
-    const char* event_name = AEvent->handler->eventName(event_type);
-    SAT_PRINT("%s : %s\n",getName(),event_name);
-    return SAT_MOUSE_EVENT_RESPONSE_NONE;
+    // uint32_t event_type = AEvent->type;
+    // const char* event_name = AEvent->handler->eventName(event_type);
+    // SAT_PRINT("%s : %s\n",getName(),event_name);
+    return SAT_INPUT_EVENT_RESPONSE_NONE;
 }
 
 /*
@@ -77,8 +79,11 @@ struct SAT_MouseGesture
 };
 */
 
-void SAT_TestWidget::on_widget_mouse_gesture(SAT_MouseGesture* AGesture)
+void SAT_TestWidget::on_widget_input_gesture(SAT_InputGesture* AGesture)
 {
+    uint32_t gesture_type = AGesture->type;
+    const char* event_name = AGesture->handler->gestureName(gesture_type);
+    SAT_PRINT("%s : %s - hovering: %s\n",getName(),event_name,AGesture->stateInfo->hoverWidget->getName());
 }
 
 //------------------------------

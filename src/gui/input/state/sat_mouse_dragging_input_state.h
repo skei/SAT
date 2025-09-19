@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "gui/mouse/sat_mouse_state.h"
+#include "gui/input/sat_input_state.h"
 
 //----------------------------------------------------------------------
 //
@@ -9,20 +9,26 @@
 //
 //----------------------------------------------------------------------
 
-class SAT_DraggingMouseState
-: public SAT_MouseState
+class SAT_MouseDraggingInputState
+: public SAT_InputState
 {
     public:
-        SAT_DraggingMouseState(SAT_BaseMouseHandler* AHandler);
-        virtual ~SAT_DraggingMouseState();
+        SAT_MouseDraggingInputState(SAT_BaseInputHandler* AHandler);
+        virtual ~SAT_MouseDraggingInputState();
     public:
         void        enter(int32_t AFromState) override;
         void        leave(int32_t AToState) override;
     public:
         int32_t     timer(double ADelta) override; 
-        int32_t     click(SAT_MouseEvent* AEvent) override; 
-        int32_t     release(SAT_MouseEvent* AEvent) override; 
-        int32_t     move(SAT_MouseEvent* AEvent) override; 
+        int32_t     mouseClick(SAT_InputEvent* AEvent) override; 
+        int32_t     mouseRelease(SAT_InputEvent* AEvent) override; 
+        int32_t     mouseMove(SAT_InputEvent* AEvent) override; 
+        int32_t     keyPress(SAT_InputEvent* AEvent) override;
+        int32_t     keyRelease(SAT_InputEvent* AEvent) override;
+    private:
+        double      MPrevMoveTime       = 0.0;
+        SAT_Widget* MPrevHoverWidget    = nullptr;
+        bool        MWaitingForHover    = false;
 };
 
 //----------------------------------------------------------------------
@@ -31,27 +37,14 @@ class SAT_DraggingMouseState
 //
 //----------------------------------------------------------------------
 
-SAT_DraggingMouseState::SAT_DraggingMouseState(SAT_BaseMouseHandler* AHandler)
-: SAT_MouseState(AHandler)
+SAT_MouseDraggingInputState::SAT_MouseDraggingInputState(SAT_BaseInputHandler* AHandler)
+: SAT_InputState(AHandler)
 {
-    type = SAT_MOUSE_STATE_DRAGGING;
-    name = "DRAGGING";
+    type = SAT_INPUT_STATE_MOUSE_DRAGGING;
+    name = "MOUSE DRAGGING";
 }
 
-SAT_DraggingMouseState::~SAT_DraggingMouseState()
-{
-}
-
-//------------------------------
-//
-//------------------------------
-
-void SAT_DraggingMouseState::enter(int32_t AFromState)
-{
-    SAT_PRINT("from %s\n",handler->stateName(AFromState));
-}
-
-void SAT_DraggingMouseState::leave(int32_t AToState)
+SAT_MouseDraggingInputState::~SAT_MouseDraggingInputState()
 {
 }
 
@@ -59,26 +52,101 @@ void SAT_DraggingMouseState::leave(int32_t AToState)
 //
 //------------------------------
 
-int32_t SAT_DraggingMouseState::timer(double ADelta)
+void SAT_MouseDraggingInputState::enter(int32_t AFromState)
 {
-    return SAT_MOUSE_STATE_NONE;
+    SAT_Widget* widget = stateInfo->activeWidget; // hover_widget;
+    uint32_t gesture = SAT_INPUT_GESTURE_BEGIN | SAT_INPUT_GESTURE_MOUSE_DRAG;
+    handler->sendGesture(widget,gesture);    
+    MPrevMoveTime = stateInfo->currentTime;
+    MPrevHoverWidget = stateInfo->hoverWidget;
+    MWaitingForHover = false;
 }
 
-int32_t SAT_DraggingMouseState::click(SAT_MouseEvent* AEvent)
+void SAT_MouseDraggingInputState::leave(int32_t AToState)
 {
-    return SAT_MOUSE_STATE_NONE;
 }
 
-int32_t SAT_DraggingMouseState::release(SAT_MouseEvent* AEvent)
+//------------------------------
+//
+//------------------------------
+
+int32_t SAT_MouseDraggingInputState::timer(double ADelta)
 {
-    return SAT_MOUSE_STATE_RELEASED;
+    if (MWaitingForHover)
+    {
+        double elapsed = stateInfo->currentTime - MPrevMoveTime;
+        if (elapsed > SAT.GUI->getMouseHoverHoldTime())
+        {
+            SAT_Widget* widget = stateInfo->activeWidget;
+            uint32_t gesture = SAT_INPUT_GESTURE_DRAG | SAT_INPUT_GESTURE_MOUSE_HOVER;
+            handler->sendGesture(widget,gesture);    
+            MWaitingForHover = false;
+        }
+    }
+    return SAT_INPUT_STATE_NONE;
 }
 
-int32_t SAT_DraggingMouseState::move(SAT_MouseEvent* AEvent)
+int32_t SAT_MouseDraggingInputState::mouseClick(SAT_InputEvent* AEvent)
 {
-    return SAT_MOUSE_STATE_NONE;
+    SAT_Widget* widget = stateInfo->activeWidget;
+    uint32_t gesture = SAT_INPUT_GESTURE_DRAG | SAT_INPUT_GESTURE_MOUSE_CLICK;
+    handler->sendGesture(widget,gesture);
+    MWaitingForHover = false;
+    return SAT_INPUT_STATE_NONE;
 }
 
+int32_t SAT_MouseDraggingInputState::mouseRelease(SAT_InputEvent* AEvent)
+{
+    // if we release the button that stared the drag,
+    // send end drag gesture, and return to released state
+    if (stateInfo->mouseButton == stateInfo->activeButton)
+    {
+        SAT_Widget* widget = stateInfo->activeWidget;
+        uint32_t gesture = SAT_INPUT_GESTURE_END | SAT_INPUT_GESTURE_MOUSE_DRAG;
+        handler->sendGesture(widget,gesture);
+        return SAT_INPUT_STATE_MOUSE_RELEASED;
+    }
+    else
+    {
+        SAT_Widget* widget = stateInfo->activeWidget;
+        uint32_t gesture = SAT_INPUT_GESTURE_DRAG | SAT_INPUT_GESTURE_MOUSE_RELEASE;
+        handler->sendGesture(widget,gesture);
+        MWaitingForHover = false;
+    }
+    return SAT_INPUT_STATE_NONE;
+}
+
+int32_t SAT_MouseDraggingInputState::mouseMove(SAT_InputEvent* AEvent)
+{
+    // if we cross to another widget, start accepting hover events
+    if (stateInfo->hoverWidget != MPrevHoverWidget)
+    {
+        MPrevHoverWidget = stateInfo->hoverWidget;
+        MWaitingForHover = true;
+    }
+    MPrevMoveTime = stateInfo->currentTime;
+
+    SAT_Widget* widget = stateInfo->activeWidget;
+    uint32_t gesture = SAT_INPUT_GESTURE_MOUSE_DRAG;
+    handler->sendGesture(widget,gesture);
+    return SAT_INPUT_STATE_NONE;
+}
+
+int32_t SAT_MouseDraggingInputState::keyPress(SAT_InputEvent* AEvent)
+{
+    SAT_Widget* widget = stateInfo->activeWidget;
+    uint32_t gesture = SAT_INPUT_GESTURE_DRAG | SAT_INPUT_GESTURE_KEY_PRESS;
+    handler->sendGesture(widget,gesture);
+    return SAT_INPUT_STATE_NONE;
+}
+
+int32_t SAT_MouseDraggingInputState::keyRelease(SAT_InputEvent* AEvent)
+{
+    SAT_Widget* widget = stateInfo->activeWidget;
+    uint32_t gesture = SAT_INPUT_GESTURE_DRAG | SAT_INPUT_GESTURE_KEY_RELEASE;
+    handler->sendGesture(widget,gesture);
+    return SAT_INPUT_STATE_NONE;
+}
 
 
 

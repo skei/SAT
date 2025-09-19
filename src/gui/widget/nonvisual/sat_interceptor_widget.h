@@ -8,7 +8,7 @@
 */
 
 #include "base/sat.h"
-#include "gui/mouse/sat_mouse_state.h"
+#include "gui/input/sat_input_state.h"
 #include "gui/sat_widget.h"
 
 //----------------------------------------------------------------------
@@ -40,10 +40,8 @@ class SAT_InterceptorWidget
         void            on_widget_timer(uint32_t ATimerId, double ADelta) override;
         void            on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues) override;
         void            on_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, intptr_t AValue=0) override;
-        uint32_t        on_widget_mouse_event(SAT_MouseEvent* AEvent) override;
-        void            on_widget_mouse_gesture(SAT_MouseGesture* AGesture) override;
-        uint32_t        on_widget_keyboard_event(SAT_KeyboardEvent* AEvent) override;
-        void            on_widget_keyboard_gesture(SAT_KeyboardGesture* AGesture) override;
+        uint32_t        on_widget_input_event(SAT_InputEvent* AEvent) override;
+        void            on_widget_input_gesture(SAT_InputGesture* AGesture) override;
     public: // do_
         void            do_widget_update(SAT_Widget* AWidget, uint32_t AIndex=0) override;
         void            do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT) override;
@@ -229,55 +227,30 @@ void SAT_InterceptorWidget::on_widget_notify(SAT_Widget* AWidget, uint32_t AType
     else SAT_Widget::on_widget_notify(AWidget,AType,AValue);
 }
 
-uint32_t SAT_InterceptorWidget::on_widget_mouse_event(SAT_MouseEvent* AEvent)
+uint32_t SAT_InterceptorWidget::on_widget_input_event(SAT_InputEvent* AEvent)
 {
     if (MChildProxy)
     {
-        uint32_t response = MChildProxy->on_widget_mouse_event(AEvent);
+        uint32_t response = MChildProxy->on_widget_input_event(AEvent);
         if (MMultiplex)
         {
-            uint32_t retval = SAT_Widget::on_widget_mouse_event(AEvent);
+            uint32_t retval = SAT_Widget::on_widget_input_event(AEvent);
             if (MOverrideReturn) response = retval;
 
         }
         return response;
     }
-    else return SAT_Widget::on_widget_mouse_event(AEvent);
+    else return SAT_Widget::on_widget_input_event(AEvent);
 }
 
-void SAT_InterceptorWidget::on_widget_mouse_gesture(SAT_MouseGesture* AGesture)
+void SAT_InterceptorWidget::on_widget_input_gesture(SAT_InputGesture* AGesture)
 {
     if (MChildProxy)
     {
-        MChildProxy->on_widget_mouse_gesture(AGesture);
-        if (MMultiplex) SAT_Widget::on_widget_mouse_gesture(AGesture);
+        MChildProxy->on_widget_input_gesture(AGesture);
+        if (MMultiplex) SAT_Widget::on_widget_input_gesture(AGesture);
     }
-    else return SAT_Widget::on_widget_mouse_gesture(AGesture);
-}
-
-uint32_t SAT_InterceptorWidget::on_widget_keyboard_event(SAT_KeyboardEvent* AEvent)
-{
-    if (MChildProxy)
-    {
-        uint32_t response = MChildProxy->on_widget_keyboard_event(AEvent);
-        if (MMultiplex)
-        {
-            uint32_t retval = SAT_Widget::on_widget_keyboard_event(AEvent);
-            if (MOverrideReturn) response = retval;
-        }
-        return response;
-    }
-    else return SAT_Widget::on_widget_keyboard_event(AEvent);
-}
-
-void SAT_InterceptorWidget::on_widget_keyboard_gesture(SAT_KeyboardGesture* AGesture)
-{
-    if (MChildProxy)
-    {
-        MChildProxy->on_widget_keyboard_gesture(AGesture);
-        if (MMultiplex) SAT_Widget::on_widget_keyboard_gesture(AGesture);
-    }
-    else SAT_Widget::on_widget_keyboard_gesture(AGesture);
+    else return SAT_Widget::on_widget_input_gesture(AGesture);
 }
 
 //------------------------------

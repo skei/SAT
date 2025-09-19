@@ -8,6 +8,9 @@
 //
 //----------------------------------------------------------------------
 
+
+//----------
+
 bool    SAT_AlmostEqual(double f1, double f2, double tol);
 double  SAT_Average(const unsigned int n, const double* ar);
 double  SAT_CalcRMS(const unsigned int n, const double* ar);
@@ -16,6 +19,10 @@ double  SAT_Clamp(const double input, const double minval, const double maxval )
 double  SAT_Clip(double x, double l, double h);
 double  SAT_Curve(double x, double t);
 double  SAT_CurveSigned(double x, double t);
+double  SAT_Distance(double x1, double y1, double x2, double y2);
+bool    SAT_DistanceAbove(double x1, double y1, double x2, double y2, double ADist);
+bool    SAT_DistanceBelow(double x1, double y1, double x2, double y2, double ADist);
+double  SAT_DistanceSquared(double x1, double y1, double x2, double y2);
 double  SAT_Fract(const double value);
 double  SAT_Fract(const double value, double* intpart);
 double  SAT_Max(const double a, const double b);
@@ -126,6 +133,33 @@ double SAT_Curve(double x, double t)
     //t = (t*0.990f) + 0.005f;
     double a = ( 1.0f - 1.0f/t );
     return x / (x+a * (x-1) );
+}
+
+double SAT_Distance(double x1, double y1, double x2, double y2)
+{
+    double d2 = SAT_DistanceSquared(x1,y1,x2,y2);
+    return sqrt(d2);
+}
+
+bool SAT_DistanceAbove(double x1, double y1, double x2, double y2, double dist)
+{
+    double d2 = SAT_DistanceSquared(x1,y1,x2,y2);
+    if (d2 > (dist * dist)) return true;
+    return false;
+}
+
+bool SAT_DistanceBelow(double x1, double y1, double x2, double y2, double dist)
+{
+    double d2 = SAT_DistanceSquared(x1,y1,x2,y2);
+    if (d2 < (dist * dist)) return true;
+    return false;
+}
+
+double SAT_DistanceSquared(double x1, double y1, double x2, double y2)
+{
+    double x = (x2 - x1);
+    double y = (y2 - y1);
+    return (x * x) + (y * y);
 }
 
 /*

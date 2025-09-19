@@ -41,9 +41,11 @@
 #define SAT_ANIM_FINISHED                           0xffffffff
 #define SAT_ANIM_QUEUE_SIZE                         256
 #define SAT_ANIM_MAX_VALUES                         4
-#define SAT_MOUSE_DOUBLE_CLICK_SEC                  0.25
+#define SAT_MOUSE_DOUBLE_CLICK_SEC                  0.2
+#define SAT_MOUSE_HOVER_HOLD_TIME_SEC               1.0
 #define SAT_MOUSE_LONGPRESS_SEC                     1.0
-#define SAT_MOUSE_TOOLTIP_SEC                       0.5
+#define SAT_MOUSE_MOVEMENT_SLACK                    0.0
+#define SAT_MOUSE_TOOLTIP_DELAY_SEC                 0.5
 #define SAT_PAINT_QUEUE_SIZE                        256
 #define SAT_PAINTER_CLIP_RECT_STACK_SIZE            256
 #define SAT_REALIGN_QUEUE_SIZE                      256

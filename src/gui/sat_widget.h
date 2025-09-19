@@ -7,14 +7,13 @@
 #include "gui/sat_skin.h"
 
 class SAT_AnimChain;
-class SAT_KeyboardEvent;
-class SAT_KeyboardGesture;
-class SAT_MouseEvent;
-class SAT_MouseGesture;
 class SAT_Parameter;
 
 class SAT_Widget;
 typedef SAT_Array<SAT_Widget*> SAT_WidgetArray;
+
+struct SAT_InputEvent;
+struct SAT_InputGesture;
 
 //----------------------------------------------------------------------
 //
@@ -40,16 +39,16 @@ struct SAT_WidgetLayout
 struct SAT_WidgetOptions
 {
     bool            active                  = true;                         // receive (mouse) events
+    bool            passive                 = false;                        // if !active, pass events through
     bool            visible                 = true;                         // visible (painted)
     bool            alignable               = true;                         // take into account while realigning
     bool            clip                    = true;                         // set clip before painting
     bool            opaque                  = true;                         // entirely fills its rect? (or does parent show through?
     sat_coord_t     scale                   = 1.0;                          // scale children (and painting)
     uint32_t        skinStates              = SAT_SKIN_STATE_NORMAL;        // which skin/paint states widget supports
-    uint32_t        wantMouseEvents         = SAT_MOUSE_EVENT_NONE;         // which mouse events the widget wants
-    uint32_t        wantMouseGestures       = SAT_MOUSE_GESTURE_NONE;       // which mouse gestures the widget wants
-    uint32_t        wantKeyboardEvents      = SAT_KEYBOARD_EVENT_NONE;      // keyboard..
-    uint32_t        wantKeyboardGestures    = SAT_KEYBOARD_GESTURE_NONE;    // keyboard..
+    uint32_t        wantInputEvents         = SAT_INPUT_EVENT_NONE;         // which mouse events the widget wants
+    uint32_t        wantInputGestures       = SAT_INPUT_GESTURE_NONE;       // which mouse gestures the widget wants
+  //uint32_t        wantInputStates         = SAT_INPUT_STATE_ALL;          // which mouse states the widget wants
 };
 
 // struct SAT_WidgetAppearance
@@ -137,10 +136,14 @@ class SAT_Widget
         virtual void            on_widget_timer(uint32_t ATimerId, double ADelta);
         virtual void            on_widget_anim(uint32_t AId, uint32_t AType, uint32_t ANumValues, double* AValues);
         virtual void            on_widget_notify(SAT_Widget* AWidget, uint32_t AType=SAT_WIDGET_NOTIFY_NONE, intptr_t AValue=0);
-        virtual uint32_t        on_widget_mouse_event(SAT_MouseEvent* AEvent);
-        virtual void            on_widget_mouse_gesture(SAT_MouseGesture* AGesture);
-        virtual uint32_t        on_widget_keyboard_event(SAT_KeyboardEvent* AEvent);
-        virtual void            on_widget_keyboard_gesture(SAT_KeyboardGesture* AGesture);
+
+        virtual uint32_t        on_widget_input_event(SAT_InputEvent* AEvent);
+        virtual void            on_widget_input_gesture(SAT_InputGesture* AGesture);
+
+        // virtual uint32_t        on_widget_mouse_event(SAT_MouseEvent* AEvent);
+        // virtual void            on_widget_mouse_gesture(SAT_MouseGesture* AGesture);
+        // virtual uint32_t        on_widget_keyboard_event(SAT_KeyboardEvent* AEvent);
+        // virtual void            on_widget_keyboard_gesture(SAT_KeyboardGesture* AGesture);
     public: // do_
         virtual void            do_widget_update(SAT_Widget* AWidget, uint32_t AIndex=0);
         virtual void            do_widget_realign(SAT_Widget* AWidget, uint32_t AMode=SAT_WIDGET_REALIGN_PARENT);
@@ -320,16 +323,27 @@ SAT_Widget* SAT_Widget::findChildAt(int32_t AXpos, int32_t AYpos, bool AVisibleO
     {
         for (int32_t i=num-1; i>=0; i--)
         {
-            SAT_Widget* widget = MChildren[i];
-            SAT_Rect widget_rect = widget->MRect;
+            SAT_Widget* child = MChildren[i];
+            SAT_Rect widget_rect = child->MRect;
             if (widget_rect.contains(AXpos,AYpos))
             {
-                bool match = true;
-                if (AActiveOnly && (widget->MState.active == false)) match = false;
-                if (AVisibleOnly && (widget->MState.visible == false)) match = false;
-                if (match)
+
+                bool active  = !(AActiveOnly && (child->MState.active == false));
+                bool visible = !(AVisibleOnly && (child->MState.visible == false));
+                bool passive = child->Options.passive;
+
+                //bool match = true;
+                //if (AActiveOnly && (child->MState.active == false)) match = false;
+                //if (AVisibleOnly && (child->MState.visible == false)) match = false;
+                //if (match)
+                if (visible)
                 {
-                    return widget->findChildAt(AXpos,AYpos,AVisibleOnly,AActiveOnly);
+                    if (active) return child->findChildAt(AXpos,AYpos,AVisibleOnly,AActiveOnly);
+                    else if (passive)
+                    {
+                        SAT_Widget* widget = child->findChildAt(AXpos,AYpos,AVisibleOnly,AActiveOnly);
+                        if (widget != child) return widget;
+                    }
                 }
             }
         }
@@ -958,23 +972,32 @@ void SAT_Widget::on_widget_notify(SAT_Widget* AWidget, uint32_t AType, intptr_t 
 {
 }
 
-uint32_t SAT_Widget::on_widget_mouse_event(SAT_MouseEvent* AEvent)
+uint32_t SAT_Widget::on_widget_input_event(SAT_InputEvent* AEvent)
 {
-    return SAT_MOUSE_EVENT_RESPONSE_NONE;
+    return SAT_INPUT_EVENT_RESPONSE_NONE;
 }
 
-void SAT_Widget::on_widget_mouse_gesture(SAT_MouseGesture* AGesture)
+void SAT_Widget::on_widget_input_gesture(SAT_InputGesture* AGesture)
 {
 }
 
-uint32_t SAT_Widget::on_widget_keyboard_event(SAT_KeyboardEvent* AEvent)
-{
-    return SAT_KEYBOARD_EVENT_RESPONSE_NONE;
-}
+// uint32_t SAT_Widget::on_widget_mouse_event(SAT_MouseEvent* AEvent)
+// {
+//     return SAT_MOUSE_EVENT_RESPONSE_NONE;
+// }
 
-void SAT_Widget::on_widget_keyboard_gesture(SAT_KeyboardGesture* AGesture)
-{
-}
+// void SAT_Widget::on_widget_mouse_gesture(SAT_MouseGesture* AGesture)
+// {
+// }
+
+// uint32_t SAT_Widget::on_widget_keyboard_event(SAT_KeyboardEvent* AEvent)
+// {
+//     return SAT_KEYBOARD_EVENT_RESPONSE_NONE;
+// }
+
+// void SAT_Widget::on_widget_keyboard_gesture(SAT_KeyboardGesture* AGesture)
+// {
+// }
 
 //------------------------------
 //

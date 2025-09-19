@@ -46,6 +46,7 @@ SAT_OverlayWidget::SAT_OverlayWidget(SAT_Rect ARect)
     Layout.stretch      = SAT_WIDGET_LAYOUT_STRETCH_ROOT | SAT_WIDGET_LAYOUT_STRETCH_ALL;
     Options.alignable   = true;
     Options.active      = false;
+    Options.passive     = true;
     Options.visible     = false;
     Options.opaque      = false;
     MSkin = SAT.GUI->SKINS.find("Default Overlay");

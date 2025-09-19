@@ -36,19 +36,25 @@ class SAT_GlobalGui
         void activate(SAT_GlobalBase* AGlobal);
         void deactivate(SAT_GlobalBase* AGlobal);
     public:
-        void        setDoubleClickTime(double ASeconds);
-        void        setLongPressTime(double ASeconds);
-        void        setTooltipDelayTime(double ASeconds);
+        void        setMouseDoubleClickTime(double ASeconds);
+        void        setMouseHoverHoldTime(double ASeconds);
+        void        setMouseLongPressTime(double ASeconds);
+        void        setMouseMovementSlack(double ADistance);
+        void        setMouseTooltipDelayTime(double ASeconds);
     public:
-        double      getDoubleClickTime();
-        double      getLongPressTime();
-        double      getTooltipDelayTime();
+        double      getMouseDoubleClickTime();
+        double      getMouseHoverHoldTime();
+        double      getMouseLongPressTime();
+        double      getMouseMovementSlack();
+        double      getMouseTooltipDelayTime();
     public:
         SAT_Skins   SKINS = {};
     private:
-        double      MDoubleClickTime    = SAT_MOUSE_DOUBLE_CLICK_SEC;
-        double      MLongPressTime      = SAT_MOUSE_LONGPRESS_SEC;
-        double      MTooltipDelayTime   = SAT_MOUSE_TOOLTIP_SEC;
+        double      MMouseDoubleClickTime    = SAT_MOUSE_DOUBLE_CLICK_SEC;
+        double      MMouseHoverHoldTime      = SAT_MOUSE_HOVER_HOLD_TIME_SEC;
+        double      MMouseLongPressTime      = SAT_MOUSE_LONGPRESS_SEC;
+        double      MMouseMovementSlack      = SAT_MOUSE_MOVEMENT_SLACK;
+        double      MMouseTooltipDelayTime   = SAT_MOUSE_TOOLTIP_DELAY_SEC;
 };
 
 //----------------------------------------------------------------------
@@ -82,10 +88,14 @@ void SAT_GlobalGui::deactivate(SAT_GlobalBase* AGlobal)
 //
 //------------------------------
 
-void SAT_GlobalGui::setDoubleClickTime(double ASeconds)     { MDoubleClickTime = ASeconds; }
-void SAT_GlobalGui::setLongPressTime(double ASeconds)       { MLongPressTime = ASeconds; }
-void SAT_GlobalGui::setTooltipDelayTime(double ASeconds)    { MTooltipDelayTime = ASeconds; }
+void SAT_GlobalGui::setMouseDoubleClickTime(double ASeconds)     { MMouseDoubleClickTime = ASeconds; }
+void SAT_GlobalGui::setMouseHoverHoldTime(double ASeconds)       { MMouseHoverHoldTime = ASeconds; }
+void SAT_GlobalGui::setMouseLongPressTime(double ASeconds)       { MMouseLongPressTime = ASeconds; }
+void SAT_GlobalGui::setMouseMovementSlack(double ASeconds)       { MMouseMovementSlack = ASeconds; }
+void SAT_GlobalGui::setMouseTooltipDelayTime(double ASeconds)    { MMouseTooltipDelayTime = ASeconds; }
 
-double SAT_GlobalGui::getDoubleClickTime()  { return MDoubleClickTime; }
-double SAT_GlobalGui::getLongPressTime()    { return MLongPressTime; }
-double SAT_GlobalGui::getTooltipDelayTime() { return MTooltipDelayTime; }
+double SAT_GlobalGui::getMouseDoubleClickTime()     { return MMouseDoubleClickTime; }
+double SAT_GlobalGui::getMouseHoverHoldTime()       { return MMouseHoverHoldTime; }
+double SAT_GlobalGui::getMouseLongPressTime()       { return MMouseLongPressTime; }
+double SAT_GlobalGui::getMouseMovementSlack()       { return MMouseMovementSlack; }
+double SAT_GlobalGui::getMouseTooltipDelayTime()    { return MMouseTooltipDelayTime; }

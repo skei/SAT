@@ -144,12 +144,12 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_KEYBOARD_STATE_IDLE                     0
 #define SAT_KEYBOARD_STATE_COUNT                    1
 
-#define SAT_STATE_KEY_NONE                          0
-#define SAT_STATE_KEY_SHIFT                         0x01
-#define SAT_STATE_KEY_CAPS                          0x02
-#define SAT_STATE_KEY_CTRL                          0x04
-#define SAT_STATE_KEY_ALT                           0x08
-#define SAT_STATE_KEY_ALTGR                         0x10
+#define SAT_MOD_KEY_NONE                          0
+#define SAT_MOD_KEY_SHIFT                         0x01
+#define SAT_MOD_KEY_CAPS                          0x02
+#define SAT_MOD_KEY_CTRL                          0x04
+#define SAT_MOD_KEY_ALT                           0x08
+#define SAT_MOD_KEY_ALTGR                         0x10
 
 #define SAT_MOUSE_BUTTON_NONE                       0
 #define SAT_MOUSE_BUTTON_LEFT                       1
@@ -159,6 +159,7 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_MOUSE_BUTTON_SCROLL_DOWN                5
 #define SAT_MOUSE_BUTTON_SIDE_BACKWARD              8
 #define SAT_MOUSE_BUTTON_SIDE_FORWARD               9
+#define SAT_MOUSE_BUTTON_COUNT                      10
 
 #define SAT_MOUSE_CURSOR_UNLOCK                     -5
 #define SAT_MOUSE_CURSOR_LOCK                       -4
@@ -167,47 +168,55 @@ const char* SAT_MONTH_NAMES[13] = { "jan", "feb", "mar", "apr", "may", "jun", "j
 #define SAT_MOUSE_CURSOR_RESET                      -1
 #define SAT_MOUSE_CURSOR_DEFAULT                    0
 
-#define SAT_MOUSE_EVENT_NONE                        0
-#define SAT_MOUSE_EVENT_CLICK                       0x0001
-#define SAT_MOUSE_EVENT_RELEASE                     0x0002
-#define SAT_MOUSE_EVENT_MOVE                        0x0004
-#define SAT_MOUSE_EVENT_ENTER                       0x0008
-#define SAT_MOUSE_EVENT_LEAVE                       0x0010
-#define SAT_MOUSE_EVENT_ALL                         0xFFFF
 
-#define SAT_MOUSE_EVENT_RESPONSE_NONE               0
-#define SAT_MOUSE_EVENT_RESPONSE_IGNORE             1
-#define SAT_MOUSE_EVENT_RESPONSE_CAPTURE            2
-#define SAT_MOUSE_EVENT_RESPONSE_RELEASE            3
 
-#define SAT_MOUSE_GESTURE_NONE                      0
-#define SAT_MOUSE_GESTURE_CLICK                     0x000001
-#define SAT_MOUSE_GESTURE_RELEASE                   0x000002
-#define SAT_MOUSE_GESTURE_DRAG                      0x000004
-#define SAT_MOUSE_GESTURE_DOUBLE_CLICK              0x000101
-#define SAT_MOUSE_GESTURE_DOUBLE_RELEASE            0x000102
-#define SAT_MOUSE_GESTURE_DOUBLE_DRAG               0x000104
-#define SAT_MOUSE_GESTURE_LONG_CLICK                0x000201
-#define SAT_MOUSE_GESTURE_LONG_RELEASE              0x000202
-#define SAT_MOUSE_GESTURE_LONG_DRAG                 0x000204
 
-// #define SAT_MOUSE_GESTURE_TOGGLE                 0x0000
-// #define SAT_MOUSE_GESTURE_SWITCH                 0x0000
-// #define SAT_MOUSE_GESTURE_SELECT                 0x0000
-#define SAT_MOUSE_GESTURE_ALL                       0xFFFFFF
 
-#define SAT_MOUSE_STATE_NONE                        -1
-#define SAT_MOUSE_STATE_IDLE                        0
-#define SAT_MOUSE_STATE_CLICKED                     1
-#define SAT_MOUSE_STATE_DRAGGING                    2
-#define SAT_MOUSE_STATE_RELEASED                    3
-#define SAT_MOUSE_STATE_DOUBLE_CLICKED              4
-#define SAT_MOUSE_STATE_DOUBLE_DRAGGING             5
-#define SAT_MOUSE_STATE_DOUBLE_RELEASED             6
-#define SAT_MOUSE_STATE_LONG_CLICKED                7
-#define SAT_MOUSE_STATE_LONG_DRAGGING               8
-#define SAT_MOUSE_STATE_LONG_RELEASED               9
-#define SAT_MOUSE_STATE_COUNT                       10
+
+#define SAT_INPUT_EVENT_NONE                        0
+#define SAT_INPUT_EVENT_MOUSE_CLICK                 0x0001
+#define SAT_INPUT_EVENT_MOUSE_RELEASE               0x0002
+#define SAT_INPUT_EVENT_MOUSE_MOVE                  0x0004
+#define SAT_INPUT_EVENT_MOUSE_ENTER                 0x0008
+#define SAT_INPUT_EVENT_MOUSE_LEAVE                 0x0010
+#define SAT_INPUT_EVENT_KEY_PRESS                   0x0020
+#define SAT_INPUT_EVENT_KEY_RELEASE                 0x0040
+#define SAT_INPUT_EVENT_ALL                         0xFFFF
+
+#define SAT_INPUT_EVENT_RESPONSE_NONE               0
+#define SAT_INPUT_EVENT_RESPONSE_IGNORE             1
+// #define SAT_INPUT_EVENT_RESPONSE_CAPTURE_MOUSE      2
+// #define SAT_INPUT_EVENT_RESPONSE_RELEASE_MOUSE      3
+// #define SAT_INPUT_EVENT_RESPONSE_CAPTURE_KEYS       4
+// #define SAT_INPUT_EVENT_RESPONSE_RELEASE_KEYS       5
+
+#define SAT_INPUT_GESTURE_NONE                      0
+#define SAT_INPUT_GESTURE_MOUSE_CLICK               0x01
+#define SAT_INPUT_GESTURE_MOUSE_RELEASE             0x02
+#define SAT_INPUT_GESTURE_MOUSE_DRAG                0x04
+#define SAT_INPUT_GESTURE_MOUSE_HOVER               0x08
+#define SAT_INPUT_GESTURE_KEY_PRESS                 0x10
+#define SAT_INPUT_GESTURE_KEY_RELEASE               0x20
+//#define SAT_INPUT_GESTURE_KEY_REPEAT              0x40
+#define SAT_INPUT_GESTURE_BEGIN                     0x000100
+#define SAT_INPUT_GESTURE_END                       0x000200
+// combinations
+#define SAT_INPUT_GESTURE_LONG                      0x010000
+#define SAT_INPUT_GESTURE_DOUBLE                    0x020000
+#define SAT_INPUT_GESTURE_DUAL                      0x040000
+#define SAT_INPUT_GESTURE_DRAG                      0x080000
+#define SAT_INPUT_GESTURE_HOVER                     0x100000
+
+#define SAT_INPUT_GESTURE_ALL                       0xFFFFFFFF
+
+#define SAT_INPUT_STATE_NONE                        -1
+#define SAT_INPUT_STATE_IDLE                        0
+#define SAT_INPUT_STATE_MOUSE_CLICKED               1
+#define SAT_INPUT_STATE_MOUSE_RELEASED              2
+#define SAT_INPUT_STATE_MOUSE_DRAGGING              3
+#define SAT_INPUT_STATE_MOUSE_HOVERING              4
+
+#define SAT_INPUT_STATE_COUNT                       5
 
 #define SAT_OBSERVE_NONE                            0
 #define SAT_OBSERVE_FLOAT                           1

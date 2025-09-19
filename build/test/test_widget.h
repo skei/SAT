@@ -70,10 +70,10 @@ int main(void)
                 widget1->setTooltip("widget1 tooltip");
                 // widget1->Layout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
                 // widget1->Layout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
-                widget1->Options.active = false;
-                widget1->Options.visible = true;
-                widget1->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
-                widget1->Options.wantMouseGestures = SAT_MOUSE_GESTURE_ALL;
+                //widget1->Options.active = false;
+                //widget1->Options.visible = true;
+                widget1->Options.wantInputEvents = SAT_INPUT_EVENT_ALL;
+                widget1->Options.wantInputGestures = SAT_INPUT_GESTURE_ALL;
 
                 //----------
 
@@ -84,8 +84,8 @@ int main(void)
                 // widget2->Layout.anchor = SAT_WIDGET_LAYOUT_ANCHOR_CENTER;
                 // widget2->Layout.relative = SAT_WIDGET_LAYOUT_RELATIVE_PARENT;
                 // widget2->Options.alignable = false;
-                widget2->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
-                widget2->Options.wantMouseGestures = SAT_MOUSE_GESTURE_ALL;
+                widget2->Options.wantInputEvents = SAT_INPUT_EVENT_ALL;
+                widget2->Options.wantInputGestures = SAT_INPUT_GESTURE_ALL;
 
                 //----------
 
@@ -94,10 +94,10 @@ int main(void)
                 overlay->appendChild(widget3);
                 widget3->setName("widget3");
                 widget3->setTooltip("widget3 tooltip");
-                widget3->Options.active = true;
-                widget3->Options.visible = true;
-                widget3->Options.wantMouseEvents = SAT_MOUSE_EVENT_ALL;
-                widget3->Options.wantMouseGestures = SAT_MOUSE_GESTURE_ALL;
+                //widget3->Options.active = true;
+                //widget3->Options.visible = true;
+                widget3->Options.wantInputEvents = SAT_INPUT_EVENT_ALL;
+                widget3->Options.wantInputGestures = SAT_INPUT_GESTURE_ALL;
 
 
     window->show();

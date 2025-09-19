@@ -5,8 +5,7 @@
 */
 
 #include "base/sat_base.h"
-#include "gui/keyboard/sat_keyboard_handler.h"
-#include "gui/mouse/sat_mouse_handler.h"
+#include "gui/input/sat_input_handler.h"
 #include "gui/window/sat_widget_window.h"
 #include "gui/sat_animator.h"
 
@@ -51,12 +50,10 @@ class SAT_Window
      // void    do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint=nullptr) override;
      public:
         SAT_Animator*           getAnimator()           override    { return &MAnimator; }
-        SAT_KeyboardHandler*    getKeyboardHandler()    override    { return &MKeyboard; }
-        SAT_MouseHandler*       getMouseHandler()       override    { return &MMouse; }
+        SAT_InputHandler*       getInputHandler()       override    { return &MInput; }
     private:
         SAT_Animator            MAnimator   = {};
-        SAT_KeyboardHandler     MKeyboard   = SAT_KeyboardHandler(this);
-        SAT_MouseHandler        MMouse      = SAT_MouseHandler(this);
+        SAT_InputHandler        MInput      = SAT_InputHandler(this);
 
 };
 
@@ -82,8 +79,7 @@ SAT_Window::~SAT_Window()
 
 void SAT_Window::handleTimer(uint32_t ATimerId, double ADelta, bool AInTimerThread)
 {
-    MKeyboard.timer(ADelta);
-    MMouse.timer(ADelta);
+    MInput.timer(ADelta);
     MAnimator.process(ADelta);
     SAT_WidgetWindow::handleTimer(ATimerId,ADelta,AInTimerThread);
 }
@@ -94,8 +90,7 @@ void SAT_Window::handleTimer(uint32_t ATimerId, double ADelta, bool AInTimerThre
 
 void SAT_Window::on_window_show()
 {
-    MMouse.reset();
-    MKeyboard.reset();
+    MInput.reset();
     MAnimator.reset();
     SAT_WidgetWindow::on_window_show();
 }
@@ -118,47 +113,47 @@ void SAT_Window::on_window_show()
 void SAT_Window::on_window_mouse_click(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
     SAT_MouseCoords pos = {AXpos,AYpos};
-    MMouse.click(pos,AButton,AState,ATime);
+    MInput.mouseClick(pos,AButton,AState,ATime);
     SAT_WidgetWindow::on_window_mouse_click(AXpos,AYpos,AButton,AState,ATime);
 }
 
 void SAT_Window::on_window_mouse_release(int32_t AXpos, int32_t AYpos, uint32_t AButton, uint32_t AState, uint32_t ATime)
 {
     SAT_MouseCoords pos = {AXpos,AYpos};
-    MMouse.release(pos,AButton,AState,ATime);
+    MInput.mouseRelease(pos,AButton,AState,ATime);
     SAT_WidgetWindow::on_window_mouse_release(AXpos,AYpos,AButton,AState,ATime);
 }
 
 void SAT_Window::on_window_mouse_move(int32_t AXpos, int32_t AYpos, uint32_t AState, uint32_t ATime)
 {
     SAT_MouseCoords pos = {AXpos,AYpos};
-    MMouse.move(pos,AState,ATime);
+    MInput.mouseMove(pos,AState,ATime);
     SAT_WidgetWindow::on_window_mouse_move(AXpos,AYpos,AState,ATime);
 }
 
 void SAT_Window::on_window_mouse_enter(int32_t AXpos, int32_t AYpos, uint32_t ATime)
 {
     SAT_MouseCoords pos = {AXpos,AYpos};
-    MMouse.enter(pos,ATime);
+    MInput.mouseEnter(pos,ATime);
     SAT_WidgetWindow::on_window_mouse_enter(AXpos,AYpos,ATime);
 }
 
 void SAT_Window::on_window_mouse_leave(int32_t AXpos, int32_t AYpos, uint32_t ATime)
 {
     SAT_MouseCoords pos = {AXpos,AYpos};
-    MMouse.leave(pos,ATime);
+    MInput.mouseLeave(pos,ATime);
     SAT_WidgetWindow::on_window_mouse_leave(AXpos,AYpos,ATime);
 }
 
 void SAT_Window::on_window_key_press(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime)
 {
-    MKeyboard.press(AKey,AState,ATime);
+    MInput.keyPress(AKey,AState,ATime);
     SAT_WidgetWindow::on_window_key_press(AKey,AChar,AState,ATime);
 }
 
 void SAT_Window::on_window_key_release(uint32_t AKey, uint32_t AChar, uint32_t AState, uint32_t ATime)
 {
-    MKeyboard.release(AKey,AState,ATime);
+    MInput.keyRelease(AKey,AState,ATime);
     SAT_WidgetWindow::on_window_key_release(AKey,AChar,AState,ATime);
 }
 
@@ -204,13 +199,13 @@ void SAT_Window::do_widget_anim(SAT_Widget* AWidget, SAT_AnimChain* AChain)
 
 void SAT_Window::do_widget_capture_mouse(SAT_Widget* AWidget)
 {
-    MMouse.captureWidget(AWidget);
+    MInput.mouseCapture(AWidget);
     SAT_WidgetWindow::do_widget_capture_mouse(AWidget);
 }
 
 void SAT_Window::do_widget_capture_keyboard(SAT_Widget* AWidget)
 {
-    MKeyboard.captureWidget(AWidget);
+    MInput.keyCapture(AWidget);
     SAT_WidgetWindow::do_widget_capture_keyboard(AWidget);
 }
 
@@ -219,24 +214,24 @@ void SAT_Window::do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor)
     switch(ACursor)
     {
         case SAT_MOUSE_CURSOR_SHOW:  
-            MMouse.showCursor();
+            MInput.showMouseCursor();
             break;
         case SAT_MOUSE_CURSOR_HIDE:
-            MMouse.hideCursor();
+            MInput.hideMouseCursor();
             break;
         case SAT_MOUSE_CURSOR_LOCK:
-            MMouse.lockCursor(AWidget);
+            MInput.lockMouseCursor(AWidget);
             break;
         case SAT_MOUSE_CURSOR_UNLOCK:
-            MMouse.unlockCursor();
+            MInput.unlockMouseCursor();
             break;
         case SAT_MOUSE_CURSOR_RESET:
             //MMouse.popCursor();
-            MMouse.resetCursor();
+            MInput.resetMouseCursor();
             break;
         default:
             //MMouse.pushCursor(ACursor);
-            MMouse.setCursor(ACursor);
+            MInput.setMouseCursor(ACursor);
             break;
     }
     SAT_WidgetWindow::do_widget_cursor(AWidget,ACursor);
@@ -244,7 +239,7 @@ void SAT_Window::do_widget_cursor(SAT_Widget* AWidget, int32_t ACursor)
 
 void SAT_Window::do_widget_modal(SAT_Widget* AWidget)
 {
-    MMouse.modalWidget(AWidget);
+    MInput.modal(AWidget);
     SAT_WidgetWindow::do_widget_modal(AWidget);
 }
 

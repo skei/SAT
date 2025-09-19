@@ -731,12 +731,12 @@ uint32_t SAT_X11Window::remapButton(uint32_t AButton, uint32_t AState)
 
 uint32_t SAT_X11Window::remapState(uint32_t AState)
 {
-    uint32_t s = SAT_STATE_KEY_NONE;
-    if (AState & XCB_MOD_MASK_SHIFT)    s |= SAT_STATE_KEY_SHIFT;
-    if (AState & XCB_MOD_MASK_LOCK)     s |= SAT_STATE_KEY_CAPS;
-    if (AState & XCB_MOD_MASK_CONTROL)  s |= SAT_STATE_KEY_CTRL;
-    if (AState & XCB_MOD_MASK_1)        s |= SAT_STATE_KEY_ALT;
-    if (AState & XCB_MOD_MASK_5)        s |= SAT_STATE_KEY_ALTGR;
+    uint32_t s = SAT_MOD_KEY_NONE;
+    if (AState & XCB_MOD_MASK_SHIFT)    s |= SAT_MOD_KEY_SHIFT;
+    if (AState & XCB_MOD_MASK_LOCK)     s |= SAT_MOD_KEY_CAPS;
+    if (AState & XCB_MOD_MASK_CONTROL)  s |= SAT_MOD_KEY_CTRL;
+    if (AState & XCB_MOD_MASK_1)        s |= SAT_MOD_KEY_ALT;
+    if (AState & XCB_MOD_MASK_5)        s |= SAT_MOD_KEY_ALTGR;
     // if (AState & XCB_MOD_MASK_1) SAT_PRINT("1\n");
     // if (AState & XCB_MOD_MASK_2) SAT_PRINT("2\n");
     // if (AState & XCB_MOD_MASK_3) SAT_PRINT("3\n");

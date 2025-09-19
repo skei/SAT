@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "gui/mouse/sat_mouse_state.h"
+#include "gui/input/sat_input_state.h"
 
 //----------------------------------------------------------------------
 //
@@ -9,20 +9,24 @@
 //
 //----------------------------------------------------------------------
 
-class SAT_ReleasedMouseState
-: public SAT_MouseState
+class SAT_MouseReleasedInputState
+: public SAT_InputState
 {
     public:
-        SAT_ReleasedMouseState(SAT_BaseMouseHandler* AHandler);
-        virtual ~SAT_ReleasedMouseState();
+        SAT_MouseReleasedInputState(SAT_BaseInputHandler* AHandler);
+        virtual ~SAT_MouseReleasedInputState();
     public:
         void        enter(int32_t AFromState) override;
         void        leave(int32_t AToState) override;
     public:
         int32_t     timer(double ADelta) override; 
-        int32_t     click(SAT_MouseEvent* AEvent) override; 
-        int32_t     release(SAT_MouseEvent* AEvent) override; 
-        int32_t     move(SAT_MouseEvent* AEvent) override; 
+        int32_t     mouseClick(SAT_InputEvent* AEvent) override; 
+        int32_t     mouseRelease(SAT_InputEvent* AEvent) override; 
+        int32_t     mouseMove(SAT_InputEvent* AEvent) override; 
+        int32_t     keyPress(SAT_InputEvent* AEvent) override;
+        int32_t     keyRelease(SAT_InputEvent* AEvent) override;
+    private:
+        double MReleasedTime = 0.0;
 };
 
 //----------------------------------------------------------------------
@@ -31,27 +35,14 @@ class SAT_ReleasedMouseState
 //
 //----------------------------------------------------------------------
 
-SAT_ReleasedMouseState::SAT_ReleasedMouseState(SAT_BaseMouseHandler* AHandler)
-: SAT_MouseState(AHandler)
+SAT_MouseReleasedInputState::SAT_MouseReleasedInputState(SAT_BaseInputHandler* AHandler)
+: SAT_InputState(AHandler)
 {
-    type = SAT_MOUSE_STATE_RELEASED;
-    name = "RELEASED";
+    type = SAT_INPUT_STATE_MOUSE_RELEASED;
+    name = "MOUSE RELEASED";
 }
 
-SAT_ReleasedMouseState::~SAT_ReleasedMouseState()
-{
-}
-
-//------------------------------
-//
-//------------------------------
-
-void SAT_ReleasedMouseState::enter(int32_t AFromState)
-{
-    SAT_PRINT("from %s\n",handler->stateName(AFromState));
-}
-
-void SAT_ReleasedMouseState::leave(int32_t AToState)
+SAT_MouseReleasedInputState::~SAT_MouseReleasedInputState()
 {
 }
 
@@ -59,26 +50,72 @@ void SAT_ReleasedMouseState::leave(int32_t AToState)
 //
 //------------------------------
 
-int32_t SAT_ReleasedMouseState::timer(double ADelta)
+void SAT_MouseReleasedInputState::enter(int32_t AFromState)
 {
-    return SAT_MOUSE_STATE_NONE;
+    MReleasedTime = stateInfo->currentTime;
+    //SAT_PRINT("from %s\n",handler->stateName(AFromState));
+    SAT_Widget* widget = stateInfo->activeWidget;
+    uint32_t gesture = SAT_INPUT_GESTURE_MOUSE_RELEASE;
+    handler->sendGesture(widget,gesture);    
 }
 
-int32_t SAT_ReleasedMouseState::click(SAT_MouseEvent* AEvent)
+void SAT_MouseReleasedInputState::leave(int32_t AToState)
 {
-    return SAT_MOUSE_STATE_CLICKED;
+    //SAT_PRINT("to %s\n",handler->stateName(AToState));
 }
 
-int32_t SAT_ReleasedMouseState::release(SAT_MouseEvent* AEvent)
+//------------------------------
+//
+//------------------------------
+
+int32_t SAT_MouseReleasedInputState::timer(double ADelta)
 {
-    return SAT_MOUSE_STATE_NONE;
+    // if too long time have passed, return to idle (too late for double clicking)
+    double elapsed = stateInfo->currentTime - MReleasedTime;
+    if (elapsed > SAT.GUI->getMouseDoubleClickTime())
+    {
+        return SAT_INPUT_STATE_IDLE;
+    }
+    return SAT_INPUT_STATE_NONE;
 }
 
-int32_t SAT_ReleasedMouseState::move(SAT_MouseEvent* AEvent)
+int32_t SAT_MouseReleasedInputState::mouseClick(SAT_InputEvent* AEvent)
 {
-    return SAT_MOUSE_STATE_NONE;
+    double elapsed = stateInfo->time - stateInfo->activeTime; // MReleasedTime
+    if (stateInfo->mouseButton == stateInfo->activeButton)
+    {
+        if (elapsed < SAT.GUI->getMouseDoubleClickTime())
+        {
+            SAT_PRINT("double click\n");
+            //return SAT_MOUSE_STATE_DOUBLE_CLICK;
+        }
+    }
+    return SAT_INPUT_STATE_MOUSE_CLICKED;
 }
 
+int32_t SAT_MouseReleasedInputState::mouseRelease(SAT_InputEvent* AEvent)
+{
+    return SAT_INPUT_STATE_NONE;
+}
+
+int32_t SAT_MouseReleasedInputState::mouseMove(SAT_InputEvent* AEvent)
+{
+    // if we moved the mouse, so we can't double click
+    // (within SAT.GUI->getMouseMovementSlack()?)
+    // return SAT_INPUT_STATE_IDLE;
+
+    return SAT_INPUT_STATE_NONE;
+}
+
+int32_t SAT_MouseReleasedInputState::keyPress(SAT_InputEvent* AEvent)
+{
+    return SAT_INPUT_STATE_NONE;
+}
+
+int32_t SAT_MouseReleasedInputState::keyRelease(SAT_InputEvent* AEvent)
+{
+    return SAT_INPUT_STATE_NONE;
+}
 
 
 

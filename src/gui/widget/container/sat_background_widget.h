@@ -35,7 +35,7 @@ SAT_BackgroundWidget::SAT_BackgroundWidget(SAT_Rect ARect)
     Layout.anchor       = SAT_WIDGET_LAYOUT_ANCHOR_ROOT | SAT_WIDGET_LAYOUT_ANCHOR_TOP_LEFT;
     Layout.stretch      = SAT_WIDGET_LAYOUT_STRETCH_ROOT | SAT_WIDGET_LAYOUT_STRETCH_ALL;
     Options.alignable   = true;
-    Options.active      = false;
+    Options.active      = true;
     Options.visible     = true;
     Options.opaque      = true;
     Options.skinStates  = SAT_SKIN_STATE_NORMAL;

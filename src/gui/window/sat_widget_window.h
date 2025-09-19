@@ -8,8 +8,7 @@
 #include "gui/sat_widget.h"
 
 class SAT_Animator;
-class SAT_KeyboardHandler;
-class SAT_MouseHandler;
+class SAT_InputHandler;
 
 //------------------------------
 // queues
@@ -89,9 +88,8 @@ class SAT_WidgetWindow
         void                    do_widget_modal(SAT_Widget* AWidget) override;
         void                    do_widget_hint(SAT_Widget* AWidget, uint32_t AType, const char* AHint=nullptr) override;
     public:
-        virtual SAT_Animator*           getAnimator()           { return nullptr; }
-        virtual SAT_KeyboardHandler*    getKeyboardHandler()    { return nullptr; }
-        virtual SAT_MouseHandler*       getMouseHandler()       { return nullptr; }
+        virtual SAT_Animator*       getAnimator()           { return nullptr; }
+        virtual SAT_InputHandler*   getInputHandler()       { return nullptr; }
     private:
         SAT_WindowListener*     MListener           = nullptr;
         SAT_WidgetRealignQueue  MRealignQueue       = {};

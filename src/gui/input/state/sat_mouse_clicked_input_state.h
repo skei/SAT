@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/sat_base.h"
-#include "gui/mouse/sat_mouse_state.h"
+#include "gui/input/sat_input_state.h"
 
 //----------------------------------------------------------------------
 //
@@ -9,20 +9,22 @@
 //
 //----------------------------------------------------------------------
 
-class SAT_ClickedMouseState
-: public SAT_MouseState
+class SAT_MouseClickedInputState
+: public SAT_InputState
 {
     public:
-        SAT_ClickedMouseState(SAT_BaseMouseHandler* AHandler);
-        virtual ~SAT_ClickedMouseState();
+        SAT_MouseClickedInputState(SAT_BaseInputHandler* AHandler);
+        virtual ~SAT_MouseClickedInputState();
     public:
         void        enter(int32_t AFromState) override;
         void        leave(int32_t AToState) override;
     public:
         int32_t     timer(double ADelta) override; 
-        int32_t     click(SAT_MouseEvent* AEvent) override; 
-        int32_t     release(SAT_MouseEvent* AEvent) override; 
-        int32_t     move(SAT_MouseEvent* AEvent) override; 
+        int32_t     mouseClick(SAT_InputEvent* AEvent) override; 
+        int32_t     mouseRelease(SAT_InputEvent* AEvent) override; 
+        int32_t     mouseMove(SAT_InputEvent* AEvent) override;
+        int32_t     keyPress(SAT_InputEvent* AEvent) override;
+        int32_t     keyRelease(SAT_InputEvent* AEvent) override;
 };
 
 //----------------------------------------------------------------------
@@ -31,27 +33,14 @@ class SAT_ClickedMouseState
 //
 //----------------------------------------------------------------------
 
-SAT_ClickedMouseState::SAT_ClickedMouseState(SAT_BaseMouseHandler* AHandler)
-: SAT_MouseState(AHandler)
+SAT_MouseClickedInputState::SAT_MouseClickedInputState(SAT_BaseInputHandler* AHandler)
+: SAT_InputState(AHandler)
 {
-    type = SAT_MOUSE_STATE_CLICKED;
-    name = "CLICKED";
+    type = SAT_INPUT_STATE_MOUSE_CLICKED;
+    name = "MOUSE CLICKED";
 }
 
-SAT_ClickedMouseState::~SAT_ClickedMouseState()
-{
-}
-
-//------------------------------
-//
-//------------------------------
-
-void SAT_ClickedMouseState::enter(int32_t AFromState)
-{
-    SAT_PRINT("from %s\n",handler->stateName(AFromState));
-}
-
-void SAT_ClickedMouseState::leave(int32_t AToState)
+SAT_MouseClickedInputState::~SAT_MouseClickedInputState()
 {
 }
 
@@ -59,26 +48,79 @@ void SAT_ClickedMouseState::leave(int32_t AToState)
 //
 //------------------------------
 
-int32_t SAT_ClickedMouseState::timer(double ADelta)
+void SAT_MouseClickedInputState::enter(int32_t AFromState)
 {
-    return SAT_MOUSE_STATE_NONE;
+    SAT_Widget* widget = stateInfo->hoverWidget;
+    stateInfo->activeTime = stateInfo->time;
+    stateInfo->activePos = stateInfo->mousePos;
+    stateInfo->activeButton = stateInfo->mouseButton;
+    stateInfo->activeWidget = widget;
+    uint32_t gesture = SAT_INPUT_GESTURE_MOUSE_CLICK;
+    handler->sendGesture(widget,gesture);
 }
 
-int32_t SAT_ClickedMouseState::click(SAT_MouseEvent* AEvent)
+void SAT_MouseClickedInputState::leave(int32_t AToState)
 {
-    return SAT_MOUSE_STATE_NONE;
 }
 
-int32_t SAT_ClickedMouseState::release(SAT_MouseEvent* AEvent)
+//------------------------------
+//
+//------------------------------
+
+int32_t SAT_MouseClickedInputState::timer(double ADelta)
 {
-    return SAT_MOUSE_STATE_IDLE;
+    // if SAT.GUI->getMouseLongPressTime() pass while holding the button,
+    // enter long click state
+
+    double elapsed = stateInfo->currentTime - stateInfo->activeTime;
+    if (elapsed > SAT.GUI->getMouseLongPressTime())
+    {
+        // return SAT_INPUT_STATE_MOUSE_LONG_CLICK;
+    }
+    return SAT_INPUT_STATE_NONE;
 }
 
-int32_t SAT_ClickedMouseState::move(SAT_MouseEvent* AEvent)
+int32_t SAT_MouseClickedInputState::mouseClick(SAT_InputEvent* AEvent)
 {
-    return SAT_MOUSE_STATE_DRAGGING;
+    return SAT_INPUT_STATE_NONE;
 }
 
+int32_t SAT_MouseClickedInputState::mouseRelease(SAT_InputEvent* AEvent)
+{
+    // if released button is the same as the onc we clicked,
+    // switch to released state
+
+    if (stateInfo->mouseButton == stateInfo->activeButton)
+    {
+        return SAT_INPUT_STATE_MOUSE_RELEASED;
+    }
+    return SAT_INPUT_STATE_NONE;
+}
+
+int32_t SAT_MouseClickedInputState::mouseMove(SAT_InputEvent* AEvent)
+{
+
+    // only start drag if we move a tiny bit?
+
+    SAT_MouseCoords src = AEvent->stateInfo->mousePos;
+    SAT_MouseCoords dst = AEvent->stateInfo->activePos;
+    double dist = SAT.GUI->getMouseMovementSlack();
+    if (SAT_DistanceAbove(src.x,src.y,dst.x,dst.y,dist))
+    {
+        return SAT_INPUT_STATE_MOUSE_DRAGGING;
+    }
+    return SAT_INPUT_STATE_NONE;
+}
+
+int32_t SAT_MouseClickedInputState::keyPress(SAT_InputEvent* AEvent)
+{
+    return SAT_INPUT_STATE_NONE;
+}
+
+int32_t SAT_MouseClickedInputState::keyRelease(SAT_InputEvent* AEvent)
+{
+    return SAT_INPUT_STATE_NONE;
+}
 
 
 
